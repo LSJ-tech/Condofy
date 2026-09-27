@@ -1,0 +1,130 @@
+from django.contrib.auth.models import User
+from django.db import models
+from django.utils import timezone
+
+REGION_CHOICES = [
+    ("arica_parinacota", "Arica y Parinacota"),
+    ("tarapaca", "Tarapacá"),
+    ("antofagasta", "Antofagasta"),
+    ("atacama", "Atacama"),
+    ("coquimbo", "Coquimbo"),
+    ("valparaiso", "Valparaíso"),
+    ("metropolitana", "Metropolitana de Santiago"),
+    ("ohiggins", "Libertador General Bernardo O'Higgins"),
+    ("maule", "Maule"),
+    ("nuble", "Ñuble"),
+    ("biobio", "Biobío"),
+    ("araucania", "La Araucanía"),
+    ("los_rios", "Los Ríos"),
+    ("los_lagos", "Los Lagos"),
+    ("aysen", "Aysén del General Carlos Ibáñez del Campo"),
+    ("magallanes", "Magallanes y de la Antártica Chilena"),
+]
+
+PLAN_CHOICES = [
+    ("free", "Gratis"),
+    ("premium", "Pro"),
+]
+
+# None = sin límite.
+PLAN_LIMITE_UNIDADES = {
+    "free": 10,
+    "premium": None,
+}
+
+ROL_CHOICES = [
+    ("directiva", "Directiva"),
+    ("conserje", "Conserjería"),
+    ("residente", "Residente"),
+]
+
+
+class Condominio(models.Model):
+    """El tenant: una junta de vecinos o condominio cliente de la plataforma.
+
+    A diferencia de PataAgenda (Negocio + Sucursal), acá hay un solo nivel de
+    tenant -- alertas, avisos, conserjería y gastos comunes son compartidos
+    por todo el condominio, no por torre.
+    """
+
+    nombre = models.CharField(max_length=150)
+    direccion = models.CharField(max_length=255, blank=True)
+    comuna = models.CharField(max_length=100, blank=True)
+    region = models.CharField(max_length=100, blank=True)
+    activo = models.BooleanField(default=True, help_text="Interruptor manual: desactivarlo bloquea todo, sin relación con el pago.")
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default="premium")
+    pagado_hasta = models.DateField(null=True, blank=True, help_text="Fecha hasta la que el condominio tiene acceso pagado. Vacío = sin restricción.")
+    es_fundador = models.BooleanField(default=False, help_text="Uno de los primeros condominios en registrarse: precio fijo de por vida.")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+    @property
+    def esta_vencido(self):
+        return self.pagado_hasta is not None and self.pagado_hasta < timezone.localdate()
+
+    @property
+    def puede_operar(self):
+        return self.activo and not self.esta_vencido
+
+    @property
+    def limite_unidades(self):
+        return PLAN_LIMITE_UNIDADES.get(self.plan)
+
+    @property
+    def total_unidades(self):
+        return self.unidades.count()
+
+    @property
+    def puede_agregar_unidad(self):
+        limite = self.limite_unidades
+        if limite is None:
+            return True
+        return self.total_unidades < limite
+
+
+class Torre(models.Model):
+    """Agrupación organizativa opcional dentro de un condominio grande -- NO es un tenant."""
+
+    condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="torres")
+    nombre = models.CharField(max_length=100)
+
+    class Meta:
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return f"{self.nombre} ({self.condominio})"
+
+
+class Unidad(models.Model):
+    """Un departamento/casa dentro del condominio -- nivel al que se prorratean los gastos comunes."""
+
+    condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="unidades")
+    torre = models.ForeignKey(Torre, on_delete=models.SET_NULL, null=True, blank=True, related_name="unidades")
+    numero = models.CharField(max_length=20, help_text="Número o identificador del departamento/casa, ej. '304' o 'Casa 12'.")
+    alicuota = models.DecimalField(max_digits=6, decimal_places=4, default=0, help_text="Coeficiente de copropiedad usado para prorratear gastos comunes (0 si no se usa).")
+
+    class Meta:
+        ordering = ["numero"]
+        constraints = [
+            models.UniqueConstraint(fields=["condominio", "numero"], name="unidad_numero_unico_por_condominio"),
+        ]
+
+    def __str__(self):
+        return f"{self.numero} - {self.condominio}"
+
+
+class Membresia(models.Model):
+    """Liga un usuario de login a su condominio y le asigna un rol."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="membresia")
+    condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="membresias")
+    unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True, blank=True, related_name="membresias", help_text="Solo aplica a residentes.")
+    rol = models.CharField(max_length=10, choices=ROL_CHOICES, default="residente")
+
+    def __str__(self):
+        return f"{self.user} ({self.get_rol_display()} de {self.condominio})"

@@ -1,0 +1,117 @@
+{% extends "core/base.html" %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<h1 class="h4 mb-4">Hola, {{ user.first_name|default:user.username }}</h1>
+
+{% if not condominio.puede_operar %}
+<div class="alert alert-warning">Tu condominio tiene la suscripción vencida. <a href="{% url 'suscripcion-vencida' %}">Ver detalle</a>.</div>
+{% endif %}
+
+{% if membresia.rol == "directiva" or membresia.rol == "conserje" %}
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white"><i class="bi bi-exclamation-triangle"></i> Alertas activas</div>
+    <div class="card-body">
+        <div id="alertas-activas"><p class="text-muted">Cargando...</p></div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">Últimos avisos</div>
+    {% if membresia.rol == "directiva" %}
+    <div class="card-body border-bottom">
+        <form id="form-aviso" class="row g-2">
+            <div class="col-md-4"><input type="text" id="aviso-titulo" class="form-control" placeholder="Título" required></div>
+            <div class="col-md-6"><input type="text" id="aviso-cuerpo" class="form-control" placeholder="Mensaje" required></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Publicar</button></div>
+        </form>
+    </div>
+    {% endif %}
+    <ul id="avisos-recientes" class="list-group list-group-flush">
+        <li class="list-group-item text-muted">Cargando...</li>
+    </ul>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function csrfToken() {
+    return document.cookie.split("; ").find(r => r.startsWith("csrftoken="))?.split("=")[1] || "";
+}
+
+{% if membresia.rol == "directiva" or membresia.rol == "conserje" %}
+function cargarAlertas() {
+    fetch("/api/v1/alertas/?estado=activa", { credentials: "same-origin" })
+        .then(r => r.json())
+        .then(data => {
+            const cont = document.getElementById("alertas-activas");
+            const alertas = data.results || data;
+            if (!alertas.length) {
+                cont.innerHTML = '<p class="text-success mb-0"><i class="bi bi-check-circle"></i> Sin alertas activas.</p>';
+                return;
+            }
+            cont.innerHTML = alertas.map(a => `
+                <div class="border rounded p-2 mb-2">
+                    <strong>${a.tipo}</strong> — ${a.autor_nombre || ""} ${a.autor_unidad ? "(Unidad " + a.autor_unidad + ")" : ""}
+                    <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()}</div>
+                    ${a.mensaje ? `<div>${a.mensaje}</div>` : ""}
+                    <button class="btn btn-sm btn-outline-success mt-1" onclick="resolverAlerta(${a.id}, 'resuelta')">Resolver</button>
+                    <button class="btn btn-sm btn-outline-secondary mt-1" onclick="resolverAlerta(${a.id}, 'falsa_alarma')">Falsa alarma</button>
+                </div>
+            `).join("");
+        });
+}
+
+function resolverAlerta(id, estado) {
+    fetch(`/api/v1/alertas/${id}/resolver/`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+        body: JSON.stringify({ estado }),
+    }).then(cargarAlertas);
+}
+
+cargarAlertas();
+setInterval(cargarAlertas, 12000);
+{% endif %}
+
+function cargarAvisos() {
+    fetch("/api/v1/avisos/", { credentials: "same-origin" })
+        .then(r => r.json())
+        .then(data => {
+            const ul = document.getElementById("avisos-recientes");
+            const avisos = (data.results || data).slice(0, 5);
+            if (!avisos.length) {
+                ul.innerHTML = '<li class="list-group-item text-muted">Todavía no hay avisos.</li>';
+                return;
+            }
+            ul.innerHTML = avisos.map(a => `
+                <li class="list-group-item">
+                    <strong>${a.titulo}</strong>
+                    <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()} — ${a.autor_nombre || ""}</div>
+                    <div>${a.cuerpo}</div>
+                </li>
+            `).join("");
+        });
+}
+cargarAvisos();
+
+{% if membresia.rol == "directiva" %}
+document.getElementById("form-aviso").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const titulo = document.getElementById("aviso-titulo").value;
+    const cuerpo = document.getElementById("aviso-cuerpo").value;
+    fetch("/api/v1/avisos/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+        body: JSON.stringify({ titulo, cuerpo }),
+    }).then(() => {
+        e.target.reset();
+        cargarAvisos();
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

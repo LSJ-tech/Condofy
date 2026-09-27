@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block titulo %}Cuotas {{ gasto.periodo }}{% endblock %}
+{% block contenido %}
+<h1 class="h4 mb-3">Cuotas del periodo {{ gasto.periodo }}</h1>
+<table class="table table-striped">
+    <thead><tr><th>Unidad</th><th>Monto</th><th>Estado</th><th>Fecha de pago</th><th></th></tr></thead>
+    <tbody>
+        {% for c in cuotas %}
+        <tr>
+            <td>{{ c.unidad }}</td>
+            <td>${{ c.monto }}</td>
+            <td>
+                <span class="badge {% if c.estado == 'pagado' %}bg-success{% elif c.estado == 'vencido' %}bg-danger{% else %}bg-secondary{% endif %}">{{ c.get_estado_display }}</span>
+            </td>
+            <td>{{ c.fecha_pago|default:"—" }}</td>
+            <td>
+                {% if c.estado != "pagado" %}
+                <form method="post" action="{% url 'cuota-marcar-pagada' c.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-success">Marcar pagada</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

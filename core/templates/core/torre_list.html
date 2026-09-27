@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+{% block titulo %}Torres{% endblock %}
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Torres</h1>
+    <a href="{% url 'crear-torre' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nueva torre</a>
+</div>
+<ul class="list-group">
+    {% for t in torres %}
+    <li class="list-group-item">{{ t.nombre }}</li>
+    {% empty %}
+    <li class="list-group-item text-muted">Sin torres registradas (opcional, solo para condominios grandes).</li>
+    {% endfor %}
+</ul>
+{% endblock %}

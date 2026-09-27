@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% block titulo %}Nuevo miembro{% endblock %}
+{% block contenido %}
+<h1 class="h4 mb-3">Nuevo miembro</h1>
+<form method="post" class="col-md-6">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mb-3">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Crear cuenta</button>
+</form>
+{% endblock %}
