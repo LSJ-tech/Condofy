@@ -267,7 +267,7 @@
                 </ul>
                 <div class="d-flex">
                     <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Iniciar sesión</a>
-                    <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-sm">Prueba gratis</a>
+                    <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-sm">Solicitar acceso</a>
                 </div>
             </div>
         </div>
@@ -281,10 +281,10 @@
                 {{ PLATFORM_NAME }} junta botón de pánico, avisos, control de accesos y gastos comunes en un solo panel, para directiva, conserjería y residentes.
             </p>
             <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
-                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Prueba {{ dias_prueba_gratis }} días gratis</a>
+                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Solicitar acceso para mi condominio</a>
                 <a href="#como-funciona" class="btn btn-outline-light btn-lg px-4">Ver cómo funciona</a>
             </div>
-            <p class="small mb-5" style="opacity: 0.85;">Sin tarjeta de crédito. Por ahora, acceso solo con código de invitación.</p>
+            <p class="small mb-5" style="opacity: 0.85;">Pensado para condominios y juntas de vecinos en Chile. Acceso por invitación.</p>
 
             <div class="row justify-content-center mx-auto" style="max-width: 760px;">
                 <div class="col-4 stat-strip-item">
@@ -491,10 +491,10 @@
             <div class="accordion" id="acordeonFaq">
                 <div class="accordion-item">
                     <h3 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">¿Qué incluye el plan de prueba?</button>
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">¿Cómo empiezo a usar {{ PLATFORM_NAME }} en mi condominio?</button>
                     </h3>
                     <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
-                        <div class="accordion-body text-muted">{{ dias_prueba_gratis }} días con todas las funciones activas, sin tarjeta de crédito.</div>
+                        <div class="accordion-body text-muted">Escríbenos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a>, coordinamos con tu directiva y te damos acceso con todas las funciones activas.</div>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -544,9 +544,9 @@
     <section class="py-5 reveal">
         <div class="container">
             <div class="cta-final text-center p-5">
-                <h2 class="h3 fw-bold mb-2">Prueba {{ PLATFORM_NAME }} con tu comunidad real</h2>
-                <p class="mb-4 mx-auto" style="max-width: 520px; opacity: 0.9;">{{ dias_prueba_gratis }} días gratis, con todas las funciones activas. Sin tarjeta de crédito.</p>
-                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Crear mi condominio</a>
+                <h2 class="h3 fw-bold mb-2">Lleva {{ PLATFORM_NAME }} a tu condominio o junta de vecinos</h2>
+                <p class="mb-4 mx-auto" style="max-width: 520px; opacity: 0.9;">Coordinamos el acceso con tu directiva, con todas las funciones activas desde el primer día.</p>
+                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Solicitar acceso</a>
             </div>
         </div>
     </section>

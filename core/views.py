@@ -104,8 +104,6 @@ class InicioView(TemplateView):
         if hasattr(self, "membresia"):
             context["membresia"] = self.membresia
             context["condominio"] = self.condominio
-        else:
-            context["dias_prueba_gratis"] = DIAS_PRUEBA_GRATIS
         return context
 
 
