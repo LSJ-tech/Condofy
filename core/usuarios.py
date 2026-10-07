@@ -41,3 +41,8 @@ def generar_username(nombre, apellido, segundo_apellido=""):
 def generar_password_temporal(longitud=10):
     alfabeto = string.ascii_letters + string.digits
     return "".join(secrets.choice(alfabeto) for _ in range(longitud))
+
+
+def generar_codigo_invitacion(longitud=8):
+    alfabeto = string.ascii_uppercase + string.digits
+    return "".join(secrets.choice(alfabeto) for _ in range(longitud))

@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils import timezone
 from unfold.admin import ModelAdmin, TabularInline
 
-from .models import PLAN_CHOICES, Condominio, Membresia, Torre, Unidad
+from .models import PLAN_CHOICES, CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 
 # Unidad/Torre/Membresia son datos operativos de cada condominio -- se
 # registran acá porque, a diferencia de PataAgenda, no hay un panel interno
@@ -78,3 +78,16 @@ class MembresiaAdmin(ModelAdmin):
     list_display = ["user", "condominio", "rol", "unidad"]
     list_filter = ["rol", "condominio"]
     autocomplete_fields = ["user"]
+
+
+@admin.register(CodigoInvitacion)
+class CodigoInvitacionAdmin(ModelAdmin):
+    """"Añadir" ya genera un código nuevo solo (ver default del campo) -- basta con Guardar."""
+
+    list_display = ["codigo", "usado_display", "condominio", "fecha_creacion", "fecha_uso"]
+    list_filter = ["fecha_creacion"]
+    readonly_fields = ["condominio", "fecha_uso"]
+
+    @admin.display(description="Usado", boolean=True)
+    def usado_display(self, obj):
+        return obj.usado

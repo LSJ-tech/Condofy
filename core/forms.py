@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import REGION_CHOICES, ROL_CHOICES, Condominio, Torre, Unidad
+from .models import REGION_CHOICES, ROL_CHOICES, CodigoInvitacion, Condominio, Torre, Unidad
 
 
 class ConfirmacionContrasenaMixin(forms.Form):
@@ -25,10 +25,15 @@ class RegistroCondominioForm(ConfirmacionContrasenaMixin):
     """Alta de un condominio nuevo y de su primer usuario (directiva), sin intervención manual."""
 
     field_order = [
-        "nombre_condominio", "direccion_condominio", "comuna_condominio", "region_condominio",
+        "codigo_invitacion", "nombre_condominio", "direccion_condominio", "comuna_condominio", "region_condominio",
         "nombre", "apellido", "password1", "password2",
     ]
 
+    codigo_invitacion = forms.CharField(
+        max_length=20, label="Código de invitación",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        help_text="Pídeselo a quien te invitó a usar la plataforma.",
+    )
     nombre_condominio = forms.CharField(
         max_length=150, label="Nombre del condominio o junta de vecinos",
         widget=forms.TextInput(attrs={"class": "form-control"}),
@@ -53,6 +58,14 @@ class RegistroCondominioForm(ConfirmacionContrasenaMixin):
         max_length=150, label="Tu apellido",
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
+
+    def clean_codigo_invitacion(self):
+        codigo = self.cleaned_data["codigo_invitacion"].strip().upper()
+        try:
+            self.codigo_obj = CodigoInvitacion.objects.get(codigo=codigo, condominio__isnull=True)
+        except CodigoInvitacion.DoesNotExist:
+            raise ValidationError("Código inválido o ya usado.")
+        return codigo
 
 
 class CrearMiembroForm(forms.Form):

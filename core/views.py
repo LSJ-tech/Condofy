@@ -12,7 +12,7 @@ from django.views.generic import CreateView, FormView, ListView, TemplateView, U
 
 from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
-from .models import Condominio, Membresia, Torre, Unidad
+from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
 DIAS_PRUEBA_GRATIS = 15
@@ -41,6 +41,11 @@ class RegistroCondominioView(FormView):
         datos = form.cleaned_data
         username = generar_username(datos["nombre"], datos["apellido"])
         with transaction.atomic():
+            codigo_obj = CodigoInvitacion.objects.select_for_update().get(pk=form.codigo_obj.pk)
+            if codigo_obj.condominio_id is not None:
+                messages.error(self.request, "Ese código de invitación ya fue usado.")
+                return redirect("registro-condominio")
+
             condominio = Condominio.objects.create(
                 nombre=datos["nombre_condominio"],
                 direccion=datos.get("direccion_condominio", ""),
@@ -54,6 +59,9 @@ class RegistroCondominioView(FormView):
                 first_name=datos["nombre"], last_name=datos["apellido"],
             )
             Membresia.objects.create(user=user, condominio=condominio, rol="directiva")
+            codigo_obj.condominio = condominio
+            codigo_obj.fecha_uso = timezone.now()
+            codigo_obj.save()
 
         login(self.request, user)
         messages.success(
