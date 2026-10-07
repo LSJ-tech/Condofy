@@ -21,7 +21,7 @@ def crear_preferencia_pago(pago, request):
     base_url = request.build_absolute_uri("/").rstrip("/")
     preferencia = {
         "items": [{
-            "title": f"Suscripción BarrioSeguro - {pago.condominio.nombre}",
+            "title": f"Suscripción Condofy - {pago.condominio.nombre}",
             "quantity": 1,
             "unit_price": float(pago.monto),
             "currency_id": "CLP",

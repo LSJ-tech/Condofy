@@ -1,4 +1,4 @@
-# BarrioSeguro
+# Condofy
 
 SaaS de emergencias y gestión para juntas de vecinos y condominios en Chile — segundo producto de [DevQuad](https://devquad.cl), en la misma línea que [PataAgenda](https://patagenda.devquad.cl).
 

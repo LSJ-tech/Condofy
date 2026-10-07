@@ -1,5 +1,5 @@
 """
-Django settings for config project (BarrioSeguro).
+Django settings for config project (Condofy).
 """
 
 import datetime
@@ -128,7 +128,7 @@ STORAGES = {
     },
 }
 
-PLATFORM_NAME = os.environ.get('PLATFORM_NAME', 'BarrioSeguro')
+PLATFORM_NAME = os.environ.get('PLATFORM_NAME', 'Condofy')
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'inicio'
@@ -161,7 +161,7 @@ else:
         },
     }
 
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@barrioseguro.local')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@condofy.local')
 
 
 # Pago de la suscripción vía Mercado Pago (Checkout Pro). Suscripción SaaS
@@ -198,7 +198,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'BarrioSeguro API',
+    'TITLE': 'Condofy API',
     'DESCRIPTION': 'API para la app móvil de residentes (alertas, avisos, gastos comunes, dispositivos push).',
     'VERSION': '1.0.0',
 }
@@ -230,8 +230,8 @@ LOGGING = {
 
 # Tema del admin (django-unfold).
 UNFOLD = {
-    "SITE_TITLE": "BarrioSeguro · Admin",
-    "SITE_HEADER": "BarrioSeguro",
+    "SITE_TITLE": "Condofy · Admin",
+    "SITE_HEADER": "Condofy",
     "SITE_SYMBOL": "shield",
     "SHOW_HISTORY": True,
     "COLORS": {
