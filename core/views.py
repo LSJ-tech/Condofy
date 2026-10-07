@@ -1,7 +1,10 @@
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -13,6 +16,21 @@ from .models import Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
 DIAS_PRUEBA_GRATIS = 15
+
+
+@staff_member_required
+def probar_correo(request):
+    """Diagnóstico manual: confirma que RESEND_API_KEY está bien configurada en el hosting."""
+    destino = request.GET.get("destino")
+    if not destino:
+        return HttpResponse("Agrega ?destino=tu@email.com a la URL.", status=400)
+    send_mail(
+        subject="Correo de prueba de Condofy",
+        message="Si recibiste esto, el envío de correo (Resend) está funcionando correctamente.",
+        from_email=None,
+        recipient_list=[destino],
+    )
+    return HttpResponse(f"Correo de prueba enviado a {destino}.")
 
 
 class RegistroCondominioView(FormView):
