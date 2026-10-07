@@ -10,35 +10,103 @@
     <title>{{ PLATFORM_NAME }} · Administración de condominios</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --condofy-primary: #4F46E5;
             --condofy-primary-dark: #4338CA;
             --condofy-primary-darker: #312E81;
             --condofy-accent: #F59E0B;
+            --condofy-ink: #1E1B4B;
         }
-        body { background: #F8FAFC; }
+        body {
+            background: #F8FAFC;
+            font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+            color: var(--condofy-ink);
+        }
         .btn-primary {
             --bs-btn-bg: var(--condofy-primary);
             --bs-btn-border-color: var(--condofy-primary);
             --bs-btn-hover-bg: var(--condofy-primary-dark);
             --bs-btn-hover-border-color: var(--condofy-primary-dark);
         }
+        .navbar-condofy {
+            background: rgba(49, 46, 129, 0.92);
+            backdrop-filter: blur(6px);
+        }
         .hero {
-            background: linear-gradient(135deg, var(--condofy-primary-darker) 0%, var(--condofy-primary) 100%);
+            position: relative;
             color: #fff;
+            overflow: hidden;
+            min-height: 92vh;
+            display: flex;
+            align-items: center;
+            padding-top: 5.5rem;
+        }
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("{% static 'core/img/hero-edificio.webp' %}");
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.02);
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(49, 30, 129, 0.93) 0%, rgba(79, 70, 229, 0.82) 55%, rgba(67, 56, 202, 0.55) 100%);
+        }
+        .hero > .container { position: relative; z-index: 1; }
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 0.35rem 0.9rem;
+            border-radius: 50rem;
+        }
+        .hero h1 { font-weight: 800; letter-spacing: -0.02em; }
+        .stat-strip-item { border-left: 1px solid rgba(255,255,255,0.25); padding-left: 1.25rem; }
+        .stat-strip-item:first-child { border-left: none; padding-left: 0; }
+        .stat-numero { font-size: 1.1rem; font-weight: 700; }
+
+        .numero-grande {
+            font-size: 3rem;
+            font-weight: 800;
+            color: rgba(79, 70, 229, 0.15);
+            line-height: 1;
         }
         .icono-feature {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 0.75rem;
-            background: rgba(79, 70, 229, 0.12);
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 1rem;
+            background: rgba(79, 70, 229, 0.1);
             color: var(--condofy-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
         }
+        .card-feature {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 1.75rem;
+            height: 100%;
+            box-shadow: 0 1px 2px rgba(30, 27, 75, 0.04);
+            border: 1px solid rgba(30, 27, 75, 0.06);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card-feature:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(30, 27, 75, 0.08); }
+
         .paso-numero {
             width: 2.5rem;
             height: 2.5rem;
@@ -51,16 +119,46 @@
             font-weight: 700;
             flex-shrink: 0;
         }
+
+        .bloque-foto {
+            background-image: url("{% static 'core/img/edificio-secundaria.webp' %}");
+            background-size: cover;
+            background-position: center;
+            border-radius: 1.25rem;
+            min-height: 420px;
+        }
+        .dato-real {
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+        }
+        .dato-real .bi { font-size: 1.35rem; color: var(--condofy-primary); }
+
+        .pain-card {
+            background: #fff;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            height: 100%;
+            border: 1px solid rgba(30, 27, 75, 0.06);
+        }
+        .pain-quote {
+            font-style: italic;
+            color: #6b7280;
+            border-left: 3px solid var(--condofy-accent);
+            padding-left: 0.9rem;
+            margin-bottom: 0.9rem;
+        }
+
         .cta-final {
             background: linear-gradient(135deg, var(--condofy-primary-darker) 0%, var(--condofy-primary) 100%);
             color: #fff;
-            border-radius: 1rem;
+            border-radius: 1.25rem;
         }
-        .badge-accent { background: var(--condofy-accent); color: #1f2937; }
+        section > .container > h2, section .section-title { letter-spacing: -0.01em; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--condofy-primary-darker);">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-condofy fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold d-inline-flex align-items-center gap-2" href="{% url 'inicio' %}">
                 <img src="{% static 'core/logo.svg' %}" width="28" height="28" alt="">
@@ -73,43 +171,138 @@
         </div>
     </nav>
 
-    <header class="hero py-5">
+    <header class="hero">
         <div class="container py-5 text-center">
-            <h1 class="display-5 fw-bold mb-3">Administra tu condominio sin planillas sueltas ni grupos de WhatsApp perdidos</h1>
-            <p class="fs-5 mb-4 mx-auto" style="max-width: 640px;">
+            <span class="eyebrow mb-3"><i class="bi bi-shield-check"></i> Hecho en Chile, para la Ley de Copropiedad Inmobiliaria</span>
+            <h1 class="display-4 mb-3">Administra tu condominio sin planillas sueltas ni grupos de WhatsApp perdidos</h1>
+            <p class="fs-5 mb-4 mx-auto" style="max-width: 640px; opacity: 0.95;">
                 {{ PLATFORM_NAME }} junta botón de pánico, avisos, control de accesos y gastos comunes en un solo panel, para directiva, conserjería y residentes.
             </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
                 <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Prueba {{ dias_prueba_gratis }} días gratis</a>
                 <a href="#como-funciona" class="btn btn-outline-light btn-lg px-4">Ver cómo funciona</a>
             </div>
-            <p class="small mt-3 mb-0">Sin tarjeta de crédito. Por ahora, acceso solo con código de invitación.</p>
+            <p class="small mb-5" style="opacity: 0.85;">Sin tarjeta de crédito. Por ahora, acceso solo con código de invitación.</p>
+
+            <div class="row justify-content-center mx-auto" style="max-width: 760px;">
+                <div class="col-4 stat-strip-item">
+                    <div class="stat-numero"><i class="bi bi-lightning-charge-fill"></i> Al instante</div>
+                    <div class="small" style="opacity: 0.85;">Botón de pánico con push a directiva/conserjería</div>
+                </div>
+                <div class="col-4 stat-strip-item">
+                    <div class="stat-numero"><i class="bi bi-people-fill"></i> 3 roles</div>
+                    <div class="small" style="opacity: 0.85;">Directiva, conserjería y residentes, cada uno con su acceso</div>
+                </div>
+                <div class="col-4 stat-strip-item">
+                    <div class="stat-numero"><i class="bi bi-shield-lock-fill"></i> Aislado</div>
+                    <div class="small" style="opacity: 0.85;">Cada condominio ve solo sus propios datos</div>
+                </div>
+            </div>
         </div>
     </header>
 
-    <section class="py-5">
+    <section class="py-5" style="margin-top: 2rem;">
         <div class="container">
-            <h2 class="text-center fw-bold mb-5">Todo lo que necesita tu comunidad</h2>
+            <h2 class="text-center fw-bold mb-2 section-title">Todo lo que necesita tu comunidad</h2>
+            <p class="text-center text-muted mb-5 mx-auto" style="max-width: 560px;">Un solo panel para directiva y conserjería, y un acceso simple para cada residente.</p>
             <div class="row g-4">
                 <div class="col-md-6 col-lg-3">
-                    <div class="icono-feature mb-3"><i class="bi bi-exclamation-triangle"></i></div>
-                    <h3 class="h5 fw-semibold">Botón de pánico</h3>
-                    <p class="text-muted">Un residente dispara la alerta y directiva/conserjería la recibe al instante con notificación push, sin depender de que alguien vea el WhatsApp a tiempo.</p>
+                    <div class="card-feature">
+                        <div class="numero-grande mb-2">01</div>
+                        <div class="icono-feature mb-3"><i class="bi bi-exclamation-triangle"></i></div>
+                        <h3 class="h5 fw-semibold">Botón de pánico</h3>
+                        <p class="text-muted mb-0">Un residente dispara la alerta y directiva/conserjería la recibe al instante con notificación push, sin depender de que alguien vea el WhatsApp a tiempo.</p>
+                    </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="icono-feature mb-3"><i class="bi bi-megaphone"></i></div>
-                    <h3 class="h5 fw-semibold">Avisos a todos los vecinos</h3>
-                    <p class="text-muted">Directiva publica un aviso y todos los residentes lo ven en su panel, sin reenviar mensajes grupo por grupo.</p>
+                    <div class="card-feature">
+                        <div class="numero-grande mb-2">02</div>
+                        <div class="icono-feature mb-3"><i class="bi bi-megaphone"></i></div>
+                        <h3 class="h5 fw-semibold">Avisos a todos los vecinos</h3>
+                        <p class="text-muted mb-0">Directiva publica un aviso y todos los residentes lo ven en su panel, sin reenviar mensajes grupo por grupo.</p>
+                    </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="icono-feature mb-3"><i class="bi bi-door-open"></i></div>
-                    <h3 class="h5 fw-semibold">Registro de accesos</h3>
-                    <p class="text-muted">Conserjería deja registrado quién entra y sale, con historial ordenado por unidad en vez de un cuaderno en portería.</p>
+                    <div class="card-feature">
+                        <div class="numero-grande mb-2">03</div>
+                        <div class="icono-feature mb-3"><i class="bi bi-door-open"></i></div>
+                        <h3 class="h5 fw-semibold">Registro de accesos</h3>
+                        <p class="text-muted mb-0">Conserjería deja registrado quién entra y sale, con historial ordenado por unidad en vez de un cuaderno en portería.</p>
+                    </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <div class="icono-feature mb-3"><i class="bi bi-cash-coin"></i></div>
-                    <h3 class="h5 fw-semibold">Gastos comunes claros</h3>
-                    <p class="text-muted">El cargo se prorratea solo por unidad, cada residente ve su cuota pendiente y los datos para transferir, y directiva marca los pagos recibidos.</p>
+                    <div class="card-feature">
+                        <div class="numero-grande mb-2">04</div>
+                        <div class="icono-feature mb-3"><i class="bi bi-cash-coin"></i></div>
+                        <h3 class="h5 fw-semibold">Gastos comunes claros</h3>
+                        <p class="text-muted mb-0">El cargo se prorratea solo por unidad, cada residente ve su cuota pendiente y los datos para transferir, y directiva marca los pagos recibidos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="bloque-foto"></div>
+                </div>
+                <div class="col-lg-6">
+                    <h2 class="fw-bold mb-4 section-title">Construido para la realidad de un condominio chileno</h2>
+                    <div class="dato-real mb-4">
+                        <i class="bi bi-diagram-3"></i>
+                        <div>
+                            <h3 class="h6 fw-semibold mb-1">Multi-torre real</h3>
+                            <p class="text-muted mb-0">Torres y unidades propias, con coeficiente de copropiedad por unidad para prorratear gastos comunes de forma automática.</p>
+                        </div>
+                    </div>
+                    <div class="dato-real mb-4">
+                        <i class="bi bi-person-badge"></i>
+                        <div>
+                            <h3 class="h6 fw-semibold mb-1">Un acceso para cada rol</h3>
+                            <p class="text-muted mb-0">Directiva administra, conserjería resuelve alertas y registra accesos, residentes solo ven lo suyo. Nadie ve más de lo que le corresponde.</p>
+                        </div>
+                    </div>
+                    <div class="dato-real">
+                        <i class="bi bi-phone"></i>
+                        <div>
+                            <h3 class="h6 fw-semibold mb-1">Lista para la app de residentes</h3>
+                            <p class="text-muted mb-0">El mismo panel ya expone una API documentada, pensada para que los residentes usen todo esto también desde el celular.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5 section-title">¿Te pasa alguna de estas?</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="pain-card">
+                        <p class="pain-quote">"El grupo de WhatsApp tiene 300 mensajes sin leer y nadie vio el aviso importante."</p>
+                        <p class="small mb-0"><strong>Con {{ PLATFORM_NAME }}:</strong> el aviso queda en el panel de cada residente, no se pierde en el chat.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="pain-card">
+                        <p class="pain-quote">"Nadie sabe cuánto debe cada departamento hasta fin de mes."</p>
+                        <p class="small mb-0"><strong>Con {{ PLATFORM_NAME }}:</strong> el gasto común se prorratea solo y cada residente ve su cuota al día.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="pain-card">
+                        <p class="pain-quote">"Si pasa algo de noche, hay que llamar uno por uno."</p>
+                        <p class="small mb-0"><strong>Con {{ PLATFORM_NAME }}:</strong> el botón de pánico avisa a directiva y conserjería al instante.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="pain-card">
+                        <p class="pain-quote">"El cuaderno de la portería se pierde o nadie lo llena bien."</p>
+                        <p class="small mb-0"><strong>Con {{ PLATFORM_NAME }}:</strong> los accesos quedan registrados y ordenados por unidad.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -117,7 +310,7 @@
 
     <section id="como-funciona" class="py-5 bg-white">
         <div class="container">
-            <h2 class="text-center fw-bold mb-5">Cómo funciona</h2>
+            <h2 class="text-center fw-bold mb-5 section-title">Cómo funciona</h2>
             <div class="row g-4 justify-content-center" style="max-width: 900px; margin: 0 auto;">
                 <div class="col-md-4 d-flex gap-3">
                     <div class="paso-numero">1</div>
@@ -159,6 +352,11 @@
             &copy; {% now "Y" %} {{ PLATFORM_NAME }}. Administración de condominios y juntas de vecinos.
             &middot; <a href="{% url 'login' %}" class="text-muted">Iniciar sesión</a>
             &middot; Hecho por <a href="https://devquad.cl/" target="_blank" rel="noopener" class="text-muted">DevQuad</a>
+            <div class="mt-2" style="font-size: 0.7rem;">
+                Fotos: <a href="https://commons.wikimedia.org/wiki/File:DFC_0446_A_tall_beachfront_apartment_tower_rising_above_a_tree-lined_shore_under_an_overcast_sky.jpg" target="_blank" rel="noopener" class="text-muted">PattayaPatrol</a>
+                y <a href="https://commons.wikimedia.org/wiki/File:Full_height_view_of_Cosmopolitan_on_the_Park,_Pearl_District,_Portland,_Oregon_(2026).jpg" target="_blank" rel="noopener" class="text-muted">PortlandAppraisalBlog</a>,
+                Wikimedia Commons (CC BY-SA 4.0)
+            </div>
         </div>
     </footer>
 </body>
