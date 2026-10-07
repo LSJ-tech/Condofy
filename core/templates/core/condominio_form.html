@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block titulo %}Mi condominio{% endblock %}
+{% block contenido %}
+<h1 class="h4 mb-3">Mi condominio</h1>
+<form method="post" class="col-md-7">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mb-3">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        <div class="form-text">{{ field.help_text }}</div>
+        {{ field.errors }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Guardar</button>
+</form>
+{% endblock %}

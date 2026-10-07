@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import REGION_CHOICES, ROL_CHOICES, Torre, Unidad
+from .models import REGION_CHOICES, ROL_CHOICES, Condominio, Torre, Unidad
 
 
 class ConfirmacionContrasenaMixin(forms.Form):
@@ -74,6 +74,21 @@ class CrearMiembroForm(forms.Form):
         if cleaned.get("rol") == "residente" and not cleaned.get("unidad"):
             raise ValidationError("Selecciona la unidad del residente.")
         return cleaned
+
+
+class CondominioForm(forms.ModelForm):
+    class Meta:
+        model = Condominio
+        fields = ["datos_transferencia"]
+        widgets = {
+            "datos_transferencia": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+        }
+        labels = {
+            "datos_transferencia": "Datos para transferencia de gastos comunes",
+        }
+        help_texts = {
+            "datos_transferencia": "Banco, tipo de cuenta, número, RUT y email — se muestra a los residentes al pagar.",
+        }
 
 
 class TorreForm(forms.ModelForm):

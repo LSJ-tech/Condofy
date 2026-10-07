@@ -56,6 +56,11 @@ class Condominio(models.Model):
     pagado_hasta = models.DateField(null=True, blank=True, help_text="Fecha hasta la que el condominio tiene acceso pagado. Vacío = sin restricción.")
     es_fundador = models.BooleanField(default=False, help_text="Uno de los primeros condominios en registrarse: precio fijo de por vida.")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    datos_transferencia = models.TextField(
+        blank=True,
+        help_text="Banco, tipo de cuenta, número, RUT y email de la administración — se muestra a los "
+        "residentes para que paguen los gastos comunes por transferencia (no es un pago online).",
+    )
 
     class Meta:
         ordering = ["nombre"]

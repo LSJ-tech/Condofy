@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 
-from .forms import CrearMiembroForm, RegistroCondominioForm, TorreForm, UnidadForm
+from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, TorreForm, UnidadForm
 from .mixins import CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
 from .models import Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
@@ -91,6 +91,16 @@ class CrearMiembroView(SoloDirectivaMixin, CondominioRequiredMixin, FormView):
             "no queda guardada en ningún otro lado.",
         )
         return super().form_valid(form)
+
+
+class CondominioUpdateView(SoloDirectivaMixin, CondominioRequiredMixin, UpdateView):
+    model = Condominio
+    form_class = CondominioForm
+    template_name = "core/condominio_form.html"
+    success_url = reverse_lazy("mi-condominio")
+
+    def get_object(self, queryset=None):
+        return self.condominio
 
 
 class TorreListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
