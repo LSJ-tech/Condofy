@@ -2,7 +2,7 @@ services:
   - type: web
     name: condofy
     env: python
-    plan: starter
+    plan: free  # Pasar a un plan pago cuando el servicio esté listo para producción real.
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application"
     envVars:
