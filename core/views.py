@@ -10,10 +10,12 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 
-from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, TorreForm, UnidadForm
+from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, SolicitudAccesoForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
 from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
+
+EMAIL_CONTACTO_DEVQUAD = "contacto@devquad.cl"
 
 DIAS_PRUEBA_GRATIS = 15
 
@@ -31,6 +33,36 @@ def probar_correo(request):
         recipient_list=[destino],
     )
     return HttpResponse(f"Correo de prueba enviado a {destino}.")
+
+
+class SolicitarAccesoView(FormView):
+    """Formulario público embebido en la landing -- captura el interés de quien todavía no tiene código."""
+
+    template_name = "core/registro_condominio.html"  # no se usa directo: el form vive embebido en landing.html
+    form_class = SolicitudAccesoForm
+    success_url = reverse_lazy("inicio")
+
+    def form_valid(self, form):
+        solicitud = form.save()
+        try:
+            send_mail(
+                subject=f"Nueva solicitud de acceso a Condofy: {solicitud.condominio}",
+                message=(
+                    f"Nombre: {solicitud.nombre}\nCondominio: {solicitud.condominio}\nComuna: {solicitud.comuna}\n"
+                    f"Teléfono: {solicitud.telefono}\nEmail: {solicitud.email}\nMensaje: {solicitud.mensaje}\n\n"
+                    f"Gestionar en /admin/core/solicitudacceso/"
+                ),
+                from_email=None,
+                recipient_list=[EMAIL_CONTACTO_DEVQUAD],
+            )
+        except Exception:
+            pass  # el lead ya quedó guardado -- el correo es solo un aviso, no bloquea la solicitud
+        messages.success(self.request, "¡Gracias! Recibimos tu solicitud y te vamos a contactar pronto.")
+        return redirect("inicio")
+
+    def form_invalid(self, form):
+        messages.error(self.request, "No pudimos enviar tu solicitud — revisa los datos e inténtalo de nuevo.")
+        return redirect("inicio")
 
 
 class RegistroCondominioView(FormView):

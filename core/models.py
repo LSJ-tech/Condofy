@@ -154,3 +154,22 @@ class CodigoInvitacion(models.Model):
     @property
     def usado(self):
         return self.condominio_id is not None
+
+
+class SolicitudAcceso(models.Model):
+    """Lead capturado desde el formulario público de la landing -- quien lo pide todavía no tiene código de invitación."""
+
+    nombre = models.CharField(max_length=150)
+    condominio = models.CharField(max_length=150, verbose_name="Condominio o junta de vecinos")
+    comuna = models.CharField(max_length=100, blank=True)
+    telefono = models.CharField(max_length=30)
+    email = models.EmailField(blank=True)
+    mensaje = models.TextField(blank=True)
+    atendido = models.BooleanField(default=False, help_text="Marca cuando ya contactaste a esta persona.")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha_creacion"]
+
+    def __str__(self):
+        return f"{self.condominio} ({self.nombre})"

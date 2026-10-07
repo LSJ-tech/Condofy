@@ -276,7 +276,7 @@
                 </ul>
                 <div class="d-flex">
                     <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Iniciar sesión</a>
-                    <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-sm">Solicitar acceso</a>
+                    <a href="#solicitar" class="btn btn-light btn-sm">Solicitar acceso</a>
                 </div>
             </div>
         </div>
@@ -290,7 +290,7 @@
                 {{ PLATFORM_NAME }} junta botón de pánico, avisos, control de accesos y gastos comunes en un solo panel, para directiva, conserjería y residentes.
             </p>
             <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
-                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Solicitar acceso para mi condominio</a>
+                <a href="#solicitar" class="btn btn-light btn-lg px-4">Solicitar acceso para mi condominio</a>
                 <a href="#como-funciona" class="btn btn-outline-light btn-lg px-4">Ver cómo funciona</a>
             </div>
             <p class="small mb-5" style="opacity: 0.85;">Pensado para condominios y juntas de vecinos en Chile. Acceso por invitación.</p>
@@ -318,6 +318,76 @@
             </div>
         </div>
     </header>
+
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <section id="solicitar" class="py-5 bg-white reveal" style="scroll-margin-top: 5rem;">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-5">
+                    <span class="eyebrow mb-3" style="background: rgba(79,70,229,0.1); border-color: rgba(79,70,229,0.2); color: var(--condofy-primary);"><i class="bi bi-chat-dots"></i> Hablemos de tu comunidad</span>
+                    <h2 class="fw-bold mt-3 mb-3 section-title">Cuéntanos de tu condominio</h2>
+                    <p class="text-muted mb-4">Llena el formulario y te contactamos para coordinar el acceso con tu directiva. Sin compromiso.</p>
+                    <div class="dato-real mb-3">
+                        <i class="bi bi-1-circle-fill"></i>
+                        <div class="small"><strong>Te contactamos</strong> — por teléfono o email, dentro de los próximos días hábiles.</div>
+                    </div>
+                    <div class="dato-real mb-3">
+                        <i class="bi bi-2-circle-fill text-amber"></i>
+                        <div class="small"><strong>Coordinamos con tu directiva</strong> — vemos el tamaño de tu condominio y resolvemos dudas.</div>
+                    </div>
+                    <div class="dato-real">
+                        <i class="bi bi-3-circle-fill text-emerald"></i>
+                        <div class="small"><strong>Tu condominio queda andando</strong> — con código de invitación y todas las funciones activas.</div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card-feature">
+                        <form method="post" action="{% url 'solicitar-acceso' %}" class="row g-3">
+                            {% csrf_token %}
+                            <div class="col-md-6">
+                                <label class="form-label small">Nombre</label>
+                                <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Condominio o junta de vecinos</label>
+                                <input type="text" name="condominio" class="form-control" placeholder="Nombre del condominio" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Comuna</label>
+                                <input type="text" name="comuna" class="form-control" placeholder="Comuna">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Teléfono</label>
+                                <input type="text" name="telefono" class="form-control" placeholder="+56 9 ..." required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">Email (opcional)</label>
+                                <input type="email" name="email" class="form-control" placeholder="tu@email.cl">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">Mensaje (opcional)</label>
+                                <textarea name="mensaje" class="form-control" rows="2" placeholder="Cuéntanos un poco de tu comunidad"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100 btn-lg">Enviar solicitud</button>
+                                <p class="text-muted small text-center mt-2 mb-0">¿Ya tienes un código de invitación? <a href="{% url 'registro-condominio' %}">Regístrate aquí</a>.</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <section class="seccion-producto py-5 reveal">
         <div class="container py-4">
@@ -503,7 +573,7 @@
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">¿Cómo empiezo a usar {{ PLATFORM_NAME }} en mi condominio?</button>
                     </h3>
                     <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
-                        <div class="accordion-body text-muted">Escríbenos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a>, coordinamos con tu directiva y te damos acceso con todas las funciones activas.</div>
+                        <div class="accordion-body text-muted">Completa el <a href="#solicitar">formulario de contacto</a> o escríbenos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a>. Coordinamos con tu directiva y te damos acceso con todas las funciones activas.</div>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -555,7 +625,7 @@
             <div class="cta-final text-center p-5">
                 <h2 class="h3 fw-bold mb-2">Lleva {{ PLATFORM_NAME }} a tu condominio o junta de vecinos</h2>
                 <p class="mb-4 mx-auto" style="max-width: 520px; opacity: 0.9;">Coordinamos el acceso con tu directiva, con todas las funciones activas desde el primer día.</p>
-                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Solicitar acceso</a>
+                <a href="#solicitar" class="btn btn-light btn-lg px-4">Solicitar acceso</a>
             </div>
         </div>
     </section>

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import REGION_CHOICES, ROL_CHOICES, CodigoInvitacion, Condominio, Torre, Unidad
+from .models import REGION_CHOICES, ROL_CHOICES, CodigoInvitacion, Condominio, SolicitudAcceso, Torre, Unidad
 
 
 class ConfirmacionContrasenaMixin(forms.Form):
@@ -101,6 +101,26 @@ class CondominioForm(forms.ModelForm):
         }
         help_texts = {
             "datos_transferencia": "Banco, tipo de cuenta, número, RUT y email — se muestra a los residentes al pagar.",
+        }
+
+
+class SolicitudAccesoForm(forms.ModelForm):
+    """Formulario público de la landing -- captura el interés de quien todavía no tiene código de invitación."""
+
+    class Meta:
+        model = SolicitudAcceso
+        fields = ["nombre", "condominio", "comuna", "telefono", "email", "mensaje"]
+        widgets = {
+            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Tu nombre"}),
+            "condominio": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del condominio o junta de vecinos"}),
+            "comuna": forms.TextInput(attrs={"class": "form-control", "placeholder": "Comuna"}),
+            "telefono": forms.TextInput(attrs={"class": "form-control", "placeholder": "+56 9 ..."}),
+            "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Email (opcional)"}),
+            "mensaje": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Cuéntanos un poco de tu comunidad (opcional)"}),
+        }
+        labels = {
+            "nombre": "Nombre", "condominio": "Condominio o junta de vecinos", "comuna": "Comuna",
+            "telefono": "Teléfono", "email": "Email", "mensaje": "Mensaje",
         }
 
 

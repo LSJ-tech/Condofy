@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.utils import timezone
 from unfold.admin import ModelAdmin, TabularInline
 
-from .models import PLAN_CHOICES, CodigoInvitacion, Condominio, Membresia, Torre, Unidad
+from .models import PLAN_CHOICES, CodigoInvitacion, Condominio, Membresia, SolicitudAcceso, Torre, Unidad
 
 # Unidad/Torre/Membresia son datos operativos de cada condominio -- se
 # registran acá porque, a diferencia de PataAgenda, no hay un panel interno
@@ -91,3 +91,16 @@ class CodigoInvitacionAdmin(ModelAdmin):
     @admin.display(description="Usado", boolean=True)
     def usado_display(self, obj):
         return obj.usado
+
+
+@admin.action(description="Marcar como atendido")
+def marcar_atendido(modeladmin, request, queryset):
+    queryset.update(atendido=True)
+
+
+@admin.register(SolicitudAcceso)
+class SolicitudAccesoAdmin(ModelAdmin):
+    list_display = ["condominio", "nombre", "comuna", "telefono", "atendido", "fecha_creacion"]
+    list_filter = ["atendido", "comuna"]
+    search_fields = ["nombre", "condominio", "telefono", "email"]
+    actions = [marcar_atendido]
