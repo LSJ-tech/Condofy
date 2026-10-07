@@ -111,7 +111,7 @@ class Unidad(models.Model):
     class Meta:
         ordering = ["numero"]
         constraints = [
-            models.UniqueConstraint(fields=["condominio", "numero"], name="unidad_numero_unico_por_condominio"),
+            models.UniqueConstraint(fields=["condominio", "torre", "numero"], name="unidad_numero_unico_por_torre"),
         ]
 
     def __str__(self):
