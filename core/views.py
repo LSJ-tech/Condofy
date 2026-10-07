@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
@@ -13,7 +12,7 @@ from django.views.generic import CreateView, FormView, ListView, TemplateView, U
 
 from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
-from .models import PLAN_LIMITE_UNIDADES, Condominio, Membresia, Torre, Unidad
+from .models import Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
 DIAS_PRUEBA_GRATIS = 15
@@ -99,8 +98,6 @@ class InicioView(TemplateView):
             context["condominio"] = self.condominio
         else:
             context["dias_prueba_gratis"] = DIAS_PRUEBA_GRATIS
-            context["limite_unidades_free"] = PLAN_LIMITE_UNIDADES["free"]
-            context["precio_premium"] = settings.PRECIOS_PLAN["premium"]
         return context
 
 

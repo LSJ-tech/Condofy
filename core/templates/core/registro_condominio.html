@@ -1,21 +1,29 @@
 {% extends "core/base.html" %}
+{% load static %}
 {% block titulo %}Registra tu condominio{% endblock %}
 {% block contenido %}
 <div class="row justify-content-center">
     <div class="col-md-7">
-        <h1 class="h4 mb-3">Registra tu condominio o junta de vecinos</h1>
-        <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                {{ field.errors }}
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="{% static 'core/logo.svg' %}" width="48" height="48" alt="" class="mb-2">
+                    <h1 class="h4 mb-0">Registra tu condominio o junta de vecinos</h1>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
+                </form>
             </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
