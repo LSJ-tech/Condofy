@@ -266,11 +266,20 @@
             margin-bottom: 0.2rem;
         }
         .mockup-sidebar .item.activo { background: rgba(255,255,255,0.15); opacity: 1; font-weight: 600; }
-        .mockup-content { flex-grow: 1; padding: 1.25rem; background: #F8FAFC; text-align: left; }
+        .mockup-content { flex-grow: 1; min-width: 0; padding: 1.25rem; background: #F8FAFC; text-align: left; }
         .mockup-card { background: #fff; border-radius: 0.75rem; padding: 1rem; border: 1px solid #E5E7EB; margin-bottom: 0.9rem; }
         .mockup-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; }
         .mockup-aviso { font-size: 0.78rem; border-bottom: 1px solid #F1F5F9; padding: 0.45rem 0; }
         .mockup-aviso:last-child { border-bottom: none; }
+
+        @media (max-width: 575.98px) {
+            .hero { min-height: auto; padding-top: 6.5rem; padding-bottom: 2.5rem; }
+            .stat-strip-item { border-left: none; border-top: 1px solid rgba(255,255,255,0.25); padding-left: 0; padding-top: 0.75rem; margin-top: 0.75rem; }
+            .stat-strip-item:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+            .mockup-sidebar { width: 56px; padding: 1rem 0.4rem; }
+            .mockup-sidebar .item span { display: none; }
+            .mockup-sidebar .item { justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -311,15 +320,15 @@
             <p class="small mb-5" style="opacity: 0.85;">Pensado para condominios y juntas de vecinos en Chile. Acceso por invitación.</p>
 
             <div class="row justify-content-center mx-auto" style="max-width: 760px;">
-                <div class="col-4 stat-strip-item">
+                <div class="col-12 col-sm-4 stat-strip-item">
                     <div class="stat-numero"><i class="bi bi-lightning-charge-fill" style="color: #FCD34D;"></i> Al instante</div>
                     <div class="small" style="opacity: 0.85;">Botón de pánico con push a directiva/conserjería</div>
                 </div>
-                <div class="col-4 stat-strip-item">
+                <div class="col-12 col-sm-4 stat-strip-item">
                     <div class="stat-numero"><i class="bi bi-people-fill" style="color: #FDA4AF;"></i> 3 roles</div>
                     <div class="small" style="opacity: 0.85;">Directiva, conserjería y residentes, cada uno con su acceso</div>
                 </div>
-                <div class="col-4 stat-strip-item">
+                <div class="col-12 col-sm-4 stat-strip-item">
                     <div class="stat-numero"><i class="bi bi-shield-lock-fill" style="color: #6EE7B7;"></i> Aislado</div>
                     <div class="small" style="opacity: 0.85;">Cada condominio ve solo sus propios datos</div>
                 </div>
@@ -420,11 +429,11 @@
                 </div>
                 <div class="mockup-body">
                     <div class="mockup-sidebar">
-                        <div class="item activo"><i class="bi bi-house"></i> Inicio</div>
-                        <div class="item"><i class="bi bi-door-open"></i> Accesos</div>
-                        <div class="item"><i class="bi bi-people"></i> Miembros</div>
-                        <div class="item"><i class="bi bi-building"></i> Unidades</div>
-                        <div class="item"><i class="bi bi-cash-coin"></i> Gastos comunes</div>
+                        <div class="item activo"><i class="bi bi-house"></i> <span>Inicio</span></div>
+                        <div class="item"><i class="bi bi-door-open"></i> <span>Accesos</span></div>
+                        <div class="item"><i class="bi bi-people"></i> <span>Miembros</span></div>
+                        <div class="item"><i class="bi bi-building"></i> <span>Unidades</span></div>
+                        <div class="item"><i class="bi bi-cash-coin"></i> <span>Gastos comunes</span></div>
                     </div>
                     <div class="mockup-content">
                         <div class="mockup-card">
