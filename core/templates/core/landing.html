@@ -96,6 +96,12 @@
             justify-content: center;
             font-size: 1.5rem;
         }
+        .icono-rose { background: rgba(244, 63, 94, 0.1); color: #F43F5E; }
+        .icono-amber { background: rgba(245, 158, 11, 0.12); color: #D97706; }
+        .icono-emerald { background: rgba(16, 185, 129, 0.1); color: #059669; }
+        .numero-rose { color: rgba(244, 63, 94, 0.18); }
+        .numero-amber { color: rgba(245, 158, 11, 0.2); }
+        .numero-emerald { color: rgba(16, 185, 129, 0.18); }
         .card-feature {
             background: #fff;
             border-radius: 1rem;
@@ -133,6 +139,9 @@
             align-items: flex-start;
         }
         .dato-real .bi { font-size: 1.35rem; color: var(--condofy-primary); }
+        .dato-real .bi.text-rose { color: #F43F5E; }
+        .dato-real .bi.text-amber { color: #D97706; }
+        .dato-real .bi.text-emerald { color: #059669; }
 
         .pain-card {
             background: #fff;
@@ -288,15 +297,15 @@
 
             <div class="row justify-content-center mx-auto" style="max-width: 760px;">
                 <div class="col-4 stat-strip-item">
-                    <div class="stat-numero"><i class="bi bi-lightning-charge-fill"></i> Al instante</div>
+                    <div class="stat-numero"><i class="bi bi-lightning-charge-fill" style="color: #FCD34D;"></i> Al instante</div>
                     <div class="small" style="opacity: 0.85;">Botón de pánico con push a directiva/conserjería</div>
                 </div>
                 <div class="col-4 stat-strip-item">
-                    <div class="stat-numero"><i class="bi bi-people-fill"></i> 3 roles</div>
+                    <div class="stat-numero"><i class="bi bi-people-fill" style="color: #FDA4AF;"></i> 3 roles</div>
                     <div class="small" style="opacity: 0.85;">Directiva, conserjería y residentes, cada uno con su acceso</div>
                 </div>
                 <div class="col-4 stat-strip-item">
-                    <div class="stat-numero"><i class="bi bi-shield-lock-fill"></i> Aislado</div>
+                    <div class="stat-numero"><i class="bi bi-shield-lock-fill" style="color: #6EE7B7;"></i> Aislado</div>
                     <div class="small" style="opacity: 0.85;">Cada condominio ve solo sus propios datos</div>
                 </div>
             </div>
@@ -356,16 +365,16 @@
             <div class="row g-4">
                 <div class="col-md-6 col-lg-3">
                     <div class="card-feature">
-                        <div class="numero-grande mb-2">01</div>
-                        <div class="icono-feature mb-3"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div class="numero-grande numero-rose mb-2">01</div>
+                        <div class="icono-feature icono-rose mb-3"><i class="bi bi-exclamation-triangle"></i></div>
                         <h3 class="h5 fw-semibold">Botón de pánico</h3>
                         <p class="text-muted mb-0">Un residente dispara la alerta y directiva/conserjería la recibe al instante con notificación push, sin depender de que alguien vea el WhatsApp a tiempo.</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-lg-3">
                     <div class="card-feature">
-                        <div class="numero-grande mb-2">02</div>
-                        <div class="icono-feature mb-3"><i class="bi bi-megaphone"></i></div>
+                        <div class="numero-grande numero-amber mb-2">02</div>
+                        <div class="icono-feature icono-amber mb-3"><i class="bi bi-megaphone"></i></div>
                         <h3 class="h5 fw-semibold">Avisos a todos los vecinos</h3>
                         <p class="text-muted mb-0">Directiva publica un aviso y todos los residentes lo ven en su panel, sin reenviar mensajes grupo por grupo.</p>
                     </div>
@@ -380,8 +389,8 @@
                 </div>
                 <div class="col-md-6 col-lg-3">
                     <div class="card-feature">
-                        <div class="numero-grande mb-2">04</div>
-                        <div class="icono-feature mb-3"><i class="bi bi-cash-coin"></i></div>
+                        <div class="numero-grande numero-emerald mb-2">04</div>
+                        <div class="icono-feature icono-emerald mb-3"><i class="bi bi-cash-coin"></i></div>
                         <h3 class="h5 fw-semibold">Gastos comunes claros</h3>
                         <p class="text-muted mb-0">El cargo se prorratea solo por unidad, cada residente ve su cuota pendiente y los datos para transferir, y directiva marca los pagos recibidos.</p>
                     </div>
@@ -399,21 +408,21 @@
                 <div class="col-lg-6">
                     <h2 class="fw-bold mb-4 section-title">Construido para la realidad de un condominio chileno</h2>
                     <div class="dato-real mb-4">
-                        <i class="bi bi-diagram-3"></i>
+                        <i class="bi bi-diagram-3 text-rose"></i>
                         <div>
                             <h3 class="h6 fw-semibold mb-1">Multi-torre real</h3>
                             <p class="text-muted mb-0">Torres y unidades propias, con coeficiente de copropiedad por unidad para prorratear gastos comunes de forma automática.</p>
                         </div>
                     </div>
                     <div class="dato-real mb-4">
-                        <i class="bi bi-person-badge"></i>
+                        <i class="bi bi-person-badge text-amber"></i>
                         <div>
                             <h3 class="h6 fw-semibold mb-1">Un acceso para cada rol</h3>
                             <p class="text-muted mb-0">Directiva administra, conserjería resuelve alertas y registra accesos, residentes solo ven lo suyo. Nadie ve más de lo que le corresponde.</p>
                         </div>
                     </div>
                     <div class="dato-real">
-                        <i class="bi bi-phone"></i>
+                        <i class="bi bi-phone text-emerald"></i>
                         <div>
                             <h3 class="h6 fw-semibold mb-1">Lista para la app de residentes</h3>
                             <p class="text-muted mb-0">El mismo panel ya expone una API documentada, pensada para que los residentes usen todo esto también desde el celular.</p>
