@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
@@ -11,8 +12,8 @@ from django.utils import timezone
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 
 from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, TorreForm, UnidadForm
-from .mixins import CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
-from .models import Condominio, Membresia, Torre, Unidad
+from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
+from .models import PLAN_LIMITE_UNIDADES, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
 DIAS_PRUEBA_GRATIS = 15
@@ -64,8 +65,43 @@ class RegistroCondominioView(FormView):
         return redirect("inicio")
 
 
-class InicioView(CondominioRequiredMixin, TemplateView):
-    template_name = "core/inicio.html"
+class InicioView(TemplateView):
+    """
+    La raíz del sitio hace dos trabajos distintos según quién la visite:
+    sin sesión, es la landing comercial; con sesión y condominio, es el
+    dashboard interno. No se puede resolver con CondominioRequiredMixin
+    porque ese mixin exige login antes de decidir nada.
+    """
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            self.template_name = "core/landing.html"
+            return super().get(request, *args, **kwargs)
+
+        membresia = getattr(request.user, "membresia", None)
+        if membresia is None:
+            if request.user.is_staff:
+                return redirect("admin:index")
+            messages.error(request, MENSAJE_SIN_CONDOMINIO)
+            return redirect("login")
+        if not membresia.condominio.puede_operar:
+            return redirect("suscripcion-vencida")
+
+        self.membresia = membresia
+        self.condominio = membresia.condominio
+        self.template_name = "core/inicio.html"
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if hasattr(self, "membresia"):
+            context["membresia"] = self.membresia
+            context["condominio"] = self.condominio
+        else:
+            context["dias_prueba_gratis"] = DIAS_PRUEBA_GRATIS
+            context["limite_unidades_free"] = PLAN_LIMITE_UNIDADES["free"]
+            context["precio_premium"] = settings.PRECIOS_PLAN["premium"]
+        return context
 
 
 class SuscripcionVencidaView(TemplateView):

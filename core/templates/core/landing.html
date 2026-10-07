@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ PLATFORM_NAME }}: administración de condominios y juntas de vecinos. Botón de pánico, avisos, accesos y gastos comunes en un solo lugar.">
+    <meta name="theme-color" content="#2563eb">
+    <title>{{ PLATFORM_NAME }} · Administración de condominios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: #fff;
+        }
+        .icono-feature {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            background: rgba(37, 99, 235, 0.12);
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .paso-numero {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: #2563eb;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-inline-flex align-items-center gap-2" href="{% url 'inicio' %}">
+                <i class="bi bi-shield-check"></i> {{ PLATFORM_NAME }}
+            </a>
+            <div>
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Iniciar sesión</a>
+                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-sm">Prueba gratis</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero py-5">
+        <div class="container py-5 text-center">
+            <h1 class="display-5 fw-bold mb-3">Administra tu condominio sin planillas sueltas ni grupos de WhatsApp perdidos</h1>
+            <p class="fs-5 mb-4 mx-auto" style="max-width: 640px;">
+                {{ PLATFORM_NAME }} junta botón de pánico, avisos, control de accesos y gastos comunes en un solo panel, para directiva, conserjería y residentes.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-lg px-4">Prueba {{ dias_prueba_gratis }} días Pro gratis</a>
+                <a href="#como-funciona" class="btn btn-outline-light btn-lg px-4">Ver cómo funciona</a>
+            </div>
+            <p class="small mt-3 mb-0">Sin tarjeta de crédito. Tu condominio queda listo en minutos.</p>
+        </div>
+    </header>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Todo lo que necesita tu comunidad</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="icono-feature mb-3"><i class="bi bi-exclamation-triangle"></i></div>
+                    <h3 class="h5 fw-semibold">Botón de pánico</h3>
+                    <p class="text-muted">Un residente dispara la alerta y directiva/conserjería la recibe al instante con notificación push, sin depender de que alguien vea el WhatsApp a tiempo.</p>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="icono-feature mb-3"><i class="bi bi-megaphone"></i></div>
+                    <h3 class="h5 fw-semibold">Avisos a todos los vecinos</h3>
+                    <p class="text-muted">Directiva publica un aviso y todos los residentes lo ven en su panel, sin reenviar mensajes grupo por grupo.</p>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="icono-feature mb-3"><i class="bi bi-door-open"></i></div>
+                    <h3 class="h5 fw-semibold">Registro de accesos</h3>
+                    <p class="text-muted">Conserjería deja registrado quién entra y sale, con historial ordenado por unidad en vez de un cuaderno en portería.</p>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="icono-feature mb-3"><i class="bi bi-cash-coin"></i></div>
+                    <h3 class="h5 fw-semibold">Gastos comunes claros</h3>
+                    <p class="text-muted">El cargo se prorratea solo por unidad, cada residente ve su cuota pendiente y los datos para transferir, y directiva marca los pagos recibidos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="como-funciona" class="py-5 bg-white">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Cómo funciona</h2>
+            <div class="row g-4 justify-content-center" style="max-width: 900px; margin: 0 auto;">
+                <div class="col-md-4 d-flex gap-3">
+                    <div class="paso-numero">1</div>
+                    <div>
+                        <h3 class="h6 fw-semibold">Crea tu condominio</h3>
+                        <p class="text-muted small">Regístrate como directiva y carga torres y unidades. Sin instalar nada.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex gap-3">
+                    <div class="paso-numero">2</div>
+                    <div>
+                        <h3 class="h6 fw-semibold">Suma a conserjería y residentes</h3>
+                        <p class="text-muted small">Cada cuenta se crea desde el panel con una contraseña temporal, lista para entregar.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex gap-3">
+                    <div class="paso-numero">3</div>
+                    <div>
+                        <h3 class="h6 fw-semibold">Usa el día a día</h3>
+                        <p class="text-muted small">Alertas, avisos, accesos y gastos comunes quedan ordenados en un solo lugar para toda la comunidad.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container text-center">
+            <h2 class="h4 fw-bold mb-2">Elige el plan que necesitas</h2>
+            <p class="text-muted mb-4">{{ dias_prueba_gratis }} días Pro gratis, con todas las funciones activas, para probarlo con tu comunidad real</p>
+            <div class="card mx-auto" style="max-width: 640px;">
+                <div class="table-responsive">
+                    <table class="table align-middle text-center mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-start" style="width: 42%">&nbsp;</th>
+                                <th scope="col">Gratis</th>
+                                <th scope="col">Pro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row" class="text-start fw-normal">Precio</th>
+                                <td class="fw-bold">$0</td>
+                                <td class="fw-bold">${{ precio_premium }}<small class="text-muted fw-normal">/mes</small></td>
+                            </tr>
+                            <tr>
+                                <th scope="row" class="text-start fw-normal">Unidades</th>
+                                <td>Hasta {{ limite_unidades_free }}</td>
+                                <td>Ilimitadas</td>
+                            </tr>
+                            <tr>
+                                <th scope="row" class="text-start fw-normal">Botón de pánico y avisos</th>
+                                <td><i class="bi bi-check-lg text-success"></i></td>
+                                <td><i class="bi bi-check-lg text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <th scope="row" class="text-start fw-normal">Accesos y gastos comunes</th>
+                                <td><i class="bi bi-check-lg text-success"></i></td>
+                                <td><i class="bi bi-check-lg text-success"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <a href="{% url 'registro-condominio' %}" class="btn btn-primary btn-lg mt-4">Crear mi condominio gratis</a>
+        </div>
+    </section>
+
+    <footer class="py-4 border-top text-center text-muted small">
+        <div class="container">
+            &copy; {% now "Y" %} {{ PLATFORM_NAME }}. Administración de condominios y juntas de vecinos.
+            &middot; <a href="{% url 'login' %}" class="text-muted">Iniciar sesión</a>
+            &middot; Hecho por <a href="https://devquad.cl/" target="_blank" rel="noopener" class="text-muted">DevQuad</a>
+        </div>
+    </footer>
+</body>
+</html>
