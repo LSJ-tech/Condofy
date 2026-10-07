@@ -21,7 +21,7 @@ services:
           name: condofy-db
           property: connectionString
       # Configurar antes de aceptar clientes reales (ver README):
-      # EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL
+      # RESEND_API_KEY, DEFAULT_FROM_EMAIL (sin RESEND_API_KEY los correos solo se imprimen en logs)
       # MERCADOPAGO_ACCESS_TOKEN (sin ella no aparece el botón de pago en línea)
 
 databases:

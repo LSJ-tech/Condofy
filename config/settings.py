@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     # lo exige el propio paquete.
     'core',
     'unfold',
+    'anymail',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -139,27 +140,18 @@ MESSAGE_TAGS = {
 }
 
 
-# Email -- sin EMAIL_HOST (desarrollo), los correos se imprimen en la consola.
+# Email -- se manda por la API HTTP de Resend (vía django-anymail), no por SMTP:
+# Render bloquea el tráfico saliente a los puertos SMTP (25/465/587) en
+# servicios del plan free -- la conexión se queda colgada contra el firewall
+# hasta hacer timeout, lo que puede tirar abajo el worker de gunicorn a mitad
+# de una petición (mismo problema ya resuelto así en Clínica Dental El Mirador).
+# Sin RESEND_API_KEY (desarrollo), los correos se imprimen en la consola.
 
-if os.environ.get('EMAIL_HOST'):
-    MAILERS = {
-        'default': {
-            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
-            'OPTIONS': {
-                'host': os.environ['EMAIL_HOST'],
-                'port': int(os.environ.get('EMAIL_PORT', 587)),
-                'username': os.environ.get('EMAIL_HOST_USER', ''),
-                'password': os.environ.get('EMAIL_HOST_PASSWORD', ''),
-                'use_tls': os.environ.get('EMAIL_USE_TLS', 'True') == 'True',
-            },
-        },
-    }
+if os.environ.get('RESEND_API_KEY'):
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {'RESEND_API_KEY': os.environ['RESEND_API_KEY']}
 else:
-    MAILERS = {
-        'default': {
-            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-        },
-    }
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@condofy.local')
 
