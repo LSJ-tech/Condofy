@@ -155,6 +155,98 @@
             border-radius: 1.25rem;
         }
         section > .container > h2, section .section-title { letter-spacing: -0.01em; }
+
+        /* Animación de entrada al hacer scroll */
+        .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* Insignia flotante sobre la foto del hero */
+        .hero-badge {
+            position: absolute;
+            right: 6%;
+            bottom: 14%;
+            background: #fff;
+            color: var(--condofy-ink);
+            border-radius: 1rem;
+            padding: 0.85rem 1.1rem;
+            box-shadow: 0 20px 40px rgba(30, 27, 75, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            max-width: 260px;
+            animation: flotar 4s ease-in-out infinite;
+        }
+        .hero-badge .bi { font-size: 1.4rem; color: #16a34a; }
+        @keyframes flotar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @media (max-width: 991px) { .hero-badge { display: none; } }
+
+        /* Sección oscura con blobs decorativos, para el mockup del producto */
+        .seccion-producto {
+            background: linear-gradient(180deg, #0F0E2E 0%, var(--condofy-primary-darker) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .seccion-producto::before, .seccion-producto::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+        }
+        .seccion-producto::before { width: 420px; height: 420px; background: #818CF8; top: -120px; left: -100px; }
+        .seccion-producto::after { width: 380px; height: 380px; background: var(--condofy-accent); bottom: -140px; right: -80px; }
+        .seccion-producto .container { position: relative; z-index: 1; }
+
+        /* Mockup del panel real, dentro de un marco de navegador */
+        .mockup-browser {
+            background: #fff;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+            transform: perspective(1200px) rotateX(2deg);
+        }
+        .mockup-topbar {
+            background: #E5E7EB;
+            padding: 0.6rem 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .mockup-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
+        .mockup-urlbar {
+            margin-left: 0.75rem;
+            background: #fff;
+            border-radius: 0.4rem;
+            padding: 0.15rem 0.75rem;
+            font-size: 0.7rem;
+            color: #6b7280;
+            flex-grow: 1;
+            max-width: 260px;
+        }
+        .mockup-body { display: flex; min-height: 360px; }
+        .mockup-sidebar {
+            width: 170px;
+            background: var(--condofy-primary-darker);
+            color: #fff;
+            padding: 1rem 0.75rem;
+            flex-shrink: 0;
+        }
+        .mockup-sidebar .item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            opacity: 0.75;
+            margin-bottom: 0.2rem;
+        }
+        .mockup-sidebar .item.activo { background: rgba(255,255,255,0.15); opacity: 1; font-weight: 600; }
+        .mockup-content { flex-grow: 1; padding: 1.25rem; background: #F8FAFC; text-align: left; }
+        .mockup-card { background: #fff; border-radius: 0.75rem; padding: 1rem; border: 1px solid #E5E7EB; margin-bottom: 0.9rem; }
+        .mockup-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .mockup-aviso { font-size: 0.78rem; border-bottom: 1px solid #F1F5F9; padding: 0.45rem 0; }
+        .mockup-aviso:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -209,9 +301,55 @@
                 </div>
             </div>
         </div>
+        <div class="hero-badge">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>
+                <div class="fw-bold small">Alerta resuelta</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Conserjería · hace 12 seg</div>
+            </div>
+        </div>
     </header>
 
-    <section id="caracteristicas" class="py-5" style="margin-top: 2rem; scroll-margin-top: 5rem;">
+    <section class="seccion-producto py-5 reveal">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="eyebrow mb-3" style="color: #fff;"><i class="bi bi-display"></i> El producto real, no una maqueta</span>
+                <h2 class="fw-bold mt-3 mb-2" style="color: #fff;">Así se ve tu panel</h2>
+                <p class="mx-auto" style="max-width: 520px; color: rgba(255,255,255,0.75);">El mismo panel que usa directiva y conserjería hoy — contenido de ejemplo, para que veas cómo se organiza.</p>
+            </div>
+            <div class="mockup-browser mx-auto" style="max-width: 760px;">
+                <div class="mockup-topbar">
+                    <span class="mockup-dot" style="background:#FF5F57;"></span>
+                    <span class="mockup-dot" style="background:#FEBC2E;"></span>
+                    <span class="mockup-dot" style="background:#28C840;"></span>
+                    <div class="mockup-urlbar"><i class="bi bi-lock-fill" style="font-size: 0.65rem;"></i> condofy.devquad.cl</div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-sidebar">
+                        <div class="item activo"><i class="bi bi-house"></i> Inicio</div>
+                        <div class="item"><i class="bi bi-door-open"></i> Accesos</div>
+                        <div class="item"><i class="bi bi-people"></i> Miembros</div>
+                        <div class="item"><i class="bi bi-building"></i> Unidades</div>
+                        <div class="item"><i class="bi bi-cash-coin"></i> Gastos comunes</div>
+                    </div>
+                    <div class="mockup-content">
+                        <div class="mockup-card">
+                            <h4 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Alertas activas</h4>
+                            <div class="text-success small"><i class="bi bi-check-circle"></i> Sin alertas activas.</div>
+                        </div>
+                        <div class="mockup-card mb-0">
+                            <h4>Últimos avisos</h4>
+                            <div class="mockup-aviso"><strong>Corte de agua programado</strong><br>Mañana 10:00–14:00 por mantención.</div>
+                            <div class="mockup-aviso"><strong>Junta de vecinos</strong><br>Este viernes 19:00, salón de eventos.</div>
+                            <div class="mockup-aviso"><strong>Fumigación áreas comunes</strong><br>Lunes, acceso restringido hasta las 11:00.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="caracteristicas" class="py-5 reveal" style="margin-top: 2rem; scroll-margin-top: 5rem;">
         <div class="container">
             <h2 class="text-center fw-bold mb-2 section-title">Todo lo que necesita tu comunidad</h2>
             <p class="text-center text-muted mb-5 mx-auto" style="max-width: 560px;">Un solo panel para directiva y conserjería, y un acceso simple para cada residente.</p>
@@ -252,7 +390,7 @@
         </div>
     </section>
 
-    <section class="py-5 bg-white">
+    <section class="py-5 bg-white reveal">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
@@ -286,7 +424,7 @@
         </div>
     </section>
 
-    <section class="py-5">
+    <section class="py-5 reveal">
         <div class="container">
             <h2 class="text-center fw-bold mb-5 section-title">¿Te pasa alguna de estas?</h2>
             <div class="row g-4">
@@ -318,7 +456,7 @@
         </div>
     </section>
 
-    <section id="como-funciona" class="py-5 bg-white" style="scroll-margin-top: 5rem;">
+    <section id="como-funciona" class="py-5 bg-white reveal" style="scroll-margin-top: 5rem;">
         <div class="container">
             <h2 class="text-center fw-bold mb-5 section-title">Cómo funciona</h2>
             <div class="row g-4 justify-content-center" style="max-width: 900px; margin: 0 auto;">
@@ -347,7 +485,7 @@
         </div>
     </section>
 
-    <section id="faq" class="py-5 bg-white" style="scroll-margin-top: 5rem;">
+    <section id="faq" class="py-5 bg-white reveal" style="scroll-margin-top: 5rem;">
         <div class="container" style="max-width: 760px;">
             <h2 class="text-center fw-bold mb-5 section-title">Preguntas frecuentes</h2>
             <div class="accordion" id="acordeonFaq">
@@ -403,7 +541,7 @@
         </div>
     </section>
 
-    <section class="py-5">
+    <section class="py-5 reveal">
         <div class="container">
             <div class="cta-final text-center p-5">
                 <h2 class="h3 fw-bold mb-2">Prueba {{ PLATFORM_NAME }} con tu comunidad real</h2>
@@ -451,5 +589,16 @@
             </div>
         </div>
     </footer>
+    <script>
+        var observador = new IntersectionObserver(function (entradas) {
+            entradas.forEach(function (entrada) {
+                if (entrada.isIntersecting) {
+                    entrada.target.classList.add("visible");
+                    observador.unobserve(entrada.target);
+                }
+            });
+        }, { threshold: 0.12 });
+        document.querySelectorAll(".reveal").forEach(function (el) { observador.observe(el); });
+    </script>
 </body>
 </html>
