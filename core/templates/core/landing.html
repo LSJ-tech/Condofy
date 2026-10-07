@@ -164,9 +164,19 @@
                 <img src="{% static 'core/logo.svg' %}" width="28" height="28" alt="">
                 {{ PLATFORM_NAME }}
             </a>
-            <div>
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Iniciar sesión</a>
-                <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-sm">Prueba gratis</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLanding">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarLanding">
+                <ul class="navbar-nav me-auto ms-4">
+                    <li class="nav-item"><a class="nav-link" href="#caracteristicas">Características</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#como-funciona">Cómo funciona</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">Preguntas frecuentes</a></li>
+                </ul>
+                <div class="d-flex">
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Iniciar sesión</a>
+                    <a href="{% url 'registro-condominio' %}" class="btn btn-light btn-sm">Prueba gratis</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -201,7 +211,7 @@
         </div>
     </header>
 
-    <section class="py-5" style="margin-top: 2rem;">
+    <section id="caracteristicas" class="py-5" style="margin-top: 2rem; scroll-margin-top: 5rem;">
         <div class="container">
             <h2 class="text-center fw-bold mb-2 section-title">Todo lo que necesita tu comunidad</h2>
             <p class="text-center text-muted mb-5 mx-auto" style="max-width: 560px;">Un solo panel para directiva y conserjería, y un acceso simple para cada residente.</p>
@@ -308,7 +318,7 @@
         </div>
     </section>
 
-    <section id="como-funciona" class="py-5 bg-white">
+    <section id="como-funciona" class="py-5 bg-white" style="scroll-margin-top: 5rem;">
         <div class="container">
             <h2 class="text-center fw-bold mb-5 section-title">Cómo funciona</h2>
             <div class="row g-4 justify-content-center" style="max-width: 900px; margin: 0 auto;">
@@ -337,6 +347,62 @@
         </div>
     </section>
 
+    <section id="faq" class="py-5 bg-white" style="scroll-margin-top: 5rem;">
+        <div class="container" style="max-width: 760px;">
+            <h2 class="text-center fw-bold mb-5 section-title">Preguntas frecuentes</h2>
+            <div class="accordion" id="acordeonFaq">
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">¿Qué incluye el plan de prueba?</button>
+                    </h3>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
+                        <div class="accordion-body text-muted">{{ dias_prueba_gratis }} días con todas las funciones activas, sin tarjeta de crédito.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">¿Cómo pagan los residentes los gastos comunes?</button>
+                    </h3>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
+                        <div class="accordion-body text-muted">Por transferencia directa a la administración de tu condominio. {{ PLATFORM_NAME }} no procesa ese pago: muestra los datos de transferencia a cada residente y directiva marca la cuota como pagada al recibirla.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">¿Mis datos están separados de otros condominios?</button>
+                    </h3>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
+                        <div class="accordion-body text-muted">Sí. Cada condominio es completamente independiente: nadie fuera del tuyo puede ver tus alertas, avisos, accesos ni gastos comunes.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">¿Necesito instalar una aplicación?</button>
+                    </h3>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
+                        <div class="accordion-body text-muted">No por ahora: se usa desde el navegador del celular o computador, sin instalar nada. Una app móvil para residentes está en desarrollo.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">¿Cómo consigo un código de invitación?</button>
+                    </h3>
+                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
+                        <div class="accordion-body text-muted">Pídeselo a quien te invitó a probar {{ PLATFORM_NAME }}, o escríbenos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a>.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">¿Cuánto cuesta {{ PLATFORM_NAME }}?</button>
+                    </h3>
+                    <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#acordeonFaq">
+                        <div class="accordion-body text-muted">Todavía no publicamos precios. Escríbenos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a> y te contamos los planes disponibles.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="py-5">
         <div class="container">
             <div class="cta-final text-center p-5">
@@ -347,15 +413,41 @@
         </div>
     </section>
 
-    <footer class="py-4 border-top text-center text-muted small">
+    <footer class="py-5 border-top text-muted">
         <div class="container">
-            &copy; {% now "Y" %} {{ PLATFORM_NAME }}. Administración de condominios y juntas de vecinos.
-            &middot; <a href="{% url 'login' %}" class="text-muted">Iniciar sesión</a>
-            &middot; Hecho por <a href="https://devquad.cl/" target="_blank" rel="noopener" class="text-muted">DevQuad</a>
-            <div class="mt-2" style="font-size: 0.7rem;">
-                Fotos: <a href="https://commons.wikimedia.org/wiki/File:DFC_0446_A_tall_beachfront_apartment_tower_rising_above_a_tree-lined_shore_under_an_overcast_sky.jpg" target="_blank" rel="noopener" class="text-muted">PattayaPatrol</a>
-                y <a href="https://commons.wikimedia.org/wiki/File:Full_height_view_of_Cosmopolitan_on_the_Park,_Pearl_District,_Portland,_Oregon_(2026).jpg" target="_blank" rel="noopener" class="text-muted">PortlandAppraisalBlog</a>,
-                Wikimedia Commons (CC BY-SA 4.0)
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <div class="d-inline-flex align-items-center gap-2 fw-bold text-dark mb-2">
+                        <img src="{% static 'core/logo.svg' %}" width="24" height="24" alt="">
+                        {{ PLATFORM_NAME }}
+                    </div>
+                    <p class="small mb-0">Administración de condominios y juntas de vecinos en Chile.</p>
+                </div>
+                <div class="col-6 col-md-3">
+                    <h3 class="h6 text-dark">Producto</h3>
+                    <ul class="list-unstyled small">
+                        <li><a href="#caracteristicas" class="text-muted">Características</a></li>
+                        <li><a href="#como-funciona" class="text-muted">Cómo funciona</a></li>
+                        <li><a href="#faq" class="text-muted">Preguntas frecuentes</a></li>
+                        <li><a href="{% url 'login' %}" class="text-muted">Iniciar sesión</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h3 class="h6 text-dark">Contacto</h3>
+                    <ul class="list-unstyled small">
+                        <li><a href="mailto:contacto@devquad.cl" class="text-muted">contacto@devquad.cl</a></li>
+                        <li>Hecho por <a href="https://devquad.cl/" target="_blank" rel="noopener" class="text-muted">DevQuad</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="small text-center">
+                &copy; {% now "Y" %} {{ PLATFORM_NAME }}.
+                <div class="mt-2" style="font-size: 0.7rem;">
+                    Fotos: <a href="https://commons.wikimedia.org/wiki/File:DFC_0446_A_tall_beachfront_apartment_tower_rising_above_a_tree-lined_shore_under_an_overcast_sky.jpg" target="_blank" rel="noopener" class="text-muted">PattayaPatrol</a>
+                    y <a href="https://commons.wikimedia.org/wiki/File:Full_height_view_of_Cosmopolitan_on_the_Park,_Pearl_District,_Portland,_Oregon_(2026).jpg" target="_blank" rel="noopener" class="text-muted">PortlandAppraisalBlog</a>,
+                    Wikimedia Commons (CC BY-SA 4.0)
+                </div>
             </div>
         </div>
     </footer>
