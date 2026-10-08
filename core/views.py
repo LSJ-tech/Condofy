@@ -1,5 +1,8 @@
+import uuid
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
 
+import qrcode
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
@@ -10,15 +13,15 @@ from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models.functions import Length
 from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.html import escape
 from django.views.decorators.http import require_GET
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 from django.views.generic.base import View
 
-from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, SolicitudAccesoForm, TorreForm, UnidadForm
+from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
 from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
@@ -163,6 +166,61 @@ class RegistroCondominioView(FormView):
             f"para volver a entrar. Tienes {DIAS_PRUEBA_GRATIS} días Pro gratis.",
         )
         return redirect("inicio")
+
+
+class RegistroResidenteView(FormView):
+    """Autoregistro público de residente -- el link/QR trae el token del condominio, el residente elige su depto."""
+
+    template_name = "core/registro_residente.html"
+    form_class = RegistroResidenteForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.condominio = get_object_or_404(Condominio, token_registro_residentes=kwargs["token"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["condominio"] = self.condominio
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["condominio"] = self.condominio
+        return context
+
+    def form_valid(self, form):
+        datos = form.cleaned_data
+        username = generar_username(datos["nombre"], datos["apellido"])
+        user = User.objects.create_user(
+            username=username, password=datos["password1"],
+            first_name=datos["nombre"], last_name=datos["apellido"],
+        )
+        Membresia.objects.create(user=user, condominio=self.condominio, unidad=datos["unidad"], rol="residente")
+        login(self.request, user)
+        messages.success(
+            self.request,
+            f"¡Listo! Tu usuario es «{username}» — anótalo, lo necesitas para volver a entrar.",
+        )
+        return redirect("inicio")
+
+
+class QRRegistroResidentesView(SoloDirectivaMixin, CondominioRequiredMixin, View):
+    def get(self, request):
+        url = request.build_absolute_uri(
+            reverse("registro-residente", kwargs={"token": self.condominio.token_registro_residentes})
+        )
+        imagen = qrcode.make(url)
+        buffer = BytesIO()
+        imagen.save(buffer, format="PNG")
+        return HttpResponse(buffer.getvalue(), content_type="image/png")
+
+
+class RegenerarTokenResidentesView(SoloDirectivaMixin, CondominioRequiredMixin, View):
+    def post(self, request):
+        self.condominio.token_registro_residentes = uuid.uuid4()
+        self.condominio.save(update_fields=["token_registro_residentes"])
+        messages.success(request, "Se generó un link nuevo — el anterior ya no sirve para registrarse.")
+        return redirect("mi-condominio")
 
 
 class InicioView(TemplateView):

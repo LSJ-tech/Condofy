@@ -1,0 +1,31 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block titulo %}Únete a {{ condominio.nombre }}{% endblock %}
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <img src="{% static 'core/logo.svg' %}" width="48" height="48" alt="" class="mb-2">
+                    <h1 class="h4 mb-0">Únete a {{ condominio.nombre }}</h1>
+                    <p class="text-muted small mb-0">Crea tu cuenta de residente</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100">Crear mi cuenta</button>
+                </form>
+                <p class="text-muted small text-center mt-3 mb-0">¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

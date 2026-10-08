@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -62,6 +64,10 @@ class Condominio(models.Model):
         blank=True,
         help_text="Banco, tipo de cuenta, número, RUT y email de la administración — se muestra a los "
         "residentes para que paguen los gastos comunes por transferencia (no es un pago online).",
+    )
+    token_registro_residentes = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False,
+        help_text="Identifica el link/QR público de autoregistro de residentes de este condominio.",
     )
 
     class Meta:

@@ -90,6 +90,26 @@ class CrearMiembroForm(forms.Form):
         return cleaned
 
 
+class RegistroResidenteForm(ConfirmacionContrasenaMixin):
+    """Autoregistro público de un residente -- elige su propio depto de una lista, vía el link/QR del condominio."""
+
+    field_order = ["nombre", "apellido", "unidad", "password1", "password2"]
+
+    nombre = forms.CharField(max_length=150, label="Tu nombre", widget=forms.TextInput(attrs={"class": "form-control"}))
+    apellido = forms.CharField(max_length=150, label="Tu apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
+    unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), label="Tu departamento", widget=forms.Select(attrs={"class": "form-select"}))
+
+    def __init__(self, *args, condominio=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if condominio is not None:
+            self.fields["unidad"].queryset = (
+                Unidad.objects.filter(condominio=condominio)
+                .select_related("torre")
+                .annotate(_torre_len=Length("torre__nombre"), _num_len=Length("numero"))
+                .order_by("_torre_len", "torre__nombre", "_num_len", "numero")
+            )
+
+
 class CondominioForm(forms.ModelForm):
     class Meta:
         model = Condominio
