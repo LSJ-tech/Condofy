@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{ PLATFORM_NAME }}: administración de condominios y juntas de vecinos. Botón de pánico, avisos, accesos y gastos comunes en un solo lugar.">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#1A2E40">
     <link rel="icon" type="image/svg+xml" href="{% static 'core/logo.svg' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/favicon-32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'core/favicon-16.png' %}">
@@ -60,14 +60,15 @@
     </script>
     <style>
         :root {
-            --condofy-primary: #4F46E5;
-            --condofy-primary-dark: #4338CA;
-            --condofy-primary-darker: #312E81;
-            --condofy-accent: #F59E0B;
-            --condofy-ink: #1E1B4B;
+            --condofy-primary: #1A2E40;
+            --condofy-primary-dark: #24405A;
+            --condofy-primary-darker: #0F1D29;
+            --condofy-secondary: #708090;
+            --condofy-accent: #E07A5F;
+            --condofy-ink: #1A2E40;
         }
         body {
-            background: #F8FAFC;
+            background: #F8F9FA;
             font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
             color: var(--condofy-ink);
         }
@@ -103,7 +104,7 @@
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(49, 30, 129, 0.94) 0%, rgba(79, 70, 229, 0.88) 55%, rgba(67, 56, 202, 0.8) 100%);
+            background: linear-gradient(135deg, rgba(15, 29, 41, 0.94) 0%, rgba(26, 46, 64, 0.88) 55%, rgba(36, 64, 90, 0.82) 100%);
         }
         .hero > .container { position: relative; z-index: 1; }
         .eyebrow {
@@ -127,14 +128,14 @@
         .numero-grande {
             font-size: 3rem;
             font-weight: 800;
-            color: rgba(79, 70, 229, 0.15);
+            color: rgba(26, 46, 64, 0.15);
             line-height: 1;
         }
         .icono-feature {
             width: 3.25rem;
             height: 3.25rem;
             border-radius: 1rem;
-            background: rgba(79, 70, 229, 0.1);
+            background: rgba(26, 46, 64, 0.1);
             color: var(--condofy-primary);
             display: flex;
             align-items: center;
@@ -236,7 +237,7 @@
 
         /* Sección oscura con blobs decorativos, para el mockup del producto */
         .seccion-producto {
-            background: linear-gradient(180deg, #0F0E2E 0%, var(--condofy-primary-darker) 100%);
+            background: linear-gradient(180deg, #081219 0%, var(--condofy-primary-darker) 100%);
             position: relative;
             overflow: hidden;
         }
@@ -247,7 +248,7 @@
             filter: blur(80px);
             opacity: 0.35;
         }
-        .seccion-producto::before { width: 420px; height: 420px; background: #818CF8; top: -120px; left: -100px; }
+        .seccion-producto::before { width: 420px; height: 420px; background: var(--condofy-secondary); top: -120px; left: -100px; }
         .seccion-producto::after { width: 380px; height: 380px; background: var(--condofy-accent); bottom: -140px; right: -80px; }
         .seccion-producto .container { position: relative; z-index: 1; }
 
@@ -388,7 +389,7 @@
         <div class="container">
             <div class="row g-5 align-items-center">
                 <div class="col-lg-5">
-                    <span class="eyebrow mb-3" style="background: rgba(79,70,229,0.1); border-color: rgba(79,70,229,0.2); color: var(--condofy-primary);"><i class="bi bi-chat-dots"></i> Hablemos de tu comunidad</span>
+                    <span class="eyebrow mb-3" style="background: rgba(26,46,64,0.1); border-color: rgba(26,46,64,0.2); color: var(--condofy-primary);"><i class="bi bi-chat-dots"></i> Hablemos de tu comunidad</span>
                     <h2 class="fw-bold mt-3 mb-3 section-title">Cuéntanos de tu condominio</h2>
                     <p class="text-muted mb-4">Llena el formulario y te contactamos para coordinar el acceso con tu directiva. Sin compromiso.</p>
                     <div class="dato-real mb-3">
