@@ -15,64 +15,71 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            condominio, creado = Condominio.objects.get_or_create(
-                nombre="Condominio EMPART",
-                defaults={
-                    "direccion": "Porvenir 1602, Playa Ancha",
-                    "comuna": "Valparaíso",
-                    "region": "valparaiso",
-                    "plan": "premium",
-                },
-            )
-            if creado:
-                self.stdout.write(self.style.SUCCESS(f"Condominio creado: {condominio}"))
-            else:
-                self.stdout.write(f"Condominio ya existía: {condominio}")
+            condominio = self._crear_condominio()
+            self._crear_torres_y_unidades(condominio)
+            self._crear_residente_ejemplo(condominio)
+            self._crear_directiva(condominio)
 
-            total_creadas = 0
-            for nombre_torre in TORRES:
-                torre, _ = Torre.objects.get_or_create(condominio=condominio, nombre=nombre_torre)
-                for piso in PISOS:
-                    for posicion in NUMEROS_POR_PISO:
-                        numero = f"{piso}{posicion}"
-                        _, creada = Unidad.objects.get_or_create(
-                            condominio=condominio,
-                            torre=torre,
-                            numero=numero,
-                        )
-                        if creada:
-                            total_creadas += 1
+    def _crear_condominio(self):
+        condominio, creado = Condominio.objects.get_or_create(
+            nombre="Condominio EMPART",
+            defaults={
+                "direccion": "Porvenir 1602, Playa Ancha",
+                "comuna": "Valparaíso",
+                "region": "valparaiso",
+                "plan": "premium",
+            },
+        )
+        if creado:
+            self.stdout.write(self.style.SUCCESS(f"Condominio creado: {condominio}"))
+        else:
+            self.stdout.write(f"Condominio ya existía: {condominio}")
+        return condominio
 
-            self.stdout.write(self.style.SUCCESS(f"{total_creadas} unidades nuevas creadas (total esperado: 300)."))
+    def _crear_torres_y_unidades(self, condominio):
+        total_creadas = 0
+        for nombre_torre in TORRES:
+            torre, _ = Torre.objects.get_or_create(condominio=condominio, nombre=nombre_torre)
+            for piso in PISOS:
+                for posicion in NUMEROS_POR_PISO:
+                    numero = f"{piso}{posicion}"
+                    _, creada = Unidad.objects.get_or_create(condominio=condominio, torre=torre, numero=numero)
+                    if creada:
+                        total_creadas += 1
+        self.stdout.write(self.style.SUCCESS(f"{total_creadas} unidades nuevas creadas (total esperado: 300)."))
 
-            torre_9 = Torre.objects.get(condominio=condominio, nombre="9")
-            unidad_54 = Unidad.objects.get(condominio=condominio, torre=torre_9, numero="54")
+    def _crear_residente_ejemplo(self, condominio):
+        torre_9 = Torre.objects.get(condominio=condominio, nombre="9")
+        unidad_54 = Unidad.objects.get(condominio=condominio, torre=torre_9, numero="54")
 
-            if Membresia.objects.filter(unidad=unidad_54).exists():
-                self.stdout.write("Ya existe un miembro asignado a Torre 9, depto 54 — no se crea otro.")
-            else:
-                username = generar_username("Logan", "Silva", "Jara")
-                password = generar_password_temporal()
-                user = User.objects.create_user(
-                    username=username, password=password,
-                    first_name="Logan", last_name="Silva Jara",
-                    email="logan.silva.jara@gmail.com",
-                )
-                Membresia.objects.create(user=user, condominio=condominio, unidad=unidad_54, rol="residente")
-                self.stdout.write(self.style.SUCCESS(
-                    f"Usuario residente creado para Torre 9, depto 54 — usuario «{username}», contraseña temporal «{password}»."
-                ))
+        if Membresia.objects.filter(unidad=unidad_54).exists():
+            self.stdout.write("Ya existe un miembro asignado a Torre 9, depto 54 — no se crea otro.")
+            return
 
-            if Membresia.objects.filter(condominio=condominio, rol="directiva").exists():
-                self.stdout.write("Ya existe una cuenta directiva para EMPART — no se crea otra.")
-            else:
-                username = generar_username("Administración", "EMPART")
-                password = generar_password_temporal()
-                user = User.objects.create_user(
-                    username=username, password=password,
-                    first_name="Administración", last_name="EMPART",
-                )
-                Membresia.objects.create(user=user, condominio=condominio, rol="directiva")
-                self.stdout.write(self.style.SUCCESS(
-                    f"Usuario directiva (administración) creado — usuario «{username}», contraseña temporal «{password}»."
-                ))
+        username = generar_username("Logan", "Silva", "Jara")
+        password = generar_password_temporal()
+        user = User.objects.create_user(
+            username=username, password=password,
+            first_name="Logan", last_name="Silva Jara",
+            email="logan.silva.jara@gmail.com",
+        )
+        Membresia.objects.create(user=user, condominio=condominio, unidad=unidad_54, rol="residente")
+        self.stdout.write(self.style.SUCCESS(
+            f"Usuario residente creado para Torre 9, depto 54 — usuario «{username}», contraseña temporal «{password}»."
+        ))
+
+    def _crear_directiva(self, condominio):
+        if Membresia.objects.filter(condominio=condominio, rol="directiva").exists():
+            self.stdout.write("Ya existe una cuenta directiva para EMPART — no se crea otra.")
+            return
+
+        username = generar_username("Administración", "EMPART")
+        password = generar_password_temporal()
+        user = User.objects.create_user(
+            username=username, password=password,
+            first_name="Administración", last_name="EMPART",
+        )
+        Membresia.objects.create(user=user, condominio=condominio, rol="directiva")
+        self.stdout.write(self.style.SUCCESS(
+            f"Usuario directiva (administración) creado — usuario «{username}», contraseña temporal «{password}»."
+        ))

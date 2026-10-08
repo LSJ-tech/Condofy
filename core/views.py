@@ -2,12 +2,16 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.core.validators import validate_email
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.utils.html import escape
+from django.views.decorators.http import require_GET
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 
 from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, SolicitudAccesoForm, TorreForm, UnidadForm
@@ -21,18 +25,21 @@ DIAS_PRUEBA_GRATIS = 15
 
 
 @staff_member_required
+@require_GET
 def probar_correo(request):
     """Diagnóstico manual: confirma que RESEND_API_KEY está bien configurada en el hosting."""
-    destino = request.GET.get("destino")
-    if not destino:
-        return HttpResponse("Agrega ?destino=tu@email.com a la URL.", status=400)
+    destino = request.GET.get("destino", "")
+    try:
+        validate_email(destino)
+    except ValidationError:
+        return HttpResponse("Agrega ?destino=tu@email.com (una dirección válida) a la URL.", status=400)
     send_mail(
         subject="Correo de prueba de Condofy",
         message="Si recibiste esto, el envío de correo (Resend) está funcionando correctamente.",
         from_email=None,
         recipient_list=[destino],
     )
-    return HttpResponse(f"Correo de prueba enviado a {destino}.")
+    return HttpResponse(f"Correo de prueba enviado a {escape(destino)}.")
 
 
 class SolicitarAccesoView(FormView):

@@ -13,14 +13,14 @@
                 <form method="post">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="form-label">Usuario</label>
+                        <label class="form-label" for="id_username">Usuario</label>
                         {{ form.username.errors }}
-                        <input type="text" name="username" class="form-control" autofocus required>
+                        <input type="text" id="id_username" name="username" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
+                        <label class="form-label" for="id_password">Contraseña</label>
                         {{ form.password.errors }}
-                        <input type="password" name="password" class="form-control" required>
+                        <input type="password" id="id_password" name="password" class="form-control" required>
                     </div>
                     {{ form.non_field_errors }}
                     <button type="submit" class="btn btn-primary w-100">Entrar</button>
