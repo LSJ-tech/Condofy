@@ -23,10 +23,6 @@ class GastoComun(models.Model):
     )
     fecha_emision = models.DateField(auto_now_add=True)
     fecha_vencimiento = models.DateField()
-    es_voluntario = models.BooleanField(
-        default=False,
-        help_text="Aporte voluntario (ej. recaudar para un proyecto puntual) -- cada unidad dona lo que quiera, no genera morosidad ni monto obligatorio.",
-    )
 
     class Meta:
         ordering = ["-fecha_emision"]
@@ -46,10 +42,7 @@ class GastoComun(models.Model):
         if not unidades or self.cuotas.exists():
             return
         cuotas = []
-        if self.es_voluntario:
-            for unidad in unidades:
-                cuotas.append(CuotaUnidad(gasto_comun=self, unidad=unidad, monto=0))
-        elif self.monto_por_unidad is not None:
+        if self.monto_por_unidad is not None:
             for unidad in unidades:
                 cuotas.append(CuotaUnidad(gasto_comun=self, unidad=unidad, monto=self.monto_por_unidad))
         else:

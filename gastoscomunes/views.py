@@ -1,8 +1,6 @@
 import calendar
 from datetime import date
 
-from django.contrib import messages
-from django.db.models import Count, Q, Sum
 from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -29,14 +27,9 @@ class GastoComunCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin,
     success_url = reverse_lazy("gastos-comunes-list")
 
     def form_valid(self, form):
-        modo = form.cleaned_data["modo"]
-        form.instance.es_voluntario = modo == "donacion"
-        if modo == "por_unidad":
+        if form.cleaned_data["modo"] == "por_unidad":
             num_unidades = self.condominio.unidades.count()
             form.instance.monto_total = form.cleaned_data["monto_por_unidad"] * num_unidades
-        elif modo == "donacion":
-            form.instance.monto_por_unidad = None
-            form.instance.monto_total = form.cleaned_data.get("monto_total") or 0
         else:
             form.instance.monto_por_unidad = None
 
@@ -65,35 +58,16 @@ class CuotaListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, Li
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        gasto = get_object_or_404(GastoComun, pk=self.kwargs["gasto_pk"], condominio=self.condominio)
-        context["gasto"] = gasto
+        context["gasto"] = get_object_or_404(GastoComun, pk=self.kwargs["gasto_pk"], condominio=self.condominio)
         context["gastos"] = GastoComun.objects.filter(condominio=self.condominio).order_by("-periodo")
         context["torres"] = Torre.objects.filter(condominio=self.condominio).annotate(_len=Length("nombre")).order_by("_len", "nombre")
         context["torre_seleccionada"] = self.request.GET.get("torre", "")
-        if gasto.es_voluntario:
-            agregados = CuotaUnidad.objects.filter(gasto_comun=gasto).aggregate(
-                recaudado=Sum("monto", filter=Q(estado="pagado")),
-                pagadas=Count("id", filter=Q(estado="pagado")),
-                total=Count("id"),
-            )
-            context["recaudado"] = agregados["recaudado"] or 0
-            context["cuotas_pagadas_count"] = agregados["pagadas"]
-            context["cuotas_total_count"] = agregados["total"]
         return context
 
 
 class MarcarCuotaPagadaView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, View):
     def post(self, request, pk):
         cuota = get_object_or_404(CuotaUnidad, pk=pk, gasto_comun__condominio=self.condominio)
-        if cuota.gasto_comun.es_voluntario:
-            try:
-                monto = int(request.POST.get("monto", ""))
-            except (TypeError, ValueError):
-                monto = 0
-            if monto <= 0:
-                messages.error(request, "Ingresa un monto válido para registrar el aporte.")
-                return redirect("gastos-comunes-cuotas", gasto_pk=cuota.gasto_comun_id)
-            cuota.monto = monto
         cuota.estado = "pagado"
         cuota.fecha_pago = timezone.localdate()
         cuota.save()
