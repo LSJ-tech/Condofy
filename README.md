@@ -42,6 +42,8 @@ python manage.py runserver
 
 Panel web: `http://127.0.0.1:8000/`. Documentación de la API: `http://127.0.0.1:8000/api/docs/`.
 
+Tests: `python manage.py test` (cubre permisos por rol, el gate de Términos/Privacidad, y donaciones/webhook de Mercado Pago).
+
 ## Estructura
 
 ```
