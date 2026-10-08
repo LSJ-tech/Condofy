@@ -55,6 +55,43 @@ def listar_condominios(request):
     return HttpResponse("\n".join(lineas) or "No hay condominios.", content_type="text/plain; charset=utf-8")
 
 
+@staff_member_required
+@require_GET
+def cargar_torres_empart(request):
+    """
+    Uso único: completa el condominio real "Empart" en producción con sus
+    16 torres confirmadas x 5 pisos x 4 deptos (320 unidades). Idempotente
+    (get_or_create) -- correrla más de una vez no duplica nada. No toca
+    miembros ni unidades que ya existan.
+    """
+    try:
+        condominio = Condominio.objects.get(nombre="Empart")
+    except Condominio.DoesNotExist:
+        return HttpResponse("No existe un condominio con nombre exacto 'Empart'.", status=404)
+
+    numeros_por_piso = ["1", "2", "3", "4"]
+    pisos = ["1", "2", "3", "4", "5"]
+    torres_nombres = [str(n) for n in range(1, 17)]
+
+    torres_creadas = 0
+    unidades_creadas = 0
+    with transaction.atomic():
+        for nombre_torre in torres_nombres:
+            torre, creada = Torre.objects.get_or_create(condominio=condominio, nombre=nombre_torre)
+            if creada:
+                torres_creadas += 1
+            for piso in pisos:
+                for posicion in numeros_por_piso:
+                    numero = f"{piso}{posicion}"
+                    _, creada = Unidad.objects.get_or_create(condominio=condominio, torre=torre, numero=numero)
+                    if creada:
+                        unidades_creadas += 1
+
+    return HttpResponse(
+        f"Listo. Torres nuevas: {torres_creadas} (de 16). Unidades nuevas: {unidades_creadas} (de 320 esperadas)."
+    )
+
+
 class SolicitarAccesoView(FormView):
     """Formulario público embebido en la landing -- captura el interés de quien todavía no tiene código."""
 
