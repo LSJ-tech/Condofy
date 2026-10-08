@@ -1,5 +1,10 @@
 {% extends "core/base.html" %}
 {% block titulo %}Inicio{% endblock %}
+{% block extra_head %}
+{% if membresia.rol == "directiva" or membresia.rol == "conserje" %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+{% endif %}
+{% endblock %}
 {% block contenido %}
 <h1 class="h4 mb-4">Hola, {{ user.first_name|default:user.username }}</h1>
 
@@ -102,9 +107,23 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if membresia.rol == "directiva" or membresia.rol == "conserje" %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+{% endif %}
 <script>
 function csrfToken() {
     return document.cookie.split("; ").find(r => r.startsWith("csrftoken="))?.split("=")[1] || "";
+}
+
+function obtenerUbicacion() {
+    return new Promise(function (resolve) {
+        if (!navigator.geolocation) { resolve(null); return; }
+        navigator.geolocation.getCurrentPosition(
+            function (pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+            function () { resolve(null); },
+            { timeout: 5000, maximumAge: 60000 }
+        );
+    });
 }
 
 const modalPanico = new bootstrap.Modal(document.getElementById("modalPanico"));
@@ -114,14 +133,18 @@ document.getElementById("btn-confirmar-panico").addEventListener("click", functi
     avisoError.classList.add("d-none");
     boton.disabled = true;
     boton.textContent = "Enviando...";
-    fetch("/api/v1/alertas/", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
-        body: JSON.stringify({
-            tipo: document.getElementById("panico-tipo").value,
-            mensaje: document.getElementById("panico-mensaje").value,
-        }),
+    obtenerUbicacion().then(function (ubicacion) {
+        return fetch("/api/v1/alertas/", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+            body: JSON.stringify({
+                tipo: document.getElementById("panico-tipo").value,
+                mensaje: document.getElementById("panico-mensaje").value,
+                latitud: ubicacion ? ubicacion.lat : null,
+                longitud: ubicacion ? ubicacion.lng : null,
+            }),
+        });
     }).then(r => {
         if (!r.ok) throw new Error("No se pudo enviar la alerta (" + r.status + ").");
         modalPanico.hide();
@@ -138,12 +161,18 @@ document.getElementById("btn-confirmar-panico").addEventListener("click", functi
 });
 
 {% if membresia.rol == "directiva" or membresia.rol == "conserje" %}
+const mapasActivos = {};
+
 function cargarAlertas() {
     fetch("/api/v1/alertas/?estado=activa", { credentials: "same-origin" })
         .then(r => r.json())
         .then(data => {
             const cont = document.getElementById("alertas-activas");
             const alertas = data.results || data;
+
+            Object.values(mapasActivos).forEach(function (mapa) { mapa.remove(); });
+            for (const key in mapasActivos) delete mapasActivos[key];
+
             if (!alertas.length) {
                 cont.innerHTML = '<p class="text-success mb-0"><i class="bi bi-check-circle"></i> Sin alertas activas.</p>';
                 return;
@@ -153,10 +182,20 @@ function cargarAlertas() {
                     <strong>${a.tipo_display}</strong> — ${a.autor_nombre || ""} ${a.autor_unidad ? "(Unidad " + a.autor_unidad + ")" : ""}
                     <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()}</div>
                     ${a.mensaje ? `<div>${a.mensaje}</div>` : ""}
+                    ${a.latitud && a.longitud ? `<div id="mapa-alerta-${a.id}" style="height: 180px;" class="rounded mt-2 mb-2"></div>` : ""}
                     <button class="btn btn-sm btn-outline-success mt-1" onclick="resolverAlerta(${a.id}, 'resuelta')">Resolver</button>
                     <button class="btn btn-sm btn-outline-secondary mt-1" onclick="resolverAlerta(${a.id}, 'falsa_alarma')">Falsa alarma</button>
                 </div>
             `).join("");
+
+            alertas.forEach(function (a) {
+                if (!a.latitud || !a.longitud) return;
+                const lat = parseFloat(a.latitud), lng = parseFloat(a.longitud);
+                const mapa = L.map(`mapa-alerta-${a.id}`, { zoomControl: false, attributionControl: false }).setView([lat, lng], 17);
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapa);
+                L.marker([lat, lng]).addTo(mapa);
+                mapasActivos[a.id] = mapa;
+            });
         });
 }
 
