@@ -12,11 +12,11 @@ Implementado y probado de punta a punta:
 
 - Registro self-service de un condominio (crea Condominio + cuenta de directiva). Las torres las configura DevQuad al dar de alta al cliente; las unidades las carga la directiva/administración.
 - Multi-tenant real: cada condominio solo ve sus propios datos (verificado con tests de aislamiento).
-- 4 roles: **directiva** (gobierno, supervisa todo), **administración** (día a día: miembros, gastos comunes, avisos, accesos), **conserjería** (accesos), **residente**.
+- 4 roles: **directiva** (gobierno: miembros, unidades, avisos, accesos, Mi condominio), **administración** (día a día, incluyendo lo exclusivo de gastos comunes -- generar el cargo del periodo y los datos de transferencia, que ni la directiva puede tocar), **conserjería** (accesos), **residente**.
 - Botón de pánico: la app/API crea una `Alerta` con ubicación GPS, se envía push a todo el condominio (vía Expo), y **cualquier miembro** (no solo directiva/conserjería) puede ver el mapa y resolverla o marcarla como falsa alarma. Se auto-cierra sola si nadie responde en 30 minutos. Historial completo filtrable en `/alertas/historial/`.
 - Avisos (muro de noticias simple): directiva/administración publican, todos los miembros leen.
 - Accesos: registro manual de ingresos por conserjería/directiva/administración desde el panel (sin QR todavía).
-- Gastos comunes: directiva/administración genera el cargo del periodo (se prorratea automático por alícuota, cuota fija por unidad, o en partes iguales) y marca cuotas como pagadas a mano; cada residente solo lee las suyas (sin pago online todavía).
+- Gastos comunes: **administración** (exclusivo, ni directiva) genera el cargo del periodo (se prorratea automático por alícuota, cuota fija por unidad, o en partes iguales) y define los datos de transferencia; directiva/administración marcan cuotas como pagadas a mano; cada residente solo lee las suyas (sin pago online todavía).
 - Panel de directiva/administración con KPIs (unidades, miembros, alertas activas, morosidad) y accesos directos a las secciones principales.
 - Donación voluntaria (condominio → DevQuad) vía Mercado Pago Checkout Pro, mismo patrón de seguridad que PataAgenda (el webhook siempre re-consulta el pago por ID, nunca confía en el body; no extiende ningún plan, Condofy ya es gratis).
 - Política de Privacidad y Términos de Uso (`/privacidad/`, `/terminos/`), con aceptación obligatoria al registrarse (o en el primer login para cuentas creadas por la directiva), y solicitud de eliminación de cuenta/datos desde "Mi perfil".
@@ -65,8 +65,8 @@ Mismo patrón que PataAgenda: `build.sh` + `render.yaml` para Render (Blueprint 
 
 ## Roles
 
-- **directiva**: todo lo de administración, más lo exclusivo de gobierno (Mi condominio, link/QR de autoregistro, nombrar otra directiva/administración).
-- **administracion**: el día a día del condominio (miembros, unidades, gastos comunes, avisos, accesos) — puede ser un tercero contratado, no necesariamente un vecino elegido.
+- **directiva**: miembros, unidades, avisos, accesos, más lo exclusivo de gobierno (Mi condominio, link/QR de autoregistro, nombrar otra directiva/administración). **No** incluye generar gastos comunes ni editar los datos de transferencia -- eso es exclusivo de administración, a pedido explícito del cliente (es la única área donde administración tiene más permiso que directiva).
+- **administracion**: el día a día del condominio (miembros, unidades, avisos, accesos), más lo exclusivo de gastos comunes: generar el cargo del periodo y los datos de transferencia — puede ser un tercero contratado, no necesariamente un vecino elegido.
 - **conserje**: registra accesos.
 - **residente**: dispara alertas, lee avisos y sus propias cuotas (uso principal: la app móvil).
 
