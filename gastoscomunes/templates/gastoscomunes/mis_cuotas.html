@@ -11,14 +11,25 @@
 <div class="row g-3">
     {% for c in cuotas %}
     <div class="col-md-6">
-        <div class="card h-100 {% if c.estado == 'pendiente' or c.estado == 'vencido' %}border-warning{% endif %}">
+        <div class="card h-100 {% if not c.gasto_comun.es_voluntario and c.estado == 'pendiente' or c.estado == 'vencido' %}border-warning{% endif %}">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h2 class="h6 mb-0">Periodo {{ c.gasto_comun.periodo }}</h2>
+                    <h2 class="h6 mb-0">
+                        Periodo {{ c.gasto_comun.periodo }}
+                        {% if c.gasto_comun.es_voluntario %}<span class="badge bg-info text-dark">Aporte voluntario</span>{% endif %}
+                    </h2>
+                    {% if c.gasto_comun.es_voluntario %}
+                    <span class="badge {% if c.estado == 'pagado' %}bg-success{% else %}bg-secondary{% endif %}">{% if c.estado == 'pagado' %}Aportado{% else %}Sin aporte aún{% endif %}</span>
+                    {% else %}
                     <span class="badge {% if c.estado == 'pagado' %}bg-success{% elif c.estado == 'vencido' %}bg-danger{% else %}bg-secondary{% endif %}">{{ c.get_estado_display }}</span>
+                    {% endif %}
                 </div>
+                {% if c.gasto_comun.es_voluntario and c.estado != "pagado" %}
+                <p class="text-muted mb-1">Es voluntario — aporta si quieres, no es obligatorio.</p>
+                {% else %}
                 <p class="fs-4 fw-bold mb-1">${{ c.monto }}</p>
-                <p class="text-muted small mb-2">Vence el {{ c.gasto_comun.fecha_vencimiento }}{% if c.fecha_pago %} · Pagado el {{ c.fecha_pago }}{% endif %}</p>
+                {% endif %}
+                <p class="text-muted small mb-2">{% if not c.gasto_comun.es_voluntario %}Vence el {{ c.gasto_comun.fecha_vencimiento }}{% endif %}{% if c.fecha_pago %}{% if not c.gasto_comun.es_voluntario %} · {% endif %}Pagado el {{ c.fecha_pago }}{% endif %}</p>
                 {% if c.estado != "pagado" and condominio.datos_transferencia %}
                 <div class="border-top pt-2 mt-2">
                     <p class="small fw-semibold mb-1">Datos para transferir:</p>

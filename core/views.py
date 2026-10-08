@@ -276,7 +276,7 @@ class InicioView(TemplateView):
             context["condominio"] = self.condominio
             if self.membresia.rol == "residente" and self.membresia.unidad_id:
                 from gastoscomunes.models import CuotaUnidad
-                pendientes = CuotaUnidad.objects.filter(unidad=self.membresia.unidad).exclude(estado="pagado")
+                pendientes = CuotaUnidad.objects.filter(unidad=self.membresia.unidad, gasto_comun__es_voluntario=False).exclude(estado="pagado")
                 context["deuda_pendiente"] = sum((c.monto for c in pendientes), Decimal("0"))
                 context["cuotas_pendientes_count"] = pendientes.count()
             if self.membresia.rol in ("directiva", "administracion"):
@@ -294,7 +294,7 @@ class InicioView(TemplateView):
             "alertas_activas_count": Alerta.objects.filter(condominio=condominio, estado="activa").count(),
         }
 
-        gasto_actual = GastoComun.objects.filter(condominio=condominio).order_by("-periodo").first()
+        gasto_actual = GastoComun.objects.filter(condominio=condominio, es_voluntario=False).order_by("-periodo").first()
         if gasto_actual:
             cuotas = CuotaUnidad.objects.filter(gasto_comun=gasto_actual)
             agregados = cuotas.aggregate(
@@ -310,7 +310,7 @@ class InicioView(TemplateView):
             resumen["gasto_actual_pendiente"] = agregados["pendiente"] or 0
 
         hoy = timezone.localdate()
-        cuotas_atrasadas = CuotaUnidad.objects.filter(gasto_comun__condominio=condominio, estado="pendiente", gasto_comun__fecha_vencimiento__lt=hoy)
+        cuotas_atrasadas = CuotaUnidad.objects.filter(gasto_comun__condominio=condominio, gasto_comun__es_voluntario=False, estado="pendiente", gasto_comun__fecha_vencimiento__lt=hoy)
         morosos_qs = (
             cuotas_atrasadas.values("unidad_id", "unidad__numero", "unidad__torre__nombre")
             .annotate(total_adeudado=Sum("monto"), cuotas_atrasadas=Count("id"))

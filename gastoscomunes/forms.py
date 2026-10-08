@@ -8,6 +8,7 @@ from .models import GastoComun
 MODO_CHOICES = [
     ("total", "Monto total del condominio (se reparte por alícuota, o parejo si no hay)"),
     ("por_unidad", "Monto fijo por unidad (todas pagan lo mismo)"),
+    ("donacion", "Aporte voluntario a un proyecto (cada unidad dona lo que quiera, sin monto obligatorio)"),
 ]
 
 PERIODO_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")

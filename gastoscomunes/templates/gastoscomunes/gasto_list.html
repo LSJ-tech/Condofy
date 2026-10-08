@@ -11,10 +11,16 @@
     <tbody>
         {% for g in gastos %}
         <tr>
-            <td>{{ g.periodo }}</td>
-            <td>${{ g.monto_total }}{% if g.monto_por_unidad %} <span class="text-muted small">(${{ g.monto_por_unidad }} por unidad)</span>{% endif %}</td>
-            <td>{{ g.fecha_vencimiento }}</td>
-            <td><a href="{% url 'gastos-comunes-cuotas' g.pk %}" class="btn btn-sm btn-outline-primary">Ver cuotas</a></td>
+            <td>{{ g.periodo }}{% if g.es_voluntario %} <span class="badge bg-info text-dark">Voluntario</span>{% endif %}</td>
+            <td>
+                {% if g.es_voluntario %}
+                    {% if g.monto_total %}Meta: ${{ g.monto_total }}{% else %}<span class="text-muted">Sin meta</span>{% endif %}
+                {% else %}
+                    ${{ g.monto_total }}{% if g.monto_por_unidad %} <span class="text-muted small">(${{ g.monto_por_unidad }} por unidad)</span>{% endif %}
+                {% endif %}
+            </td>
+            <td>{% if not g.es_voluntario %}{{ g.fecha_vencimiento }}{% else %}—{% endif %}</td>
+            <td><a href="{% url 'gastos-comunes-cuotas' g.pk %}" class="btn btn-sm btn-outline-primary">{% if g.es_voluntario %}Ver aportes{% else %}Ver cuotas{% endif %}</a></td>
         </tr>
         {% empty %}
         <tr><td colspan="4" class="text-muted">Sin periodos generados todavía.</td></tr>
