@@ -10,6 +10,8 @@ urlpatterns = [
     path("unirme/<uuid:token>/", views.RegistroResidenteView.as_view(), name="registro-residente"),
     path("login/", auth_views.LoginView.as_view(template_name="core/login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("mi-perfil/", views.MiPerfilView.as_view(), name="mi-perfil"),
+    path("mi-perfil/cambiar-contrasena/", views.MiCambiarContrasenaView.as_view(), name="cambiar-contrasena"),
     path("suscripcion-vencida/", views.SuscripcionVencidaView.as_view(), name="suscripcion-vencida"),
     path("mi-condominio/", views.CondominioUpdateView.as_view(), name="mi-condominio"),
     path("mi-condominio/qr-residentes.png", views.QRRegistroResidentesView.as_view(), name="qr-registro-residentes"),

@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block titulo %}Mi perfil{% endblock %}
+{% block contenido %}
+<h1 class="h4 mb-3">Mi perfil</h1>
+
+<div class="card col-md-6 mb-4">
+    <div class="card-body">
+        <p class="text-muted small mb-3">
+            Usuario: <strong>{{ user.username }}</strong>
+            &middot; Rol: <strong>{{ membresia.get_rol_display }}</strong>
+            {% if membresia.unidad %}&middot; Unidad: <strong>{{ membresia.unidad }}</strong>{% endif %}
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+    </div>
+</div>
+
+<a href="{% url 'cambiar-contrasena' %}" class="btn btn-outline-secondary">Cambiar contraseña</a>
+{% endblock %}

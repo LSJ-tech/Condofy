@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Length
@@ -171,3 +173,26 @@ class UnidadForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if condominio is not None:
             self.fields["torre"].queryset = Torre.objects.filter(condominio=condominio).annotate(_len=Length("nombre")).order_by("_len", "nombre")
+
+
+class MiPerfilForm(forms.ModelForm):
+    """Cualquier miembro (residente, directiva, conserjería) edita sus propios datos."""
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email"]
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+        }
+        labels = {"first_name": "Nombre", "last_name": "Apellido", "email": "Email"}
+
+
+class MiCambiarContrasenaForm(PasswordChangeForm):
+    """Mismo PasswordChangeForm de Django, solo con clases de Bootstrap."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control"

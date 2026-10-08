@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.contrib.auth.views import PasswordChangeView
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
@@ -23,7 +24,7 @@ from django.views.decorators.http import require_GET
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 from django.views.generic.base import View
 
-from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
+from .forms import CondominioForm, CrearMiembroForm, MiCambiarContrasenaForm, MiPerfilForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
 from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
@@ -421,4 +422,30 @@ class UnidadCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
         if not self.condominio.puede_agregar_unidad:
             messages.error(self.request, "Alcanzaste el límite de unidades de tu plan actual.")
             return redirect("unidades")
+        return super().form_valid(form)
+
+
+class MiPerfilView(CondominioRequiredMixin, UpdateView):
+    """Cualquier miembro edita sus propios datos -- residente, directiva o conserjería."""
+
+    model = User
+    form_class = MiPerfilForm
+    template_name = "core/mi_perfil.html"
+    success_url = reverse_lazy("mi-perfil")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def form_valid(self, form):
+        messages.success(self.request, "Tus datos quedaron actualizados.")
+        return super().form_valid(form)
+
+
+class MiCambiarContrasenaView(PasswordChangeView):
+    template_name = "core/cambiar_contrasena.html"
+    form_class = MiCambiarContrasenaForm
+    success_url = reverse_lazy("mi-perfil")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Tu contraseña fue cambiada correctamente.")
         return super().form_valid(form)

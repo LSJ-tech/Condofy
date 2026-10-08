@@ -80,6 +80,8 @@
                             {{ user.username }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="{% url 'mi-perfil' %}"><i class="bi bi-person"></i> Mi perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="post" action="{% url 'logout' %}">
                                     {% csrf_token %}
