@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 from io import BytesIO
 
 import qrcode
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
@@ -30,8 +31,6 @@ from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
 EMAIL_CONTACTO_DEVQUAD = "contacto@devquad.cl"
-
-DIAS_PRUEBA_GRATIS = 15
 
 
 @staff_member_required
@@ -150,8 +149,6 @@ class RegistroCondominioView(FormView):
                 direccion=datos.get("direccion_condominio", ""),
                 comuna=datos.get("comuna_condominio", ""),
                 region=datos.get("region_condominio", ""),
-                plan="premium",
-                pagado_hasta=timezone.localdate() + timezone.timedelta(days=DIAS_PRUEBA_GRATIS),
             )
             user = User.objects.create_user(
                 username=username, password=datos["password1"],
@@ -166,7 +163,7 @@ class RegistroCondominioView(FormView):
         messages.success(
             self.request,
             f"¡Listo! Creamos la cuenta de {condominio.nombre}. Tu usuario es «{username}» — anótalo, lo necesitas "
-            f"para volver a entrar. Tienes {DIAS_PRUEBA_GRATIS} días Pro gratis.",
+            f"para volver a entrar. {settings.PLATFORM_NAME} es gratis, sin límites de tiempo ni de unidades.",
         )
         return redirect("inicio")
 
@@ -262,7 +259,7 @@ class InicioView(TemplateView):
             messages.error(request, MENSAJE_SIN_CONDOMINIO)
             return redirect("login")
         if not membresia.condominio.puede_operar:
-            return redirect("suscripcion-vencida")
+            return redirect("cuenta-desactivada")
 
         self.membresia = membresia
         self.condominio = membresia.condominio
@@ -323,8 +320,8 @@ class InicioView(TemplateView):
         return resumen
 
 
-class SuscripcionVencidaView(TemplateView):
-    template_name = "core/suscripcion_vencida.html"
+class CuentaDesactivadaView(TemplateView):
+    template_name = "core/cuenta_desactivada.html"
 
 
 class MiembroListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, ListView):
@@ -459,12 +456,6 @@ class UnidadCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin, Cre
         kwargs = super().get_form_kwargs()
         kwargs["condominio"] = self.condominio
         return kwargs
-
-    def form_valid(self, form):
-        if not self.condominio.puede_agregar_unidad:
-            messages.error(self.request, "Alcanzaste el límite de unidades de tu plan actual.")
-            return redirect("unidades")
-        return super().form_valid(form)
 
 
 class MiPerfilView(CondominioRequiredMixin, UpdateView):

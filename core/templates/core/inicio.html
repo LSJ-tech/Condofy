@@ -7,7 +7,7 @@
 <h1 class="h4 mb-4">Hola, {{ user.first_name|default:user.username }}</h1>
 
 {% if not condominio.puede_operar %}
-<div class="alert alert-warning">Tu condominio tiene la suscripción vencida. <a href="{% url 'suscripcion-vencida' %}">Ver detalle</a>.</div>
+<div class="alert alert-warning">Tu cuenta está desactivada. <a href="{% url 'cuenta-desactivada' %}">Ver detalle</a>.</div>
 {% endif %}
 
 {% if membresia.rol == "residente" %}

@@ -156,12 +156,10 @@ else:
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@condofy.local')
 
 
-# Pago de la suscripción vía Mercado Pago (Checkout Pro). Suscripción SaaS
-# (condominio -> DevQuad) -- distinto del pago de gastos comunes, ver
-# gastoscomunes/models.py y el plan del proyecto.
+# Donación voluntaria vía Mercado Pago (Checkout Pro) de un condominio a
+# DevQuad -- Condofy es gratis, no hay suscripción paga. Distinto del pago
+# de gastos comunes, ver gastoscomunes/models.py.
 MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', '')
-PRECIO_PREMIUM_CLP = int(os.environ.get('PRECIO_PREMIUM_CLP', '14990'))
-PRECIOS_PLAN = {"premium": PRECIO_PREMIUM_CLP}
 
 
 # Django REST Framework + JWT (djangorestframework-simplejwt) -- autenticación

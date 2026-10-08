@@ -30,12 +30,6 @@ PLAN_CHOICES = [
     ("premium", "Pro"),
 ]
 
-# None = sin límite.
-PLAN_LIMITE_UNIDADES = {
-    "free": 10,
-    "premium": None,
-}
-
 ROL_CHOICES = [
     ("directiva", "Directiva"),
     ("administracion", "Administración"),
@@ -56,10 +50,10 @@ class Condominio(models.Model):
     direccion = models.CharField(max_length=255, blank=True)
     comuna = models.CharField(max_length=100, blank=True)
     region = models.CharField(max_length=100, blank=True)
-    activo = models.BooleanField(default=True, help_text="Interruptor manual: desactivarlo bloquea todo, sin relación con el pago.")
-    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default="premium")
-    pagado_hasta = models.DateField(null=True, blank=True, help_text="Fecha hasta la que el condominio tiene acceso pagado. Vacío = sin restricción.")
-    es_fundador = models.BooleanField(default=False, help_text="Uno de los primeros condominios en registrarse: precio fijo de por vida.")
+    activo = models.BooleanField(default=True, help_text="Interruptor manual: desactivarlo bloquea todo (ej. un cliente que dejó de serlo).")
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default="premium", help_text="Condofy es gratis para todos -- este campo es solo registro interno de DevQuad, no limita nada.")
+    pagado_hasta = models.DateField(null=True, blank=True, help_text="Histórico de cuando Condofy todavía cobraba suscripción. Ya no restringe el acceso.")
+    es_fundador = models.BooleanField(default=False, help_text="Uno de los primeros condominios en registrarse.")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     datos_transferencia = models.TextField(
         blank=True,
@@ -83,22 +77,13 @@ class Condominio(models.Model):
 
     @property
     def puede_operar(self):
-        return self.activo and not self.esta_vencido
-
-    @property
-    def limite_unidades(self):
-        return PLAN_LIMITE_UNIDADES.get(self.plan)
+        """Condofy es gratis y sin límites -- lo único que puede bloquear el
+        acceso es el interruptor manual `activo` (ver su help_text)."""
+        return self.activo
 
     @property
     def total_unidades(self):
         return self.unidades.count()
-
-    @property
-    def puede_agregar_unidad(self):
-        limite = self.limite_unidades
-        if limite is None:
-            return True
-        return self.total_unidades < limite
 
 
 class Torre(models.Model):

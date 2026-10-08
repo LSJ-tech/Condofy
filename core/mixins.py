@@ -23,7 +23,7 @@ class CondominioRequiredMixin(LoginRequiredMixin):
                 messages.error(request, MENSAJE_SIN_CONDOMINIO)
                 return redirect("login")
             if not membresia.condominio.puede_operar:
-                return redirect("suscripcion-vencida")
+                return redirect("cuenta-desactivada")
             self.membresia = membresia
             self.condominio = membresia.condominio
         return super().dispatch(request, *args, **kwargs)

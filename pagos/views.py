@@ -17,50 +17,6 @@ from .mercadopago_client import crear_preferencia_pago, obtener_pago_mercadopago
 from .models import Pago
 
 
-class IniciarPagoView(LoginRequiredMixin, View):
-    """A propósito NO usa CondominioRequiredMixin: esta vista es justo para
-    cuando el condominio está vencido, y ese mixin lo mandaría a
-    suscripcion-vencida antes de dejarlo pagar."""
-
-    def post(self, request, *args, **kwargs):
-        membresia = getattr(request.user, "membresia", None)
-        if membresia is None:
-            messages.error(request, "Tu cuenta no está vinculada a ningún condominio.")
-            return redirect("login")
-
-        condominio = membresia.condominio
-        destino = "inicio" if condominio.puede_operar else "suscripcion-vencida"
-
-        if membresia.rol != "directiva":
-            messages.error(request, "Solo la directiva puede gestionar el pago de la suscripción.")
-            return redirect(destino)
-
-        if not settings.MERCADOPAGO_ACCESS_TOKEN:
-            messages.error(request, "El pago en línea todavía no está disponible. Escríbenos para renovar.")
-            return redirect(destino)
-
-        plan = request.POST.get("plan") or condominio.plan
-        if plan not in settings.PRECIOS_PLAN:
-            messages.error(request, "Elige un plan válido antes de pagar.")
-            return redirect(destino)
-
-        monto = settings.PRECIOS_PLAN[plan]
-
-        pago = Pago.objects.filter(condominio=condominio, tipo="suscripcion", estado="pendiente").order_by("-fecha_creacion").first()
-        if pago:
-            pago.monto = monto
-            pago.plan = plan
-            pago.save(update_fields=["monto", "plan"])
-        else:
-            pago = Pago.objects.create(condominio=condominio, tipo="suscripcion", monto=monto, plan=plan)
-
-        url_pago = crear_preferencia_pago(pago, request)
-        if not url_pago:
-            messages.error(request, "No pudimos iniciar el pago. Intenta de nuevo en un momento.")
-            return redirect(destino)
-        return redirect(url_pago)
-
-
 class DonarView(LoginRequiredMixin, View):
     """Para que un condominio apoye económicamente el desarrollo de la
     plataforma -- sin relación con su propia suscripción: no extiende
