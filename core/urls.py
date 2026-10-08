@@ -20,4 +20,5 @@ urlpatterns = [
     path("torres/nueva/", views.TorreCreateView.as_view(), name="crear-torre"),
     path("unidades/", views.UnidadListView.as_view(), name="unidades"),
     path("unidades/nueva/", views.UnidadCreateView.as_view(), name="crear-unidad"),
+    path("unidades/aplicar-alicuota/", views.AplicarAlicuotaMasivaView.as_view(), name="aplicar-alicuota-masiva"),
 ]

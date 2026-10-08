@@ -8,6 +8,30 @@
 {% if condominio.limite_unidades %}
 <p class="text-muted">{{ condominio.total_unidades }} de {{ condominio.limite_unidades }} unidades de tu plan.</p>
 {% endif %}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-5">
+        <form method="get" class="d-flex gap-2">
+            <select name="torre" class="form-select" onchange="this.form.submit()">
+                <option value="">Todas las torres</option>
+                {% for t in torres %}
+                <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>Torre {{ t.nombre }}</option>
+                {% endfor %}
+            </select>
+            {% if torre_seleccionada %}<a href="{% url 'unidades' %}" class="btn btn-outline-secondary">Quitar filtro</a>{% endif %}
+        </form>
+    </div>
+    <div class="col-md-7">
+        <form method="post" action="{% url 'aplicar-alicuota-masiva' %}" class="d-flex gap-2 justify-content-md-end"
+              onsubmit="return confirm('Esto va a cambiar la alícuota de TODAS las unidades del condominio. ¿Continuar?');">
+            {% csrf_token %}
+            <label class="col-form-label small text-muted" for="id_alicuota_masiva">Aplicar alícuota a todas:</label>
+            <input type="text" id="id_alicuota_masiva" name="alicuota" class="form-control" style="max-width: 140px;" placeholder="Ej. 0.0031" required>
+            <button type="submit" class="btn btn-outline-primary">Aplicar a todas</button>
+        </form>
+    </div>
+</div>
+
 <table class="table table-striped">
     <thead><tr><th>Número</th><th>Torre</th><th>Alícuota</th></tr></thead>
     <tbody>
@@ -18,4 +42,18 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if torre_seleccionada %}&torre={{ torre_seleccionada }}{% endif %}">Anterior</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if torre_seleccionada %}&torre={{ torre_seleccionada }}{% endif %}">Siguiente</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}

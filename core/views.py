@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
@@ -14,6 +16,7 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.views.decorators.http import require_GET
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
+from django.views.generic.base import View
 
 from .forms import CondominioForm, CrearMiembroForm, RegistroCondominioForm, SolicitudAccesoForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
@@ -270,9 +273,32 @@ class UnidadListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
     model = Unidad
     template_name = "core/unidad_list.html"
     context_object_name = "unidades"
+    paginate_by = 50
 
     def get_queryset(self):
-        return super().get_queryset().select_related("torre")
+        qs = super().get_queryset().select_related("torre")
+        torre_id = self.request.GET.get("torre")
+        if torre_id:
+            qs = qs.filter(torre_id=torre_id)
+        return qs.annotate(_torre_len=Length("torre__nombre")).order_by("_torre_len", "torre__nombre", "numero")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["torres"] = Torre.objects.filter(condominio=self.condominio).annotate(_len=Length("nombre")).order_by("_len", "nombre")
+        context["torre_seleccionada"] = self.request.GET.get("torre", "")
+        return context
+
+
+class AplicarAlicuotaMasivaView(SoloDirectivaMixin, CondominioRequiredMixin, View):
+    def post(self, request):
+        try:
+            valor = Decimal(request.POST.get("alicuota", "").replace(",", "."))
+        except (InvalidOperation, TypeError):
+            messages.error(request, "Ingresa un número válido para la alícuota.")
+            return redirect("unidades")
+        total = Unidad.objects.filter(condominio=self.condominio).update(alicuota=valor)
+        messages.success(request, f"Alícuota {valor} aplicada a las {total} unidades de tu condominio.")
+        return redirect("unidades")
 
 
 class UnidadCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
