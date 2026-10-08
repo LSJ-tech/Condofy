@@ -11,7 +11,7 @@
         {% for g in gastos %}
         <tr>
             <td>{{ g.periodo }}</td>
-            <td>${{ g.monto_total }}</td>
+            <td>${{ g.monto_total }}{% if g.monto_por_unidad %} <span class="text-muted small">(${{ g.monto_por_unidad }} por unidad)</span>{% endif %}</td>
             <td>{{ g.fecha_vencimiento }}</td>
             <td><a href="{% url 'gastos-comunes-cuotas' g.pk %}" class="btn btn-sm btn-outline-primary">Ver cuotas</a></td>
         </tr>
