@@ -11,13 +11,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import PasswordChangeView
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Length
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.html import escape
@@ -38,21 +39,33 @@ def enviar_correo_bienvenida(user, condominio):
     (ya sea porque la eligió él mismo al autoregistrarse, o porque es
     temporal y se entrega aparte, ver CrearMiembroView). No bloquea el alta
     si Resend falla: el correo es un plus, no un requisito."""
+    login_url = "https://condofy.devquad.cl/login/"
+    contexto = {
+        "platform_name": settings.PLATFORM_NAME,
+        "nombre": user.first_name,
+        "condominio_nombre": condominio.nombre,
+        "username": user.username,
+        "login_url": login_url,
+        "email_contacto": EMAIL_CONTACTO_DEVQUAD,
+    }
+    texto_plano = (
+        f"Hola {user.first_name},\n\n"
+        f"Tu cuenta en {condominio.nombre} ya está lista en {settings.PLATFORM_NAME}. Desde ahí puedes:\n\n"
+        f"- Activar el botón de pánico si tienes una emergencia -- avisa a todo el condominio al instante.\n"
+        f"- Ver los avisos de tu directiva/administración.\n"
+        f"- Revisar tus gastos comunes.\n\n"
+        f"Entra con tu usuario «{user.username}» en {login_url}\n\n"
+        f"Cualquier duda, escríbenos a {EMAIL_CONTACTO_DEVQUAD}."
+    )
     try:
-        send_mail(
+        correo = EmailMultiAlternatives(
             subject=f"¡Bienvenido a {settings.PLATFORM_NAME}, {user.first_name}!",
-            message=(
-                f"Hola {user.first_name},\n\n"
-                f"Tu cuenta en {condominio.nombre} ya está lista en {settings.PLATFORM_NAME}. Desde ahí puedes:\n\n"
-                f"- Activar el botón de pánico si tienes una emergencia -- avisa a todo el condominio al instante.\n"
-                f"- Ver los avisos de tu directiva/administración.\n"
-                f"- Revisar tus gastos comunes.\n\n"
-                f"Entra con tu usuario «{user.username}» en https://condofy.devquad.cl/login/\n\n"
-                f"Cualquier duda, escríbenos a {EMAIL_CONTACTO_DEVQUAD}."
-            ),
+            body=texto_plano,
             from_email=None,
-            recipient_list=[user.email],
+            to=[user.email],
         )
+        correo.attach_alternative(render_to_string("core/emails/bienvenida.html", contexto), "text/html")
+        correo.send()
     except Exception:
         pass
 
