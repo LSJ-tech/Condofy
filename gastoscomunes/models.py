@@ -17,6 +17,10 @@ class GastoComun(models.Model):
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="gastos_comunes")
     periodo = models.CharField(max_length=20, help_text="Ej. '2026-09'.")
     monto_total = models.DecimalField(max_digits=12, decimal_places=2)
+    monto_por_unidad = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text="Si el cargo es una cuota fija por unidad (no prorrateada por alícuota), queda el valor acá y en monto_total queda el total resultante.",
+    )
     fecha_emision = models.DateField(auto_now_add=True)
     fecha_vencimiento = models.DateField()
 
@@ -30,20 +34,25 @@ class GastoComun(models.Model):
         return f"{self.condominio} - {self.periodo}"
 
     def generar_cuotas(self):
-        """Prorratea `monto_total` entre las unidades del condominio, según su
-        alícuota si está definida (>0), o en partes iguales si ninguna la tiene.
-        No pisa cuotas ya generadas para este gasto."""
+        """Si `monto_por_unidad` está definido, cada unidad paga exactamente ese
+        valor fijo (sin importar alícuota). Si no, prorratea `monto_total` entre
+        las unidades según su alícuota (si está definida, >0) o en partes
+        iguales si ninguna la tiene. No pisa cuotas ya generadas para este gasto."""
         unidades = list(self.condominio.unidades.all())
         if not unidades or self.cuotas.exists():
             return
-        suma_alicuotas = sum((u.alicuota for u in unidades), Decimal("0"))
         cuotas = []
-        for unidad in unidades:
-            if suma_alicuotas > 0:
-                monto = (self.monto_total * unidad.alicuota / suma_alicuotas).quantize(Decimal("0.01"))
-            else:
-                monto = (self.monto_total / len(unidades)).quantize(Decimal("0.01"))
-            cuotas.append(CuotaUnidad(gasto_comun=self, unidad=unidad, monto=monto))
+        if self.monto_por_unidad is not None:
+            for unidad in unidades:
+                cuotas.append(CuotaUnidad(gasto_comun=self, unidad=unidad, monto=self.monto_por_unidad))
+        else:
+            suma_alicuotas = sum((u.alicuota for u in unidades), Decimal("0"))
+            for unidad in unidades:
+                if suma_alicuotas > 0:
+                    monto = (self.monto_total * unidad.alicuota / suma_alicuotas).quantize(Decimal("0.01"))
+                else:
+                    monto = (self.monto_total / len(unidades)).quantize(Decimal("0.01"))
+                cuotas.append(CuotaUnidad(gasto_comun=self, unidad=unidad, monto=monto))
         CuotaUnidad.objects.bulk_create(cuotas)
 
 

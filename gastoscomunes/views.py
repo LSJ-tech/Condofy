@@ -22,6 +22,11 @@ class GastoComunCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
     success_url = reverse_lazy("gastos-comunes-list")
 
     def form_valid(self, form):
+        if form.cleaned_data["modo"] == "por_unidad":
+            num_unidades = self.condominio.unidades.count()
+            form.instance.monto_total = form.cleaned_data["monto_por_unidad"] * num_unidades
+        else:
+            form.instance.monto_por_unidad = None
         response = super().form_valid(form)
         self.object.generar_cuotas()
         return response
