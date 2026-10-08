@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, View
 
-from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin
+from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
 from core.models import Torre
 
 from .forms import GastoComunForm
@@ -20,7 +20,7 @@ class GastoComunListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, L
     context_object_name = "gastos"
 
 
-class GastoComunCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin, CreateView):
+class GastoComunCreateView(SoloAdministracionMixin, CondominioFormMixin, CreateView):
     model = GastoComun
     form_class = GastoComunForm
     template_name = "gastoscomunes/gasto_form.html"

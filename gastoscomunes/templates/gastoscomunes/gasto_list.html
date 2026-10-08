@@ -3,7 +3,9 @@
 {% block contenido %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">Gastos comunes</h1>
+    {% if membresia.rol == "administracion" %}
     <a href="{% url 'gastos-comunes-crear' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo periodo</a>
+    {% endif %}
 </div>
 <div class="table-responsive">
 <table class="table table-striped">

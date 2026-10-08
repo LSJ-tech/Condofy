@@ -80,6 +80,25 @@ class EsDirectivaOAdministracionMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
+class SoloAdministracionMixin:
+    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige rol
+    'administracion' exacto -- ni siquiera directiva pasa.
+
+    Uso deliberadamente angosto: solo para generar un gasto común nuevo
+    (fijar el monto del periodo), que el usuario pidió dejar exclusivo de
+    administración. El resto de gastos comunes (ver la lista, marcar cuotas
+    pagadas) sigue abierto a directiva también, ver EsDirectivaOAdministracionMixin.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            membresia = getattr(request.user, "membresia", None)
+            if membresia and membresia.rol != "administracion":
+                messages.error(request, "Esta acción es exclusiva de administración.")
+                return redirect("inicio")
+        return super().dispatch(request, *args, **kwargs)
+
+
 class EsDirectivaAdministracionOConserjeMixin:
     """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige directiva,
     administración o conserjería (ej. accesos)."""
