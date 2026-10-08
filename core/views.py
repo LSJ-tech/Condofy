@@ -25,7 +25,7 @@ from django.views.generic import CreateView, FormView, ListView, TemplateView, U
 from django.views.generic.base import View
 
 from .forms import CondominioForm, CrearMiembroForm, MiCambiarContrasenaForm, MiPerfilForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
-from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloDirectivaMixin
+from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloDirectivaMixin, SoloStaffMixin
 from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
@@ -407,7 +407,7 @@ class TorreListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, ListVi
         return super().get_queryset().annotate(_len=Length("nombre")).order_by("_len", "nombre")
 
 
-class TorreCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin, CreateView):
+class TorreCreateView(SoloStaffMixin, CondominioFormMixin, CreateView):
     model = Torre
     form_class = TorreForm
     template_name = "core/torre_form.html"

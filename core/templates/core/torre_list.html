@@ -1,10 +1,8 @@
 {% extends "core/base.html" %}
 {% block titulo %}Torres{% endblock %}
 {% block contenido %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Torres</h1>
-    <a href="{% url 'crear-torre' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nueva torre</a>
-</div>
+<h1 class="h4 mb-3">Torres</h1>
+<p class="text-muted small">La estructura de torres la configura el administrador de la plataforma al dar de alta el condominio. Si necesitas agregar o corregir una torre, contáctanos.</p>
 <ul class="list-group">
     {% for t in torres %}
     <li class="list-group-item">{{ t.nombre }}</li>

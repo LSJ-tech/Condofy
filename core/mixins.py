@@ -91,6 +91,22 @@ class EsDirectivaAdministracionOConserjeMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
+class SoloStaffMixin:
+    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige is_staff.
+
+    Uso: operaciones que son de configuración inicial del condominio (crear
+    torres) y que hace DevQuad al dar de alta al cliente, no el día a día de
+    directiva/administración -- la estructura física del edificio no cambia
+    seguido y un cambio mal hecho ahí rompe la numeración de unidades.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_staff:
+            messages.error(request, "Esta acción es exclusiva del administrador de la plataforma.")
+            return redirect("inicio")
+        return super().dispatch(request, *args, **kwargs)
+
+
 class BorradoSeguroMixin:
     """Evita el error 500 al borrar un registro que otros protegen (on_delete=PROTECT)."""
 
