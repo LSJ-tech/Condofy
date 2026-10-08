@@ -8,6 +8,7 @@ from django.db.models.functions import Length
 from .models import REGION_CHOICES, ROL_CHOICES, CodigoInvitacion, Condominio, SolicitudAcceso, Torre, Unidad
 
 LABEL_TU_NOMBRE = "Tu nombre"
+LABEL_EMAIL = "Email"
 LABEL_EMAIL_OPCIONAL = "Email (opcional)"
 
 
@@ -89,7 +90,7 @@ class CrearMiembroForm(forms.Form):
 
     nombre = forms.CharField(max_length=150, label="Nombre", widget=forms.TextInput(attrs={"class": "form-control"}))
     apellido = forms.CharField(max_length=150, label="Apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
-    email = forms.EmailField(required=False, label=LABEL_EMAIL_OPCIONAL, widget=forms.EmailInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(label=LABEL_EMAIL, widget=forms.EmailInput(attrs={"class": "form-control"}))
     rol = forms.ChoiceField(choices=[c for c in ROL_CHOICES if c[0] != "directiva"], widget=forms.Select(attrs={"class": "form-select"}))
     unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), required=False, label="Unidad (obligatorio para residentes)", widget=forms.Select(attrs={"class": "form-select"}))
 
@@ -122,9 +123,9 @@ class RegistroResidenteForm(ConfirmacionContrasenaMixin):
     nombre = forms.CharField(max_length=150, label=LABEL_TU_NOMBRE, widget=forms.TextInput(attrs={"class": "form-control"}))
     apellido = forms.CharField(max_length=150, label="Tu apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
     email = forms.EmailField(
-        required=False, label=LABEL_EMAIL_OPCIONAL,
+        label=LABEL_EMAIL,
         widget=forms.EmailInput(attrs={"class": "form-control"}),
-        help_text="Te mandamos un correo de bienvenida si nos lo dejas.",
+        help_text="Te mandamos un correo de bienvenida.",
     )
     unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), label="Tu departamento", widget=forms.Select(attrs={"class": "form-select"}))
     acepto_terminos = forms.BooleanField(

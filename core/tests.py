@@ -98,7 +98,7 @@ class RolesPermisosTests(TestCase):
 
     def test_crear_miembro_residente_exige_unidad(self):
         form = CrearMiembroForm(
-            data={"nombre": "Ana", "apellido": "Soto", "rol": "residente"},
+            data={"nombre": "Ana", "apellido": "Soto", "email": "ana@example.com", "rol": "residente"},
             condominio=self.condominio, creador_rol="directiva",
         )
         self.assertFalse(form.is_valid())
@@ -204,7 +204,7 @@ class ConsentimientoRegistroTests(TestCase):
         condominio = Condominio.objects.create(nombre="Test Registro Residente", plan="premium")
         unidad = Unidad.objects.create(condominio=condominio, numero="1")
         datos = {
-            "nombre": "Rosa", "apellido": "Mena", "unidad": unidad.pk,
+            "nombre": "Rosa", "apellido": "Mena", "email": "rosa@example.com", "unidad": unidad.pk,
             "password1": "unaClaveSegura123", "password2": "unaClaveSegura123",
         }
         form_sin_checkbox = RegistroResidenteForm(data=datos, condominio=condominio)
@@ -216,8 +216,9 @@ class ConsentimientoRegistroTests(TestCase):
 
 
 class CorreoBienvenidaTests(TestCase):
-    """El email de bienvenida es opcional (el autoregistro de residente no
-    pedía email antes de esto) y nunca debe bloquear el alta si falla."""
+    """El email es obligatorio en ambos formularios de alta (autoregistro y
+    CrearMiembroForm) justo para garantizar que siempre llegue el correo de
+    bienvenida -- y aun así, que enviarlo nunca bloquee el alta si falla."""
 
     @classmethod
     def setUpTestData(cls):
@@ -236,13 +237,13 @@ class CorreoBienvenidaTests(TestCase):
         self.assertEqual(mail.outbox[0].to, ["rosa@example.com"])
         self.assertIn("Bienvenido", mail.outbox[0].subject)
 
-    def test_residente_sin_email_no_rompe_el_registro(self):
+    def test_residente_sin_email_no_puede_registrarse(self):
         r = self.client.post(reverse("registro-residente", kwargs={"token": self.condominio.token_registro_residentes}), {
             "nombre": "Ana", "apellido": "Soto", "unidad": self.unidad.pk,
             "password1": "unaClaveSegura123", "password2": "unaClaveSegura123", "acepto_terminos": True,
         })
-        self.assertEqual(r.status_code, 302)
-        self.assertTrue(User.objects.filter(first_name="Ana").exists())
+        self.assertEqual(r.status_code, 200)  # se queda en el form con el error, no redirige
+        self.assertFalse(User.objects.filter(first_name="Ana").exists())
         self.assertEqual(len(mail.outbox), 0)
 
     def test_crear_miembro_con_email_recibe_bienvenida(self):
@@ -254,6 +255,14 @@ class CorreoBienvenidaTests(TestCase):
         self.assertEqual(r.status_code, 302)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["juan@example.com"])
+
+    def test_crear_miembro_sin_email_no_crea_la_cuenta(self):
+        directiva = crear_membresia(self.condominio, "directiva", username="bienvenida_directiva3")
+        self.client.force_login(directiva.user)
+        r = self.client.post(reverse("crear-miembro"), {"nombre": "Luis", "apellido": "Rojas", "rol": "conserje"})
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(User.objects.filter(first_name="Luis").exists())
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_el_correo_de_bienvenida_nunca_incluye_la_contrasena(self):
         directiva = crear_membresia(self.condominio, "directiva", username="bienvenida_directiva2")
