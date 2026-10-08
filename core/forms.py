@@ -81,7 +81,12 @@ class CrearMiembroForm(forms.Form):
     def __init__(self, *args, condominio=None, **kwargs):
         super().__init__(*args, **kwargs)
         if condominio is not None:
-            self.fields["unidad"].queryset = Unidad.objects.filter(condominio=condominio)
+            self.fields["unidad"].queryset = (
+                Unidad.objects.filter(condominio=condominio)
+                .select_related("torre")
+                .annotate(_torre_len=Length("torre__nombre"), _num_len=Length("numero"))
+                .order_by("_torre_len", "torre__nombre", "_num_len", "numero")
+            )
 
     def clean(self):
         cleaned = super().clean()

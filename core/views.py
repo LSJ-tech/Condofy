@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.db import transaction
+from django.db.models import Q
 from django.db.models.functions import Length
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -287,9 +288,30 @@ class SuscripcionVencidaView(TemplateView):
 class MiembroListView(SoloDirectivaMixin, CondominioRequiredMixin, ListView):
     template_name = "core/miembro_list.html"
     context_object_name = "membresias"
+    paginate_by = 50
 
     def get_queryset(self):
-        return Membresia.objects.filter(condominio=self.condominio).select_related("user", "unidad").order_by("rol", "user__last_name")
+        qs = Membresia.objects.filter(condominio=self.condominio).select_related("user", "unidad", "unidad__torre")
+
+        rol = self.request.GET.get("rol")
+        if rol:
+            qs = qs.filter(rol=rol)
+
+        busqueda = self.request.GET.get("q", "").strip()
+        if busqueda:
+            qs = qs.filter(
+                Q(user__first_name__icontains=busqueda)
+                | Q(user__last_name__icontains=busqueda)
+                | Q(user__username__icontains=busqueda)
+            )
+
+        return qs.order_by("rol", "user__last_name")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["rol_seleccionado"] = self.request.GET.get("rol", "")
+        context["busqueda"] = self.request.GET.get("q", "")
+        return context
 
 
 class CrearMiembroView(SoloDirectivaMixin, CondominioRequiredMixin, FormView):

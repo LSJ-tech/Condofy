@@ -5,6 +5,24 @@
     <h1 class="h4 mb-0">Miembros del condominio</h1>
     <a href="{% url 'crear-miembro' %}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Nuevo miembro</a>
 </div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5">
+        <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o usuario" value="{{ busqueda }}">
+    </div>
+    <div class="col-md-4">
+        <select name="rol" class="form-select" onchange="this.form.submit()">
+            <option value="">Todos los roles</option>
+            <option value="directiva" {% if rol_seleccionado == "directiva" %}selected{% endif %}>Directiva</option>
+            <option value="conserje" {% if rol_seleccionado == "conserje" %}selected{% endif %}>Conserjería</option>
+            <option value="residente" {% if rol_seleccionado == "residente" %}selected{% endif %}>Residente</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-outline-primary w-100">Buscar</button>
+    </div>
+</form>
+
 <table class="table table-striped">
     <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Unidad</th></tr></thead>
     <tbody>
@@ -16,8 +34,22 @@
             <td>{{ m.unidad|default:"—" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="4" class="text-muted">Sin miembros todavía.</td></tr>
+        <tr><td colspan="4" class="text-muted">Sin miembros para este filtro.</td></tr>
         {% endfor %}
     </tbody>
 </table>
+
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&rol={{ rol_seleccionado }}&q={{ busqueda }}">Anterior</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&rol={{ rol_seleccionado }}&q={{ busqueda }}">Siguiente</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}
