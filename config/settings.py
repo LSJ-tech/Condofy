@@ -4,6 +4,7 @@ Django settings for config project (Condofy).
 
 import datetime
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -21,6 +22,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or get_random_secret_key()
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
+if 'test' in sys.argv:
+    ALLOWED_HOSTS.append('testserver')
 
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
@@ -105,6 +108,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+if 'test' in sys.argv:
+    # El hasher de producción (PBKDF2) es lento a propósito -- en los tests
+    # creamos decenas de usuarios por corrida y no hay nada que proteger.
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
 
 LANGUAGE_CODE = 'es-cl'
