@@ -37,6 +37,7 @@ def crear_preferencia_pago(pago, request):
             "failure": f"{base_url}/pago/resultado/",
         },
         "auto_return": "approved",
+        "notification_url": f"{base_url}/pago/webhook/",
     }
     resultado = _sdk().preference().create(preferencia)
     if not resultado.is_success:
