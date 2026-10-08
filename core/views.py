@@ -56,10 +56,13 @@ def probar_correo(request):
 def listar_condominios(request):
     """Diagnóstico manual: nombre exacto, torres y unidades de cada condominio real en esta base de datos."""
     lineas = []
-    for condominio in Condominio.objects.order_by("nombre"):
+    condominios = Condominio.objects.order_by("nombre").annotate(
+        _torres=Count("torres", distinct=True), _unidades=Count("unidades", distinct=True), _miembros=Count("membresias", distinct=True),
+    )
+    for condominio in condominios:
         lineas.append(
-            f"id={condominio.pk} | nombre={condominio.nombre!r} | torres={condominio.torres.count()} | "
-            f"unidades={condominio.unidades.count()} | miembros={condominio.membresias.count()}"
+            f"id={condominio.pk} | nombre={condominio.nombre!r} | torres={condominio._torres} | "
+            f"unidades={condominio._unidades} | miembros={condominio._miembros}"
         )
     return HttpResponse("\n".join(lineas) or "No hay condominios.", content_type="text/plain; charset=utf-8")
 
