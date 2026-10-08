@@ -2,6 +2,29 @@
 {% block titulo %}Cuotas {{ gasto.periodo }}{% endblock %}
 {% block contenido %}
 <h1 class="h4 mb-3">Cuotas del periodo {{ gasto.periodo }}</h1>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label class="form-label small text-muted">Mes</label>
+        <select class="form-select" onchange="if(this.value) location.href=this.value;">
+            {% for g in gastos %}
+            <option value="{% url 'gastos-comunes-cuotas' g.pk %}" {% if g.pk == gasto.pk %}selected{% endif %}>{{ g.periodo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label small text-muted">Torre</label>
+        <form method="get">
+            <select name="torre" class="form-select" onchange="this.form.submit()">
+                <option value="">Todas las torres</option>
+                {% for t in torres %}
+                <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>Torre {{ t.nombre }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
 <table class="table table-striped">
     <thead><tr><th>Unidad</th><th>Monto</th><th>Estado</th><th>Fecha de pago</th><th></th></tr></thead>
     <tbody>
@@ -22,7 +45,23 @@
                 {% endif %}
             </td>
         </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-muted">Sin cuotas para este filtro.</td></tr>
         {% endfor %}
     </tbody>
 </table>
+
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if torre_seleccionada %}&torre={{ torre_seleccionada }}{% endif %}">Anterior</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if torre_seleccionada %}&torre={{ torre_seleccionada }}{% endif %}">Siguiente</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}

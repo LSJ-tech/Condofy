@@ -1,12 +1,14 @@
 import calendar
 from datetime import date
 
+from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, View
 
 from core.mixins import CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
+from core.models import Torre
 
 from .forms import GastoComunForm
 from .models import CuotaUnidad, GastoComun
@@ -43,13 +45,23 @@ class GastoComunCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
 class CuotaListView(SoloDirectivaMixin, CondominioRequiredMixin, ListView):
     template_name = "gastoscomunes/cuota_list.html"
     context_object_name = "cuotas"
+    paginate_by = 50
 
     def get_queryset(self):
-        return CuotaUnidad.objects.filter(gasto_comun__condominio=self.condominio, gasto_comun_id=self.kwargs["gasto_pk"]).select_related("unidad")
+        qs = CuotaUnidad.objects.filter(
+            gasto_comun__condominio=self.condominio, gasto_comun_id=self.kwargs["gasto_pk"]
+        ).select_related("unidad", "unidad__torre")
+        torre_id = self.request.GET.get("torre")
+        if torre_id:
+            qs = qs.filter(unidad__torre_id=torre_id)
+        return qs.annotate(_torre_len=Length("unidad__torre__nombre")).order_by("_torre_len", "unidad__torre__nombre", "unidad__numero")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["gasto"] = get_object_or_404(GastoComun, pk=self.kwargs["gasto_pk"], condominio=self.condominio)
+        context["gastos"] = GastoComun.objects.filter(condominio=self.condominio).order_by("-periodo")
+        context["torres"] = Torre.objects.filter(condominio=self.condominio).annotate(_len=Length("nombre")).order_by("_len", "nombre")
+        context["torre_seleccionada"] = self.request.GET.get("torre", "")
         return context
 
 
