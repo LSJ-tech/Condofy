@@ -219,9 +219,11 @@ const CONDOMINIO_NOMBRE_WHATSAPP = "{{ condominio.nombre|default:PLATFORM_NAME|e
 
 function mensajeAlertaWhatsApp(alerta) {
     const lineas = [`🚨 *Alerta de ${alerta.tipo_display || alerta.tipo}* en ${CONDOMINIO_NOMBRE_WHATSAPP}`, ""];
-    let quien = alerta.autor_nombre || "";
-    if (alerta.autor_unidad) quien += ` (Unidad ${alerta.autor_unidad})`;
-    if (quien) lineas.push(`Reportado por: ${quien}`);
+    if (alerta.autor_nombre) lineas.push(`Reportado por: ${alerta.autor_nombre}`);
+    if (alerta.autor_unidad) {
+        const unidad = alerta.autor_torre ? `Torre ${alerta.autor_torre}, depto ${alerta.autor_unidad}` : `Depto ${alerta.autor_unidad}`;
+        lineas.push(`Unidad: ${unidad}`);
+    }
     if (alerta.mensaje) lineas.push(`Mensaje: "${alerta.mensaje}"`);
     lineas.push("", `👉 Revisa la alerta en Condofy: ${window.location.origin}/`);
     return lineas.join("\n");
