@@ -272,7 +272,6 @@ class InicioView(TemplateView):
         if hasattr(self, "membresia"):
             context["membresia"] = self.membresia
             context["condominio"] = self.condominio
-            context["es_staff_condominio"] = self.membresia.rol in ("directiva", "conserje")
             if self.membresia.rol == "residente" and self.membresia.unidad_id:
                 from gastoscomunes.models import CuotaUnidad
                 pendientes = CuotaUnidad.objects.filter(unidad=self.membresia.unidad).exclude(estado="pagado")

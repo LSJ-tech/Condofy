@@ -13,7 +13,10 @@ ESTADO_CHOICES = [
     ("activa", "Activa"),
     ("resuelta", "Resuelta"),
     ("falsa_alarma", "Falsa alarma"),
+    ("auto_cerrada", "Cerrada automáticamente"),
 ]
+
+MINUTOS_AUTO_CIERRE = 30
 
 
 class Alerta(models.Model):

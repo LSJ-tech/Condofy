@@ -78,6 +78,13 @@
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-header">Últimas alertas resueltas</div>
+    <div class="card-body">
+        <div id="alertas-recientes"><p class="text-muted mb-0">Cargando...</p></div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header">Últimos avisos</div>
     {% if membresia.rol == "directiva" %}
@@ -105,8 +112,6 @@
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <script>
-const esStaff = {{ es_staff_condominio|yesno:"true,false" }};
-
 function csrfToken() {
     return document.cookie.split("; ").find(r => r.startsWith("csrftoken="))?.split("=")[1] || "";
 }
@@ -183,10 +188,8 @@ function cargarAlertas() {
                     <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()}</div>
                     ${a.mensaje ? `<div>${a.mensaje}</div>` : ""}
                     ${a.latitud && a.longitud ? `<div id="mapa-alerta-${a.id}" style="height: 180px;" class="rounded mt-2 mb-2"></div>` : ""}
-                    ${esStaff ? `
                     <button class="btn btn-sm btn-outline-success mt-1" onclick="resolverAlerta(${a.id}, 'resuelta')">Resolver</button>
                     <button class="btn btn-sm btn-outline-secondary mt-1" onclick="resolverAlerta(${a.id}, 'falsa_alarma')">Falsa alarma</button>
-                    ` : ""}
                 </div>
             `).join("");
 
@@ -201,17 +204,46 @@ function cargarAlertas() {
         });
 }
 
+function cargarAlertasRecientes() {
+    fetch("/api/v1/alertas/?estado=recientes", { credentials: "same-origin" })
+        .then(r => r.json())
+        .then(data => {
+            const cont = document.getElementById("alertas-recientes");
+            const alertas = data.results || data;
+            if (!alertas.length) {
+                cont.innerHTML = '<p class="text-muted mb-0">Todavía no hay alertas resueltas.</p>';
+                return;
+            }
+            cont.innerHTML = alertas.map(a => {
+                const quien = a.estado === "auto_cerrada"
+                    ? "Se cerró sola (nadie respondió en 30 min)"
+                    : `${a.resuelta_por_nombre || "?"} ${a.resuelta_por_unidad ? "(Unidad " + a.resuelta_por_unidad + ")" : ""}`;
+                return `
+                <div class="border rounded p-2 mb-2">
+                    <strong>${a.tipo_display}</strong> — <span class="badge bg-secondary">${a.estado_display}</span>
+                    <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()}</div>
+                    <div class="small">${quien}</div>
+                </div>`;
+            }).join("");
+        });
+}
+
 function resolverAlerta(id, estado) {
     fetch(`/api/v1/alertas/${id}/resolver/`, {
         method: "PATCH",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
         body: JSON.stringify({ estado }),
-    }).then(cargarAlertas);
+    }).then(function () {
+        cargarAlertas();
+        cargarAlertasRecientes();
+    });
 }
 
 cargarAlertas();
+cargarAlertasRecientes();
 setInterval(cargarAlertas, 12000);
+setInterval(cargarAlertasRecientes, 12000);
 
 function cargarAvisos() {
     fetch("/api/v1/avisos/", { credentials: "same-origin" })
