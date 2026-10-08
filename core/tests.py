@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -212,3 +213,54 @@ class ConsentimientoRegistroTests(TestCase):
         datos["acepto_terminos"] = True
         form_con_checkbox = RegistroResidenteForm(data=datos, condominio=condominio)
         self.assertTrue(form_con_checkbox.is_valid(), form_con_checkbox.errors)
+
+
+class CorreoBienvenidaTests(TestCase):
+    """El email de bienvenida es opcional (el autoregistro de residente no
+    pedía email antes de esto) y nunca debe bloquear el alta si falla."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Bienvenida", plan="premium")
+        cls.unidad = Unidad.objects.create(condominio=cls.condominio, numero="1")
+
+    def test_residente_con_email_recibe_bienvenida(self):
+        r = self.client.post(reverse("registro-residente", kwargs={"token": self.condominio.token_registro_residentes}), {
+            "nombre": "Rosa", "apellido": "Mena", "email": "rosa@example.com", "unidad": self.unidad.pk,
+            "password1": "unaClaveSegura123", "password2": "unaClaveSegura123", "acepto_terminos": True,
+        })
+        self.assertEqual(r.status_code, 302)
+        user = User.objects.get(email="rosa@example.com")
+        self.assertEqual(user.first_name, "Rosa")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["rosa@example.com"])
+        self.assertIn("Bienvenido", mail.outbox[0].subject)
+
+    def test_residente_sin_email_no_rompe_el_registro(self):
+        r = self.client.post(reverse("registro-residente", kwargs={"token": self.condominio.token_registro_residentes}), {
+            "nombre": "Ana", "apellido": "Soto", "unidad": self.unidad.pk,
+            "password1": "unaClaveSegura123", "password2": "unaClaveSegura123", "acepto_terminos": True,
+        })
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(User.objects.filter(first_name="Ana").exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_crear_miembro_con_email_recibe_bienvenida(self):
+        directiva = crear_membresia(self.condominio, "directiva", username="bienvenida_directiva")
+        self.client.force_login(directiva.user)
+        r = self.client.post(reverse("crear-miembro"), {
+            "nombre": "Juan", "apellido": "Perez", "email": "juan@example.com", "rol": "conserje",
+        })
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["juan@example.com"])
+
+    def test_el_correo_de_bienvenida_nunca_incluye_la_contrasena(self):
+        directiva = crear_membresia(self.condominio, "directiva", username="bienvenida_directiva2")
+        self.client.force_login(directiva.user)
+        self.client.post(reverse("crear-miembro"), {
+            "nombre": "Pedro", "apellido": "Diaz", "email": "pedro@example.com", "rol": "conserje",
+        })
+        user = User.objects.get(email="pedro@example.com")
+        self.assertNotIn(user.password, mail.outbox[0].body)
+        self.assertNotRegex(mail.outbox[0].body, r"contraseña")

@@ -33,6 +33,30 @@ from .usuarios import generar_password_temporal, generar_username
 EMAIL_CONTACTO_DEVQUAD = "contacto@devquad.cl"
 
 
+def enviar_correo_bienvenida(user, condominio):
+    """Correo de bienvenida a un miembro nuevo -- nunca incluye la contraseña
+    (ya sea porque la eligió él mismo al autoregistrarse, o porque es
+    temporal y se entrega aparte, ver CrearMiembroView). No bloquea el alta
+    si Resend falla: el correo es un plus, no un requisito."""
+    try:
+        send_mail(
+            subject=f"¡Bienvenido a {settings.PLATFORM_NAME}, {user.first_name}!",
+            message=(
+                f"Hola {user.first_name},\n\n"
+                f"Tu cuenta en {condominio.nombre} ya está lista en {settings.PLATFORM_NAME}. Desde ahí puedes:\n\n"
+                f"- Activar el botón de pánico si tienes una emergencia -- avisa a todo el condominio al instante.\n"
+                f"- Ver los avisos de tu directiva/administración.\n"
+                f"- Revisar tus gastos comunes.\n\n"
+                f"Entra con tu usuario «{user.username}» en https://condofy.devquad.cl/login/\n\n"
+                f"Cualquier duda, escríbenos a {EMAIL_CONTACTO_DEVQUAD}."
+            ),
+            from_email=None,
+            recipient_list=[user.email],
+        )
+    except Exception:
+        pass
+
+
 @staff_member_required
 @require_GET
 def probar_correo(request):
@@ -211,17 +235,21 @@ class RegistroResidenteView(FormView):
         datos = form.cleaned_data
         username = generar_username(datos["nombre"], datos["apellido"])
         user = User.objects.create_user(
-            username=username, password=datos["password1"],
+            username=username, password=datos["password1"], email=datos.get("email", ""),
             first_name=datos["nombre"], last_name=datos["apellido"],
         )
         Membresia.objects.create(
             user=user, condominio=self.condominio, unidad=datos["unidad"], rol="residente",
             terminos_aceptados_en=timezone.now(),
         )
+        if user.email:
+            enviar_correo_bienvenida(user, self.condominio)
         login(self.request, user)
         messages.success(
             self.request,
-            f"¡Listo! Tu usuario es «{username}» — anótalo, lo necesitas para volver a entrar.",
+            f"¡Bienvenido a {self.condominio.nombre}! Tu usuario es «{username}» — anótalo, lo necesitas para "
+            f"volver a entrar. Desde aquí puedes activar el botón de pánico, ver los avisos de tu condominio y "
+            f"revisar tus gastos comunes.",
         )
         return redirect("inicio")
 
@@ -453,6 +481,8 @@ class CrearMiembroView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin,
                 user=user, condominio=self.condominio, rol=datos["rol"],
                 unidad=datos.get("unidad"),
             )
+        if user.email:
+            enviar_correo_bienvenida(user, self.condominio)
         messages.success(
             self.request,
             f"Cuenta creada: usuario «{username}», contraseña temporal «{password}» — entrégasela a la persona, "

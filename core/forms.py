@@ -116,10 +116,15 @@ class CrearMiembroForm(forms.Form):
 class RegistroResidenteForm(ConfirmacionContrasenaMixin):
     """Autoregistro público de un residente -- elige su propio depto de una lista, vía el link/QR del condominio."""
 
-    field_order = ["nombre", "apellido", "unidad", "password1", "password2", "acepto_terminos"]
+    field_order = ["nombre", "apellido", "email", "unidad", "password1", "password2", "acepto_terminos"]
 
     nombre = forms.CharField(max_length=150, label=LABEL_TU_NOMBRE, widget=forms.TextInput(attrs={"class": "form-control"}))
     apellido = forms.CharField(max_length=150, label="Tu apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(
+        required=False, label="Email (opcional)",
+        widget=forms.EmailInput(attrs={"class": "form-control"}),
+        help_text="Te mandamos un correo de bienvenida si nos lo dejas.",
+    )
     unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), label="Tu departamento", widget=forms.Select(attrs={"class": "form-select"}))
     acepto_terminos = forms.BooleanField(
         required=True, label="Acepto los Términos de Uso y la Política de Privacidad",
