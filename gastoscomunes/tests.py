@@ -51,3 +51,39 @@ class GenerarGastoComunPermisosTests(TestCase):
         r = self.client.get(reverse("gastos-comunes-list"))
         self.assertEqual(r.status_code, 200)
         self.assertNotIn(reverse("gastos-comunes-crear").encode(), r.content)
+
+
+class DatosTransferenciaPermisosTests(TestCase):
+    """Los datos de transferencia (banco/cuenta/RUT para pagar gastos
+    comunes) quedaron exclusivos de administración -- antes vivían en "Mi
+    condominio" (exclusivo directiva), ahora ni directiva puede editarlos."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Transferencia Permisos", plan="premium")
+
+    def setUp(self):
+        self.administracion = crear_membresia(self.condominio, "administracion", username="transf_admon")
+        self.directiva = crear_membresia(self.condominio, "directiva", username="transf_directiva")
+
+    def test_administracion_puede_editar_datos_transferencia(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("datos-transferencia"), {"datos_transferencia": "Banco Estado, cta 123, RUT 11.111.111-1"})
+        self.assertEqual(r.status_code, 302)
+        self.condominio.refresh_from_db()
+        self.assertIn("Banco Estado", self.condominio.datos_transferencia)
+
+    def test_directiva_no_puede_editar_datos_transferencia(self):
+        self.client.force_login(self.directiva.user)
+        r = self.client.get(reverse("datos-transferencia"))
+        self.assertEqual(r.status_code, 302)
+        r = self.client.post(reverse("datos-transferencia"), {"datos_transferencia": "Intento de directiva"})
+        self.assertEqual(r.status_code, 302)
+        self.condominio.refresh_from_db()
+        self.assertNotIn("Intento de directiva", self.condominio.datos_transferencia or "")
+
+    def test_mi_condominio_ya_no_tiene_el_form_de_transferencia(self):
+        self.client.force_login(self.directiva.user)
+        r = self.client.get(reverse("mi-condominio"))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn(b"datos_transferencia", r.content)

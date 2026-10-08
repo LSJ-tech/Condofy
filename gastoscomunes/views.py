@@ -5,10 +5,11 @@ from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, ListView, View
+from django.views.generic import CreateView, ListView, UpdateView, View
 
+from core.forms import CondominioForm
 from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
-from core.models import Torre
+from core.models import Condominio, Torre
 
 from .forms import GastoComunForm
 from .models import CuotaUnidad, GastoComun
@@ -40,6 +41,21 @@ class GastoComunCreateView(SoloAdministracionMixin, CondominioFormMixin, CreateV
         response = super().form_valid(form)
         self.object.generar_cuotas()
         return response
+
+
+class DatosTransferenciaUpdateView(SoloAdministracionMixin, CondominioFormMixin, UpdateView):
+    """Banco/cuenta/RUT que se muestra a los residentes para pagar gastos
+    comunes -- exclusivo de administración, igual que generar el gasto
+    común (a pedido del usuario; antes vivía en "Mi condominio", exclusivo
+    de directiva)."""
+
+    model = Condominio
+    form_class = CondominioForm
+    template_name = "gastoscomunes/datos_transferencia_form.html"
+    success_url = reverse_lazy("gastos-comunes-list")
+
+    def get_object(self, queryset=None):
+        return self.condominio
 
 
 class CuotaListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, ListView):

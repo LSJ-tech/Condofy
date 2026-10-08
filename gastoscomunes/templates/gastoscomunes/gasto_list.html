@@ -4,7 +4,10 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">Gastos comunes</h1>
     {% if membresia.rol == "administracion" %}
-    <a href="{% url 'gastos-comunes-crear' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo periodo</a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'datos-transferencia' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-bank"></i> Datos de transferencia</a>
+        <a href="{% url 'gastos-comunes-crear' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo periodo</a>
+    </div>
     {% endif %}
 </div>
 <div class="table-responsive">

@@ -25,7 +25,7 @@ from django.views.decorators.http import require_GET
 from django.views.generic import CreateView, FormView, ListView, TemplateView, UpdateView
 from django.views.generic.base import View
 
-from .forms import CondominioForm, CrearMiembroForm, MiCambiarContrasenaForm, MiPerfilForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
+from .forms import CrearMiembroForm, MiCambiarContrasenaForm, MiPerfilForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloDirectivaMixin, SoloStaffMixin
 from .models import CodigoInvitacion, Condominio, Membresia, SolicitudEliminacion, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
@@ -491,14 +491,13 @@ class CrearMiembroView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin,
         return super().form_valid(form)
 
 
-class CondominioUpdateView(SoloDirectivaMixin, CondominioRequiredMixin, UpdateView):
-    model = Condominio
-    form_class = CondominioForm
-    template_name = "core/condominio_form.html"
-    success_url = reverse_lazy("mi-condominio")
+class CondominioUpdateView(SoloDirectivaMixin, CondominioRequiredMixin, TemplateView):
+    """Ya no edita nada acá -- los datos de transferencia de gastos comunes
+    se movieron a DatosTransferenciaUpdateView (exclusivo de administración).
+    Esta página le queda a la directiva solo para el autoregistro de
+    residentes (QR/link)."""
 
-    def get_object(self, queryset=None):
-        return self.condominio
+    template_name = "core/condominio_form.html"
 
 
 class TorreListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, ListView):
