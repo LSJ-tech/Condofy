@@ -292,9 +292,12 @@ class UnidadListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
 class AplicarAlicuotaMasivaView(SoloDirectivaMixin, CondominioRequiredMixin, View):
     def post(self, request):
         try:
-            valor = Decimal(request.POST.get("alicuota", "").replace(",", "."))
+            valor = Decimal(request.POST.get("alicuota", "").replace(",", ".")).quantize(Decimal("0.0001"))
         except (InvalidOperation, TypeError):
             messages.error(request, "Ingresa un número válido para la alícuota.")
+            return redirect("unidades")
+        if valor <= -100 or valor >= 100:
+            messages.error(request, "El valor es demasiado grande (máximo 99.9999).")
             return redirect("unidades")
         total = Unidad.objects.filter(condominio=self.condominio).update(alicuota=valor)
         messages.success(request, f"Alícuota {valor} aplicada a las {total} unidades de tu condominio.")
