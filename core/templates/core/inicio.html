@@ -7,6 +7,30 @@
 <div class="alert alert-warning">Tu condominio tiene la suscripción vencida. <a href="{% url 'suscripcion-vencida' %}">Ver detalle</a>.</div>
 {% endif %}
 
+{% if membresia.rol == "residente" %}
+<div class="card mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="text-muted small">Mi unidad</div>
+            <div class="fw-semibold">
+                {% if membresia.unidad %}Torre {{ membresia.unidad.torre.nombre|default:"—" }}, depto {{ membresia.unidad.numero }}{% else %}Sin unidad asignada — pídesela a tu directiva{% endif %}
+            </div>
+        </div>
+        {% if membresia.unidad %}
+        <div class="text-md-end">
+            {% if cuotas_pendientes_count %}
+            <div class="text-muted small">Gastos comunes</div>
+            <div class="fw-bold text-danger fs-5">${{ deuda_pendiente }} pendiente{{ cuotas_pendientes_count|pluralize }}</div>
+            {% else %}
+            <div class="text-success"><i class="bi bi-check-circle"></i> Gastos comunes al día</div>
+            {% endif %}
+            <a href="{% url 'mis-cuotas' %}" class="small">Ver detalle →</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div id="aviso-panico" class="alert alert-success d-none"><i class="bi bi-check-circle"></i> Alerta enviada — directiva y conserjería fueron notificados.</div>
 
 <div class="card mb-4 border-danger">

@@ -197,6 +197,11 @@ class InicioView(TemplateView):
         if hasattr(self, "membresia"):
             context["membresia"] = self.membresia
             context["condominio"] = self.condominio
+            if self.membresia.rol == "residente" and self.membresia.unidad_id:
+                from gastoscomunes.models import CuotaUnidad
+                pendientes = CuotaUnidad.objects.filter(unidad=self.membresia.unidad).exclude(estado="pagado")
+                context["deuda_pendiente"] = sum((c.monto for c in pendientes), Decimal("0"))
+                context["cuotas_pendientes_count"] = pendientes.count()
         return context
 
 
