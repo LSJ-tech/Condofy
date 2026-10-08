@@ -7,6 +7,8 @@ from django.db.models.functions import Length
 
 from .models import REGION_CHOICES, ROL_CHOICES, CodigoInvitacion, Condominio, SolicitudAcceso, Torre, Unidad
 
+LABEL_TU_NOMBRE = "Tu nombre"
+
 
 class ConfirmacionContrasenaMixin(forms.Form):
     password1 = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={"class": "form-control"}))
@@ -54,7 +56,7 @@ class RegistroCondominioForm(ConfirmacionContrasenaMixin):
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     nombre = forms.CharField(
-        max_length=150, label="Tu nombre",
+        max_length=150, label=LABEL_TU_NOMBRE,
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
     apellido = forms.CharField(
@@ -116,7 +118,7 @@ class RegistroResidenteForm(ConfirmacionContrasenaMixin):
 
     field_order = ["nombre", "apellido", "unidad", "password1", "password2", "acepto_terminos"]
 
-    nombre = forms.CharField(max_length=150, label="Tu nombre", widget=forms.TextInput(attrs={"class": "form-control"}))
+    nombre = forms.CharField(max_length=150, label=LABEL_TU_NOMBRE, widget=forms.TextInput(attrs={"class": "form-control"}))
     apellido = forms.CharField(max_length=150, label="Tu apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
     unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), label="Tu departamento", widget=forms.Select(attrs={"class": "form-select"}))
     acepto_terminos = forms.BooleanField(
@@ -158,7 +160,7 @@ class SolicitudAccesoForm(forms.ModelForm):
         model = SolicitudAcceso
         fields = ["nombre", "condominio", "comuna", "telefono", "email", "mensaje"]
         widgets = {
-            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Tu nombre"}),
+            "nombre": forms.TextInput(attrs={"class": "form-control", "placeholder": LABEL_TU_NOMBRE}),
             "condominio": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del condominio o junta de vecinos"}),
             "comuna": forms.TextInput(attrs={"class": "form-control", "placeholder": "Comuna"}),
             "telefono": forms.TextInput(attrs={"class": "form-control", "placeholder": "+56 9 ..."}),

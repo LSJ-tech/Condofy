@@ -86,20 +86,28 @@ class WebhookMercadoPagoView(View):
 
         estado_mp = detalle.get("status")
         if estado_mp == "approved" and pago.estado != "aprobado":
-            pago.estado = "aprobado"
-            pago.mercadopago_payment_id = str(payment_id)
-            pago.fecha_confirmacion = timezone.now()
-            pago.save(update_fields=["estado", "mercadopago_payment_id", "fecha_confirmacion"])
-
-            if pago.tipo == "suscripcion":
-                condominio = pago.condominio
-                hoy = timezone.localdate()
-                desde = condominio.pagado_hasta if condominio.pagado_hasta and condominio.pagado_hasta > hoy else hoy
-                condominio.pagado_hasta = desde + datetime.timedelta(days=30)
-                condominio.plan = pago.plan
-                condominio.save(update_fields=["pagado_hasta", "plan"])
+            self._marcar_aprobado(pago, payment_id)
         elif estado_mp == "rejected" and pago.estado == "pendiente":
             pago.estado = "rechazado"
             pago.save(update_fields=["estado"])
 
         return HttpResponse(status=200)
+
+    def _marcar_aprobado(self, pago, payment_id):
+        pago.estado = "aprobado"
+        pago.mercadopago_payment_id = str(payment_id)
+        pago.fecha_confirmacion = timezone.now()
+        pago.save(update_fields=["estado", "mercadopago_payment_id", "fecha_confirmacion"])
+        if pago.tipo == "suscripcion":
+            self._extender_suscripcion(pago)
+
+    def _extender_suscripcion(self, pago):
+        """Una donación aprobada NUNCA debe pasar por acá -- no regala días
+        de servicio ni cambia el plan, eso es exclusivo de un pago de tipo
+        'suscripcion' (ver tests de WebhookMercadoPagoTests)."""
+        condominio = pago.condominio
+        hoy = timezone.localdate()
+        desde = condominio.pagado_hasta if condominio.pagado_hasta and condominio.pagado_hasta > hoy else hoy
+        condominio.pagado_hasta = desde + datetime.timedelta(days=30)
+        condominio.plan = pago.plan
+        condominio.save(update_fields=["pagado_hasta", "plan"])

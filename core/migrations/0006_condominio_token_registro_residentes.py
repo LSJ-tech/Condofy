@@ -4,8 +4,8 @@ from django.db import migrations, models
 
 
 def asignar_tokens_unicos(apps, schema_editor):
-    Condominio = apps.get_model("core", "Condominio")
-    for condominio in Condominio.objects.all():
+    modelo_condominio = apps.get_model("core", "Condominio")
+    for condominio in modelo_condominio.objects.all():
         condominio.token_registro_residentes = uuid.uuid4()
         condominio.save(update_fields=["token_registro_residentes"])
 

@@ -13,8 +13,9 @@ from .models import Pago
 
 
 def crear_membresia(condominio, rol, unidad=None, **user_kwargs):
+    """Sin password: los tests se autentican con force_login."""
     username = user_kwargs.pop("username", f"t_{rol}_{Membresia.objects.count()}")
-    user = User.objects.create_user(username=username, password="x12345678", **user_kwargs)
+    user = User.objects.create_user(username=username, **user_kwargs)
     return Membresia.objects.create(
         user=user, condominio=condominio, rol=rol, unidad=unidad, terminos_aceptados_en=timezone.now(),
     )
@@ -33,7 +34,7 @@ class DonarViewTests(TestCase):
 
     def setUp(self):
         self.residente = crear_membresia(self.condominio, "residente", unidad=self.unidad, username="don_residente")
-        self.client.login(username="don_residente", password="x12345678")
+        self.client.force_login(self.residente.user)
 
     @patch("pagos.views.crear_preferencia_pago", return_value="https://fake-mp.test/pagar/1")
     def test_residente_puede_donar(self, mock_pref):
@@ -56,9 +57,9 @@ class DonarViewTests(TestCase):
         self.assertFalse(Pago.objects.filter(condominio=self.condominio).exists())
 
     def test_usuario_sin_membresia_no_puede_donar(self):
-        User.objects.create_user(username="sin_membresia", password="x12345678")
+        sin_membresia = User.objects.create_user(username="sin_membresia")
         self.client.logout()
-        self.client.login(username="sin_membresia", password="x12345678")
+        self.client.force_login(sin_membresia)
         r = self.client.post(reverse("donar"), {"monto": "3000"})
         self.assertEqual(r.status_code, 302)
         self.assertFalse(Pago.objects.exists())

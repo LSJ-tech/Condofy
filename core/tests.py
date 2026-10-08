@@ -9,8 +9,11 @@ from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 
 
 def crear_membresia(condominio, rol, unidad=None, terminos=True, **user_kwargs):
+    """Sin password: los tests se autentican con force_login (no valida
+    contraseña, no hay nada que hashear) -- ninguno de estos tests prueba el
+    mecanismo de login en sí, solo qué puede ver cada rol una vez adentro."""
     username = user_kwargs.pop("username", f"t_{rol}_{Membresia.objects.count()}")
-    user = User.objects.create_user(username=username, password="x12345678", **user_kwargs)
+    user = User.objects.create_user(username=username, **user_kwargs)
     return Membresia.objects.create(
         user=user, condominio=condominio, rol=rol, unidad=unidad,
         terminos_aceptados_en=timezone.now() if terminos else None,
@@ -36,7 +39,7 @@ class RolesPermisosTests(TestCase):
         self.residente = crear_membresia(self.condominio, "residente", unidad=self.unidad, username="roles_residente")
 
     def _login(self, membresia):
-        self.client.login(username=membresia.user.username, password="x12345678")
+        self.client.force_login(membresia.user)
 
     def test_dia_a_dia_directiva_y_administracion_permitido(self):
         for membresia in (self.directiva, self.administracion):
@@ -146,7 +149,7 @@ class TerminosAceptacionTests(TestCase):
 
     def setUp(self):
         self.membresia = crear_membresia(self.condominio, "directiva", terminos=False, username="pendiente_terminos")
-        self.client.login(username="pendiente_terminos", password="x12345678")
+        self.client.force_login(self.membresia.user)
 
     def test_inicio_redirige_a_aceptar_terminos(self):
         r = self.client.get(reverse("inicio"))

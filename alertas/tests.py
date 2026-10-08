@@ -11,8 +11,9 @@ from .models import Alerta
 
 
 def crear_membresia(condominio, rol, **user_kwargs):
+    """Sin password: los tests se autentican con force_login."""
     username = user_kwargs.pop("username", f"t_{rol}_{Membresia.objects.count()}")
-    user = User.objects.create_user(username=username, password="x12345678", **user_kwargs)
+    user = User.objects.create_user(username=username, **user_kwargs)
     return Membresia.objects.create(user=user, condominio=condominio, rol=rol, terminos_aceptados_en=timezone.now())
 
 
@@ -27,7 +28,7 @@ class FiltroEstadoAlertaTests(TestCase):
 
     def setUp(self):
         self.membresia = crear_membresia(self.condominio, "residente", username="filtro_residente")
-        self.client.login(username="filtro_residente", password="x12345678")
+        self.client.force_login(self.membresia.user)
         Alerta.objects.create(condominio=self.condominio, autor=self.membresia, tipo="robo", estado="activa")
         Alerta.objects.create(condominio=self.condominio, autor=self.membresia, tipo="incendio", estado="resuelta")
         Alerta.objects.create(condominio=self.condominio, autor=self.membresia, tipo="otro", estado="falsa_alarma")
@@ -61,7 +62,7 @@ class AutoCierreYResolucionAbiertaTests(TestCase):
 
     def test_un_residente_puede_resolver_la_alerta_de_otro(self):
         alerta = Alerta.objects.create(condominio=self.condominio, autor=self.autor, tipo="robo", estado="activa")
-        self.client.login(username="auto_vecino", password="x12345678")
+        self.client.force_login(self.vecino.user)
         r = self.client.patch(
             reverse("alerta-resolver", kwargs={"pk": alerta.pk}),
             data={"estado": "resuelta"}, content_type="application/json",
@@ -74,7 +75,7 @@ class AutoCierreYResolucionAbiertaTests(TestCase):
     def test_alerta_vieja_se_autocierra_al_listar(self):
         alerta = Alerta.objects.create(condominio=self.condominio, autor=self.autor, tipo="robo", estado="activa")
         Alerta.objects.filter(pk=alerta.pk).update(fecha_creacion=timezone.now() - timedelta(minutes=45))
-        self.client.login(username="auto_vecino", password="x12345678")
+        self.client.force_login(self.vecino.user)
         self.client.get(reverse("alerta-list"))
         alerta.refresh_from_db()
         self.assertEqual(alerta.estado, "auto_cerrada")

@@ -109,12 +109,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-if 'test' in sys.argv:
-    # El hasher de producción (PBKDF2) es lento a propósito -- en los tests
-    # creamos decenas de usuarios por corrida y no hay nada que proteger.
-    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
-
-
 LANGUAGE_CODE = 'es-cl'
 TIME_ZONE = 'America/Santiago'
 USE_I18N = True
