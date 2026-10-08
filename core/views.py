@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.db import transaction
+from django.db.models.functions import Length
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -253,6 +254,9 @@ class TorreListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
     model = Torre
     template_name = "core/torre_list.html"
     context_object_name = "torres"
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(_len=Length("nombre")).order_by("_len", "nombre")
 
 
 class TorreCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):

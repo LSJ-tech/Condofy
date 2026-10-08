@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.db.models.functions import Length
 
 from .models import REGION_CHOICES, ROL_CHOICES, CodigoInvitacion, Condominio, SolicitudAcceso, Torre, Unidad
 
@@ -144,4 +145,4 @@ class UnidadForm(forms.ModelForm):
     def __init__(self, *args, condominio=None, **kwargs):
         super().__init__(*args, **kwargs)
         if condominio is not None:
-            self.fields["torre"].queryset = Torre.objects.filter(condominio=condominio)
+            self.fields["torre"].queryset = Torre.objects.filter(condominio=condominio).annotate(_len=Length("nombre")).order_by("_len", "nombre")
