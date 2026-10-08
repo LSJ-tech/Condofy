@@ -5,6 +5,7 @@
     <h1 class="h4 mb-0">Gastos comunes</h1>
     <a href="{% url 'gastos-comunes-crear' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo periodo</a>
 </div>
+<div class="table-responsive">
 <table class="table table-striped">
     <thead><tr><th>Periodo</th><th>Monto total</th><th>Vencimiento</th><th></th></tr></thead>
     <tbody>
@@ -20,4 +21,5 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

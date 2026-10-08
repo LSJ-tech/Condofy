@@ -5,6 +5,7 @@
     <h1 class="h4 mb-0">Registro de accesos</h1>
     <a href="{% url 'registro-ingreso-crear' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Registrar ingreso</a>
 </div>
+<div class="table-responsive">
 <table class="table table-striped">
     <thead><tr><th>Visitante</th><th>Unidad</th><th>Motivo</th><th>Ingreso</th><th>Salida</th><th></th></tr></thead>
     <tbody>
@@ -29,4 +30,5 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

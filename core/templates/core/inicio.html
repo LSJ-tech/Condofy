@@ -85,7 +85,7 @@
     <div class="card-body">
         <ul class="list-group list-group-flush">
             {% for m in morosos %}
-            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 px-0">
                 <span>{% if m.unidad__torre__nombre %}Torre {{ m.unidad__torre__nombre }} - {% endif %}Depto {{ m.unidad__numero }}</span>
                 <span class="text-danger fw-semibold">${{ m.total_adeudado }} <span class="text-muted small">({{ m.cuotas_atrasadas }} cuota{{ m.cuotas_atrasadas|pluralize }})</span></span>
             </li>

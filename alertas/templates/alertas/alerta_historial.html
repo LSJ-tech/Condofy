@@ -18,6 +18,7 @@
     </div>
 </form>
 
+<div class="table-responsive">
 <table class="table table-striped">
     <thead><tr><th>Tipo</th><th>Estado</th><th>Autor</th><th>Fecha</th><th>Resuelta por</th></tr></thead>
     <tbody>
@@ -42,6 +43,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 {% if page_obj.has_other_pages %}
 <nav>
