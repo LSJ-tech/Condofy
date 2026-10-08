@@ -218,14 +218,13 @@ function csrfToken() {
 const CONDOMINIO_NOMBRE_WHATSAPP = "{{ condominio.nombre|default:PLATFORM_NAME|escapejs }}";
 
 function mensajeAlertaWhatsApp(alerta) {
-    let texto = `🚨 Alerta de ${alerta.tipo_display || alerta.tipo} en ${CONDOMINIO_NOMBRE_WHATSAPP}`;
-    if (alerta.autor_nombre) {
-        texto += ` — avisó ${alerta.autor_nombre}`;
-        if (alerta.autor_unidad) texto += ` (Unidad ${alerta.autor_unidad})`;
-    }
-    if (alerta.mensaje) texto += `. "${alerta.mensaje}"`;
-    texto += ". Revisa Condofy para más detalles.";
-    return texto;
+    const lineas = [`🚨 *Alerta de ${alerta.tipo_display || alerta.tipo}* en ${CONDOMINIO_NOMBRE_WHATSAPP}`, ""];
+    let quien = alerta.autor_nombre || "";
+    if (alerta.autor_unidad) quien += ` (Unidad ${alerta.autor_unidad})`;
+    if (quien) lineas.push(`Reportado por: ${quien}`);
+    if (alerta.mensaje) lineas.push(`Mensaje: "${alerta.mensaje}"`);
+    lineas.push("", `👉 Revisa la alerta en Condofy: ${window.location.origin}/`);
+    return lineas.join("\n");
 }
 
 function linkWhatsAppAlerta(alerta) {
