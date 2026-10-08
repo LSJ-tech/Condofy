@@ -16,9 +16,9 @@ class GastoComun(models.Model):
 
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="gastos_comunes")
     periodo = models.CharField(max_length=20, help_text="Ej. '2026-09'.")
-    monto_total = models.DecimalField(max_digits=12, decimal_places=2)
-    monto_por_unidad = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True,
+    monto_total = models.PositiveIntegerField(help_text="En pesos chilenos -- sin centavos.")
+    monto_por_unidad = models.PositiveIntegerField(
+        null=True, blank=True,
         help_text="Si el cargo es una cuota fija por unidad (no prorrateada por alícuota), queda el valor acá y en monto_total queda el total resultante.",
     )
     fecha_emision = models.DateField(auto_now_add=True)
@@ -49,9 +49,9 @@ class GastoComun(models.Model):
             suma_alicuotas = sum((u.alicuota for u in unidades), Decimal("0"))
             for unidad in unidades:
                 if suma_alicuotas > 0:
-                    monto = (self.monto_total * unidad.alicuota / suma_alicuotas).quantize(Decimal("0.01"))
+                    monto = round(self.monto_total * unidad.alicuota / suma_alicuotas)
                 else:
-                    monto = (self.monto_total / len(unidades)).quantize(Decimal("0.01"))
+                    monto = round(self.monto_total / len(unidades))
                 cuotas.append(CuotaUnidad(gasto_comun=self, unidad=unidad, monto=monto))
         CuotaUnidad.objects.bulk_create(cuotas)
 
@@ -59,7 +59,7 @@ class GastoComun(models.Model):
 class CuotaUnidad(models.Model):
     gasto_comun = models.ForeignKey(GastoComun, on_delete=models.CASCADE, related_name="cuotas")
     unidad = models.ForeignKey(Unidad, on_delete=models.CASCADE, related_name="cuotas")
-    monto = models.DecimalField(max_digits=12, decimal_places=2)
+    monto = models.PositiveIntegerField(help_text="En pesos chilenos -- sin centavos.")
     estado = models.CharField(max_length=10, choices=ESTADO_CUOTA_CHOICES, default="pendiente")
     fecha_pago = models.DateField(null=True, blank=True)
 

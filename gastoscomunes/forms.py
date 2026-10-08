@@ -23,8 +23,8 @@ class GastoComunForm(forms.ModelForm):
         fields = ["periodo", "monto_total", "monto_por_unidad"]
         widgets = {
             "periodo": forms.TextInput(attrs={"class": "form-control", "type": "month"}),
-            "monto_total": forms.NumberInput(attrs={"class": "form-control", "id": "id_monto_total"}),
-            "monto_por_unidad": forms.NumberInput(attrs={"class": "form-control", "id": "id_monto_por_unidad"}),
+            "monto_total": forms.NumberInput(attrs={"class": "form-control", "id": "id_monto_total", "step": "1"}),
+            "monto_por_unidad": forms.NumberInput(attrs={"class": "form-control", "id": "id_monto_por_unidad", "step": "1"}),
         }
         labels = {
             "periodo": "Mes",
