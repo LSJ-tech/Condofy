@@ -169,6 +169,15 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@condofy.loca
 MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', '')
 
 
+# Web Push para la PWA (botón de pánico, avisos) -- par de llaves VAPID,
+# generadas una sola vez con `manage.py generar_vapid_keys`. Sin configurar,
+# el botón de pánico sigue funcionando pero nadie recibe notificación si no
+# tiene la app abierta (ver notificaciones/services.py).
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+VAPID_CLAIMS_EMAIL = os.environ.get('VAPID_CLAIMS_EMAIL', 'contacto@devquad.cl')
+
+
 # Django REST Framework + JWT (djangorestframework-simplejwt) -- autenticación
 # de la app móvil. Access corto + refresh largo revocable (blacklist), más
 # apropiado para sesiones móviles persistentes que un token simple sin expirar.

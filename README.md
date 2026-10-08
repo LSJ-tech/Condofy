@@ -22,9 +22,9 @@ Implementado y probado de punta a punta:
 - Política de Privacidad y Términos de Uso (`/privacidad/`, `/terminos/`), con aceptación obligatoria al registrarse (o en el primer login para cuentas creadas por la directiva), y solicitud de eliminación de cuenta/datos desde "Mi perfil".
 - Panel de administración (django-unfold) para el dueño de la plataforma.
 - API REST documentada con Swagger en `/api/docs/` (drf-spectacular).
-- PWA instalable (manifest + service worker en `/sw.js`, íconos propios): ícono en el escritorio del celular, ventana standalone, página de respaldo sin conexión en `/offline/`. Todavía sin push notifications vía Web Push (eso sigue siendo solo para la futura app nativa vía Expo).
+- PWA instalable (manifest + service worker en `/sw.js`, íconos propios): ícono en el escritorio del celular, ventana standalone, página de respaldo sin conexión en `/offline/`. **Con Web Push real**: botón de pánico y avisos llegan como notificación del sistema aunque la PWA esté cerrada (VAPID + `pywebpush`, generar el par de llaves con `manage.py generar_vapid_keys`) -- separado de `DispositivoPush`/Expo, que sigue siendo solo para la futura app nativa.
 
-No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes, confirmaciones de alerta entre vecinos, reportes, donación recurrente/mensual, push notifications desde la PWA, app nativa.
+No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes, confirmaciones de alerta entre vecinos, reportes, donación recurrente/mensual, app nativa.
 
 ## Stack
 

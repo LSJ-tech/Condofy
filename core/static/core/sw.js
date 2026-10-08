@@ -27,3 +27,32 @@ self.addEventListener("fetch", (event) => {
         );
     }
 });
+
+self.addEventListener("push", (event) => {
+    let datos = {};
+    try {
+        datos = event.data ? event.data.json() : {};
+    } catch (error) {
+        datos = { title: "Condofy", body: event.data ? event.data.text() : "" };
+    }
+    const opciones = {
+        body: datos.body || "",
+        icon: "/static/core/icon-192.png",
+        badge: "/static/core/icon-192.png",
+        data: datos.data || {},
+        requireInteraction: (datos.data && datos.data.tipo === "alerta") || false,
+    };
+    event.waitUntil(self.registration.showNotification(datos.title || "Condofy", opciones));
+});
+
+self.addEventListener("notificationclick", (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then((lista) => {
+            for (const cliente of lista) {
+                if ("focus" in cliente) return cliente.focus();
+            }
+            return clients.openWindow("/");
+        })
+    );
+});

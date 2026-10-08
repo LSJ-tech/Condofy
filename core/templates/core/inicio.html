@@ -106,6 +106,11 @@
 </div>
 {% endif %}
 
+<div id="banner-notificaciones" class="alert alert-warning d-none d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span><i class="bi bi-bell"></i> Activa las notificaciones para enterarte al instante si alguien activa el botón de pánico.</span>
+    <button type="button" id="btn-activar-notificaciones" class="btn btn-sm btn-warning text-nowrap">Activar</button>
+</div>
+
 <div id="aviso-panico" class="alert alert-success d-none"><i class="bi bi-check-circle"></i> Alerta enviada — todo el condominio fue notificado.</div>
 <div id="error-panico" class="alert alert-danger d-none"></div>
 
@@ -212,6 +217,54 @@ function obtenerUbicacion() {
             function () { resolve(null); },
             { timeout: 5000, maximumAge: 60000 }
         );
+    });
+}
+
+// Notificaciones push (Web Push) -- banner "Activar" solo si el navegador
+// soporta push, hay una llave VAPID configurada, y todavía no se decidió
+// (permiso "default"). Si ya está "granted" o "denied" no hay nada que
+// mostrar: en "denied" el navegador ni deja volver a preguntar.
+function urlBase64ToUint8Array(base64) {
+    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+    const base64Seguro = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = window.atob(base64Seguro);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+const vapidPublicKey = "{{ VAPID_PUBLIC_KEY|escapejs }}";
+if (vapidPublicKey && "serviceWorker" in navigator && "PushManager" in window && Notification.permission === "default") {
+    document.getElementById("banner-notificaciones").classList.remove("d-none");
+}
+
+const btnActivarNotificaciones = document.getElementById("btn-activar-notificaciones");
+if (btnActivarNotificaciones) {
+    btnActivarNotificaciones.addEventListener("click", function () {
+        const boton = this;
+        boton.disabled = true;
+        Notification.requestPermission().then(function (permiso) {
+            if (permiso !== "granted") {
+                document.getElementById("banner-notificaciones").classList.add("d-none");
+                return;
+            }
+            navigator.serviceWorker.ready.then(function (registro) {
+                return registro.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+            }).then(function (suscripcion) {
+                const datos = suscripcion.toJSON();
+                return fetch("/api/v1/dispositivos/web-push/", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+                    body: JSON.stringify({ endpoint: datos.endpoint, p256dh: datos.keys.p256dh, auth: datos.keys.auth }),
+                });
+            }).then(function () {
+                document.getElementById("banner-notificaciones").classList.add("d-none");
+            }).catch(function () {
+                boton.disabled = false;
+            });
+        });
     });
 }
 

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -79,3 +80,25 @@ class AutoCierreYResolucionAbiertaTests(TestCase):
         self.client.get(reverse("alerta-list"))
         alerta.refresh_from_db()
         self.assertEqual(alerta.estado, "auto_cerrada")
+
+
+class NotificarAlertaTests(TestCase):
+    """Crear una alerta de verdad (vía la API, como hace el botón de pánico)
+    debe disparar los dos canales de push -- Expo (app nativa futura) y Web
+    Push (la PWA, agregada hoy) -- sin pegarle a ningún servicio real."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Notificar Alerta", plan="premium")
+
+    def test_crear_alerta_llama_a_ambos_canales_de_push(self):
+        membresia = crear_membresia(self.condominio, "residente", username="notif_autor")
+        self.client.force_login(membresia.user)
+        with patch("alertas.services.enviar_push_a_condominio") as mock_expo, \
+             patch("alertas.services.enviar_web_push_a_condominio") as mock_web:
+            r = self.client.post(reverse("alerta-list"), {"tipo": "robo", "mensaje": "Prueba"}, content_type="application/json")
+        self.assertEqual(r.status_code, 201)
+        self.assertEqual(mock_expo.call_count, 1)
+        self.assertEqual(mock_web.call_count, 1)
+        self.assertEqual(mock_expo.call_args.kwargs["excluir_user_id"], membresia.user_id)
+        self.assertEqual(mock_web.call_args.kwargs["excluir_user_id"], membresia.user_id)

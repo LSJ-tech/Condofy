@@ -1,8 +1,11 @@
+import json
 import logging
 
 import requests
+from django.conf import settings
+from pywebpush import WebPushException, webpush
 
-from .models import DispositivoPush
+from .models import DispositivoPush, SuscripcionWebPush
 
 logger = logging.getLogger(__name__)
 
@@ -40,3 +43,37 @@ def enviar_push_a_condominio(condominio, titulo, cuerpo, data=None, excluir_user
             respuesta.raise_for_status()
         except requests.RequestException:
             logger.exception("Falló el envío de push a Expo para %s dispositivos.", len(lote))
+
+
+def enviar_web_push_a_condominio(condominio, titulo, cuerpo, data=None, excluir_user_id=None):
+    """Igual que enviar_push_a_condominio, pero para navegadores (la PWA)
+    vía el protocolo estándar de Web Push -- sin pasar por Expo. No hace
+    nada si no hay VAPID configurado (todavía no se armó en producción) ni
+    si nadie se suscribió."""
+    if not settings.VAPID_PRIVATE_KEY:
+        return
+
+    suscripciones = SuscripcionWebPush.objects.filter(user__membresia__condominio=condominio)
+    if excluir_user_id:
+        suscripciones = suscripciones.exclude(user_id=excluir_user_id)
+
+    payload = json.dumps({"title": titulo, "body": cuerpo, "data": data or {}})
+    for suscripcion in suscripciones:
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": suscripcion.endpoint,
+                    "keys": {"p256dh": suscripcion.p256dh, "auth": suscripcion.auth},
+                },
+                data=payload,
+                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": f"mailto:{settings.VAPID_CLAIMS_EMAIL}"},
+            )
+        except WebPushException as error:
+            estado = getattr(error.response, "status_code", None)
+            if estado in (404, 410):
+                # El navegador descartó la suscripción (desinstaló la PWA,
+                # borró datos del sitio, etc.) -- ya no sirve, se limpia.
+                suscripcion.delete()
+            else:
+                logger.exception("Falló el envío de web push a la suscripción #%s.", suscripcion.pk)

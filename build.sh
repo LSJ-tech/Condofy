@@ -2,7 +2,11 @@
 # Script de build para Render. Se ejecuta en cada deploy.
 set -o errexit
 
-pip install --only-binary :all: -r requirements.txt
+# http-ece (dependencia de pywebpush, para Web Push) solo publica .tar.gz en
+# PyPI, nunca un wheel -- se excluye de --only-binary o el build falla. Es
+# puro Python (sin extensiones en C), así que compilarla no necesita nada
+# más que pip/setuptools, no hace falta un compilador de C.
+pip install --only-binary :all: --no-binary http-ece -r requirements.txt
 
 python manage.py collectstatic --noinput
 python manage.py migrate
