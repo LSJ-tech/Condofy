@@ -20,7 +20,14 @@ def crear_preferencia_pago(pago, request):
     Pago rechazó la solicitud."""
     base_url = request.build_absolute_uri("/").rstrip("/")
     if pago.tipo == "donacion":
-        titulo = f"Donación a {settings.PLATFORM_NAME} - {pago.condominio.nombre}"
+        origen = pago.condominio.nombre
+        if pago.membresia and pago.membresia.unidad:
+            unidad = pago.membresia.unidad
+            if unidad.torre:
+                origen = f"{pago.condominio.nombre}, Torre {unidad.torre.nombre} - Depto {unidad.numero}"
+            else:
+                origen = f"{pago.condominio.nombre}, Depto {unidad.numero}"
+        titulo = f"Donación a {settings.PLATFORM_NAME} - {origen}"
     else:
         titulo = f"Suscripción {settings.PLATFORM_NAME} - {pago.condominio.nombre}"
     preferencia = {

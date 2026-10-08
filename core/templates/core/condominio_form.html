@@ -31,12 +31,4 @@
         </div>
     </div>
 </div>
-
-<h2 class="h5 mb-2">Apoya el proyecto</h2>
-<p class="text-muted">¿{{ PLATFORM_NAME }} les ha sido útil? Pueden hacer una donación voluntaria para apoyar el desarrollo de la plataforma — es independiente de la suscripción, no afecta tu plan ni tu fecha de vencimiento.</p>
-<form method="post" action="{% url 'donar' %}" class="col-md-7 d-flex gap-2">
-    {% csrf_token %}
-    <input type="number" name="monto" min="1" step="1" class="form-control" placeholder="Monto en CLP" required>
-    <button type="submit" class="btn btn-outline-primary text-nowrap"><i class="bi bi-heart"></i> Donar con Mercado Pago</button>
-</form>
 {% endblock %}

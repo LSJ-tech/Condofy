@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.models import PLAN_CHOICES, Condominio
+from core.models import PLAN_CHOICES, Condominio, Membresia
 
 ESTADO_PAGO_CHOICES = [
     ("pendiente", "Pendiente"),
@@ -22,6 +22,10 @@ class Pago(models.Model):
     `gastoscomunes`, un flujo de dinero de terceros con mecanismo distinto)."""
 
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="pagos")
+    membresia = models.ForeignKey(
+        Membresia, on_delete=models.SET_NULL, null=True, blank=True, related_name="donaciones",
+        help_text="Quién donó (torre/unidad incluida) -- vacío en pagos de suscripción, que son del condominio como tal.",
+    )
     tipo = models.CharField(max_length=15, choices=TIPO_PAGO_CHOICES, default="suscripcion")
     plan = models.CharField(max_length=10, choices=PLAN_CHOICES, blank=True, help_text="Vacío si es una donación -- no está ligada a ningún plan.")
     monto = models.DecimalField(max_digits=10, decimal_places=2)

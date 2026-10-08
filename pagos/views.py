@@ -18,9 +18,10 @@ from .models import Pago
 
 
 class DonarView(LoginRequiredMixin, View):
-    """Para que un condominio apoye económicamente el desarrollo de la
-    plataforma -- sin relación con su propia suscripción: no extiende
-    `pagado_hasta` ni cambia el plan (ver WebhookMercadoPagoView)."""
+    """Cualquier miembro (directiva, administración, conserjería o residente)
+    puede donar para apoyar el desarrollo de la plataforma -- sin relación
+    con la suscripción del condominio: no extiende `pagado_hasta` ni cambia
+    el plan (ver WebhookMercadoPagoView)."""
 
     def post(self, request, *args, **kwargs):
         membresia = getattr(request.user, "membresia", None)
@@ -28,13 +29,9 @@ class DonarView(LoginRequiredMixin, View):
             messages.error(request, "Tu cuenta no está vinculada a ningún condominio.")
             return redirect("login")
 
-        if membresia.rol != "directiva":
-            messages.error(request, "Solo la directiva puede gestionar donaciones.")
-            return redirect("mi-condominio")
-
         if not settings.MERCADOPAGO_ACCESS_TOKEN:
             messages.error(request, "El pago en línea todavía no está disponible. Escríbenos para donar.")
-            return redirect("mi-condominio")
+            return redirect("inicio")
 
         try:
             monto = Decimal((request.POST.get("monto") or "").replace(",", "."))
@@ -42,13 +39,13 @@ class DonarView(LoginRequiredMixin, View):
             monto = None
         if not monto or monto <= 0:
             messages.error(request, "Ingresa un monto válido para donar.")
-            return redirect("mi-condominio")
+            return redirect("inicio")
 
-        pago = Pago.objects.create(condominio=membresia.condominio, tipo="donacion", monto=monto)
+        pago = Pago.objects.create(condominio=membresia.condominio, membresia=membresia, tipo="donacion", monto=monto)
         url_pago = crear_preferencia_pago(pago, request)
         if not url_pago:
             messages.error(request, "No pudimos iniciar la donación. Intenta de nuevo en un momento.")
-            return redirect("mi-condominio")
+            return redirect("inicio")
         return redirect(url_pago)
 
 
