@@ -11,19 +11,9 @@ class EsDirectiva(BasePermission):
         return _rol(request) == "directiva"
 
 
-class EsConserje(BasePermission):
-    def has_permission(self, request, view):
-        return _rol(request) == "conserje"
-
-
 class EsResidente(BasePermission):
     def has_permission(self, request, view):
         return _rol(request) == "residente"
-
-
-class EsDirectivaOConserje(BasePermission):
-    def has_permission(self, request, view):
-        return _rol(request) in ("directiva", "conserje")
 
 
 class EsDirectivaOAdministracion(BasePermission):
