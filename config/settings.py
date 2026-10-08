@@ -9,7 +9,6 @@ from pathlib import Path
 import dj_database_url
 from django.contrib import messages
 from django.core.management.utils import get_random_secret_key
-from django.templatetags.static import static
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
