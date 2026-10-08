@@ -14,12 +14,33 @@
                 <form method="post">
                     {% csrf_token %}
                     {% for field in form %}
+                    {% if field.name == "unidad" %}
+                    <div class="mb-3">
+                        <label class="form-label" for="id_torre_selector">Torre</label>
+                        <select id="id_torre_selector" class="form-select">
+                            <option value="">— Elige tu torre —</option>
+                            {% for t in torres %}
+                            <option value="{{ t.pk }}">Torre {{ t.nombre }}</option>
+                            {% endfor %}
+                            {% if hay_unidades_sin_torre %}
+                            <option value="sin-torre">Sin torre</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        <div class="form-text">Elige primero tu torre.</div>
+                        {{ field.errors }}
+                    </div>
+                    {% else %}
                     <div class="mb-3">
                         <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
                         {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                         {{ field.errors }}
                     </div>
+                    {% endif %}
                     {% endfor %}
                     <button type="submit" class="btn btn-primary w-100">Crear mi cuenta</button>
                 </form>
@@ -28,4 +49,28 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var unidadesPorTorre = {{ unidades_por_torre_json|safe }};
+var selectorTorre = document.getElementById("id_torre_selector");
+var selectorUnidad = document.getElementById("{{ form.unidad.id_for_label }}");
+
+function actualizarUnidades() {
+    var torreId = selectorTorre.value;
+    if (!torreId) {
+        selectorUnidad.innerHTML = '<option value="">— Elige tu torre primero —</option>';
+        selectorUnidad.disabled = true;
+        return;
+    }
+    var unidades = unidadesPorTorre[torreId] || [];
+    selectorUnidad.innerHTML = '<option value="">— Elige tu depto —</option>' +
+        unidades.map(function (u) { return '<option value="' + u.id + '">' + u.numero + '</option>'; }).join("");
+    selectorUnidad.disabled = false;
+}
+
+selectorTorre.addEventListener("change", actualizarUnidades);
+actualizarUnidades();
+</script>
 {% endblock %}

@@ -1,3 +1,4 @@
+import json
 import uuid
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -186,6 +187,22 @@ class RegistroResidenteView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["condominio"] = self.condominio
+        context["torres"] = (
+            Torre.objects.filter(condominio=self.condominio)
+            .annotate(_len=Length("nombre")).order_by("_len", "nombre")
+        )
+        unidades = (
+            Unidad.objects.filter(condominio=self.condominio)
+            .annotate(_len=Length("numero")).order_by("torre_id", "_len", "numero")
+        )
+        unidades_por_torre = {}
+        hay_sin_torre = False
+        for unidad in unidades:
+            clave = str(unidad.torre_id) if unidad.torre_id else "sin-torre"
+            hay_sin_torre = hay_sin_torre or clave == "sin-torre"
+            unidades_por_torre.setdefault(clave, []).append({"id": unidad.pk, "numero": unidad.numero})
+        context["unidades_por_torre_json"] = json.dumps(unidades_por_torre)
+        context["hay_unidades_sin_torre"] = hay_sin_torre
         return context
 
     def form_valid(self, form):
