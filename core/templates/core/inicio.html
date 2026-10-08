@@ -196,8 +196,12 @@ function cargarAlertas() {
             alertas.forEach(function (a) {
                 if (!a.latitud || !a.longitud) return;
                 const lat = parseFloat(a.latitud), lng = parseFloat(a.longitud);
-                const mapa = L.map(`mapa-alerta-${a.id}`, { zoomControl: false, attributionControl: false }).setView([lat, lng], 17);
-                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapa);
+                const mapa = L.map(`mapa-alerta-${a.id}`, { zoomControl: false }).setView([lat, lng], 17);
+                L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+                    subdomains: "abcd",
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                }).addTo(mapa);
                 L.marker([lat, lng]).addTo(mapa);
                 mapasActivos[a.id] = mapa;
             });
