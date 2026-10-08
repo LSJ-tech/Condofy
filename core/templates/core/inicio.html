@@ -111,7 +111,10 @@
     <button type="button" id="btn-activar-notificaciones" class="btn btn-sm btn-warning text-nowrap">Activar</button>
 </div>
 
-<div id="aviso-panico" class="alert alert-success d-none"><i class="bi bi-check-circle"></i> Alerta enviada — todo el condominio fue notificado.</div>
+<div id="aviso-panico" class="alert alert-success d-none">
+    <i class="bi bi-check-circle"></i> Alerta enviada — todo el condominio fue notificado.
+    <a href="#" id="link-whatsapp-panico" target="_blank" rel="noopener" class="alert-link ms-2"><i class="bi bi-whatsapp"></i> Compartir por WhatsApp</a>
+</div>
 <div id="error-panico" class="alert alert-danger d-none"></div>
 
 <div class="card mb-4 border-danger">
@@ -209,6 +212,26 @@ function csrfToken() {
     return document.cookie.split("; ").find(r => r.startsWith("csrftoken="))?.split("=")[1] || "";
 }
 
+// Compartir una alerta por WhatsApp -- lo manda el propio residente a quien
+// quiera (su grupo del edificio, un vecino puntual), sin ninguna API ni
+// integración de por medio: solo un link wa.me con el mensaje ya armado.
+const CONDOMINIO_NOMBRE_WHATSAPP = "{{ condominio.nombre|default:PLATFORM_NAME|escapejs }}";
+
+function mensajeAlertaWhatsApp(alerta) {
+    let texto = `🚨 Alerta de ${alerta.tipo_display || alerta.tipo} en ${CONDOMINIO_NOMBRE_WHATSAPP}`;
+    if (alerta.autor_nombre) {
+        texto += ` — avisó ${alerta.autor_nombre}`;
+        if (alerta.autor_unidad) texto += ` (Unidad ${alerta.autor_unidad})`;
+    }
+    if (alerta.mensaje) texto += `. "${alerta.mensaje}"`;
+    texto += ". Revisa Condofy para más detalles.";
+    return texto;
+}
+
+function linkWhatsAppAlerta(alerta) {
+    return "https://wa.me/?text=" + encodeURIComponent(mensajeAlertaWhatsApp(alerta));
+}
+
 function obtenerUbicacion() {
     return new Promise(function (resolve) {
         if (!navigator.geolocation) { resolve(null); return; }
@@ -294,9 +317,12 @@ document.getElementById("btn-confirmar-panico").addEventListener("click", functi
                 throw new Error(detalle || ("No se pudo enviar la alerta (" + r.status + ")."));
             });
         }
+        return r.json();
+    }).then(function (alerta) {
         modalPanico.hide();
         document.getElementById("panico-mensaje").value = "";
         document.getElementById("aviso-panico").classList.remove("d-none");
+        document.getElementById("link-whatsapp-panico").href = linkWhatsAppAlerta(alerta);
         if (typeof cargarAlertas === "function") cargarAlertas();
     }).catch(function (err) {
         avisoError.textContent = (err && err.message) || "No se pudo enviar la alerta. Revisa tu conexión e inténtalo de nuevo.";
@@ -331,6 +357,7 @@ function cargarAlertas() {
                     ${a.latitud && a.longitud ? `<div id="mapa-alerta-${a.id}" style="height: 180px;" class="rounded mt-2 mb-2"></div>` : ""}
                     <button class="btn btn-sm btn-outline-success mt-1" onclick="resolverAlerta(${a.id}, 'resuelta')">Resolver</button>
                     <button class="btn btn-sm btn-outline-secondary mt-1" onclick="resolverAlerta(${a.id}, 'falsa_alarma')">Falsa alarma</button>
+                    <a href="${linkWhatsAppAlerta(a)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success mt-1"><i class="bi bi-whatsapp"></i> Compartir</a>
                 </div>
             `).join("");
 
