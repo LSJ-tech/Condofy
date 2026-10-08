@@ -8,7 +8,8 @@
 <div class="row g-3 mb-3">
     <div class="col-md-5">
         <form method="get" class="d-flex gap-2">
-            <select name="torre" class="form-select" onchange="this.form.submit()">
+            <label for="unidades-torre" class="visually-hidden">Filtrar por torre</label>
+            <select id="unidades-torre" name="torre" class="form-select" onchange="this.form.submit()">
                 <option value="">Todas las torres</option>
                 {% for t in torres %}
                 <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>Torre {{ t.nombre }}</option>

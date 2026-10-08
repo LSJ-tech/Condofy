@@ -8,10 +8,12 @@
 
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-5">
-        <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o usuario" value="{{ busqueda }}">
+        <label for="miembros-q" class="visually-hidden">Buscar por nombre o usuario</label>
+        <input type="text" id="miembros-q" name="q" class="form-control" placeholder="Buscar por nombre o usuario" value="{{ busqueda }}">
     </div>
     <div class="col-md-4">
-        <select name="rol" class="form-select" onchange="this.form.submit()">
+        <label for="miembros-rol" class="visually-hidden">Filtrar por rol</label>
+        <select id="miembros-rol" name="rol" class="form-select" onchange="this.form.submit()">
             <option value="">Todos los roles</option>
             <option value="directiva" {% if rol_seleccionado == "directiva" %}selected{% endif %}>Directiva</option>
             <option value="administracion" {% if rol_seleccionado == "administracion" %}selected{% endif %}>Administración</option>

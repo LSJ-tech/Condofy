@@ -8,7 +8,8 @@
 
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
-        <select name="estado" class="form-select" onchange="this.form.submit()">
+        <label for="historial-estado" class="visually-hidden">Filtrar por estado</label>
+        <select id="historial-estado" name="estado" class="form-select" onchange="this.form.submit()">
             <option value="">Todos los estados</option>
             <option value="activa" {% if estado_seleccionado == "activa" %}selected{% endif %}>Activa</option>
             <option value="resuelta" {% if estado_seleccionado == "resuelta" %}selected{% endif %}>Resuelta</option>

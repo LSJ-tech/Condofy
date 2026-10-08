@@ -21,8 +21,8 @@
     <div class="card-body d-flex gap-4 align-items-center flex-wrap">
         <img src="{% url 'qr-registro-residentes' %}" alt="QR de autoregistro" width="160" height="160">
         <div class="flex-grow-1">
-            <label class="form-label small">Link para compartir</label>
-            <input type="text" class="form-control" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'registro-residente' token=condominio.token_registro_residentes %}" onclick="this.select();">
+            <label class="form-label small" for="link-autoregistro">Link para compartir</label>
+            <input type="text" id="link-autoregistro" class="form-control" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'registro-residente' token=condominio.token_registro_residentes %}" onclick="this.select();">
             <form method="post" action="{% url 'regenerar-token-residentes' %}" class="mt-2"
                   onsubmit="return confirm('El link/QR actual dejará de funcionar. ¿Generar uno nuevo?');">
                 {% csrf_token %}

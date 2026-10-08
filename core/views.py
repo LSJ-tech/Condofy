@@ -1,4 +1,3 @@
-import json
 import uuid
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -201,7 +200,7 @@ class RegistroResidenteView(FormView):
             clave = str(unidad.torre_id) if unidad.torre_id else "sin-torre"
             hay_sin_torre = hay_sin_torre or clave == "sin-torre"
             unidades_por_torre.setdefault(clave, []).append({"id": unidad.pk, "numero": unidad.numero})
-        context["unidades_por_torre_json"] = json.dumps(unidades_por_torre)
+        context["unidades_por_torre"] = unidades_por_torre
         context["hay_unidades_sin_torre"] = hay_sin_torre
         return context
 

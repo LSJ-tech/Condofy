@@ -188,7 +188,8 @@
         <p class="text-muted small mb-2">¿{{ PLATFORM_NAME }} les ha sido útil? Pueden hacer una donación voluntaria para apoyar el desarrollo de la plataforma.</p>
         <form method="post" action="{% url 'donar' %}" class="d-flex gap-2">
             {% csrf_token %}
-            <input type="number" name="monto" min="1" step="1" class="form-control" placeholder="Monto en CLP" required>
+            <label for="donar-monto" class="visually-hidden">Monto a donar en CLP</label>
+            <input type="number" id="donar-monto" name="monto" min="1" step="1" class="form-control" placeholder="Monto en CLP" required>
             <button type="submit" class="btn btn-outline-primary text-nowrap">Donar con Mercado Pago</button>
         </form>
     </div>

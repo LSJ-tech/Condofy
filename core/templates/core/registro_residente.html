@@ -57,24 +57,33 @@
         </div>
     </div>
 </div>
+{{ unidades_por_torre|json_script:"unidades-por-torre-data" }}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-var unidadesPorTorre = {{ unidades_por_torre_json|safe }};
+var unidadesPorTorre = JSON.parse(document.getElementById("unidades-por-torre-data").textContent);
 var selectorTorre = document.getElementById("id_torre_selector");
 var selectorUnidad = document.getElementById("{{ form.unidad.id_for_label }}");
 
+function agregarOpcion(select, valor, texto) {
+    var opcion = document.createElement("option");
+    opcion.value = valor;
+    opcion.textContent = texto;
+    select.appendChild(opcion);
+}
+
 function actualizarUnidades() {
     var torreId = selectorTorre.value;
+    selectorUnidad.innerHTML = "";
     if (!torreId) {
-        selectorUnidad.innerHTML = '<option value="">— Elige tu torre primero —</option>';
+        agregarOpcion(selectorUnidad, "", "— Elige tu torre primero —");
         selectorUnidad.disabled = true;
         return;
     }
     var unidades = unidadesPorTorre[torreId] || [];
-    selectorUnidad.innerHTML = '<option value="">— Elige tu depto —</option>' +
-        unidades.map(function (u) { return '<option value="' + u.id + '">' + u.numero + '</option>'; }).join("");
+    agregarOpcion(selectorUnidad, "", "— Elige tu depto —");
+    unidades.forEach(function (u) { agregarOpcion(selectorUnidad, u.id, u.numero); });
     selectorUnidad.disabled = false;
 }
 

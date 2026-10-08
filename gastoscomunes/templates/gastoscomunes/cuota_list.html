@@ -5,17 +5,17 @@
 
 <div class="row g-3 mb-3">
     <div class="col-md-4">
-        <label class="form-label small text-muted">Mes</label>
-        <select class="form-select" onchange="if(this.value) location.href=this.value;">
+        <label class="form-label small text-muted" for="cuotas-mes">Mes</label>
+        <select id="cuotas-mes" class="form-select" onchange="if(this.value) location.href=this.value;">
             {% for g in gastos %}
             <option value="{% url 'gastos-comunes-cuotas' g.pk %}" {% if g.pk == gasto.pk %}selected{% endif %}>{{ g.periodo }}</option>
             {% endfor %}
         </select>
     </div>
     <div class="col-md-4">
-        <label class="form-label small text-muted">Torre</label>
+        <label class="form-label small text-muted" for="cuotas-torre">Torre</label>
         <form method="get">
-            <select name="torre" class="form-select" onchange="this.form.submit()">
+            <select id="cuotas-torre" name="torre" class="form-select" onchange="this.form.submit()">
                 <option value="">Todas las torres</option>
                 {% for t in torres %}
                 <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>Torre {{ t.nombre }}</option>
