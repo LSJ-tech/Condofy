@@ -12,6 +12,7 @@ urlpatterns = [
     path("suscripcion-vencida/", views.SuscripcionVencidaView.as_view(), name="suscripcion-vencida"),
     path("mi-condominio/", views.CondominioUpdateView.as_view(), name="mi-condominio"),
     path("admin-utils/probar-correo/", views.probar_correo, name="probar-correo"),
+    path("admin-utils/listar-condominios/", views.listar_condominios, name="listar-condominios"),
     path("miembros/", views.MiembroListView.as_view(), name="miembros"),
     path("miembros/nuevo/", views.CrearMiembroView.as_view(), name="crear-miembro"),
     path("torres/", views.TorreListView.as_view(), name="torres"),

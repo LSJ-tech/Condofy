@@ -42,6 +42,19 @@ def probar_correo(request):
     return HttpResponse(f"Correo de prueba enviado a {escape(destino)}.")
 
 
+@staff_member_required
+@require_GET
+def listar_condominios(request):
+    """Diagnóstico manual: nombre exacto, torres y unidades de cada condominio real en esta base de datos."""
+    lineas = []
+    for condominio in Condominio.objects.order_by("nombre"):
+        lineas.append(
+            f"id={condominio.pk} | nombre={condominio.nombre!r} | torres={condominio.torres.count()} | "
+            f"unidades={condominio.unidades.count()} | miembros={condominio.membresias.count()}"
+        )
+    return HttpResponse("\n".join(lineas) or "No hay condominios.", content_type="text/plain; charset=utf-8")
+
+
 class SolicitarAccesoView(FormView):
     """Formulario público embebido en la landing -- captura el interés de quien todavía no tiene código."""
 
