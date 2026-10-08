@@ -31,6 +31,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "{{ PLATFORM_NAME }}",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Administración de condominios y juntas de vecinos: botón de pánico, avisos, control de accesos y gastos comunes.",
+        "url": "https://condofy.devquad.cl/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "DevQuad",
+            "url": "https://devquad.cl/"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": "¿Cómo pagan los residentes los gastos comunes?", "acceptedAnswer": {"@type": "Answer", "text": "Por transferencia directa a la administración de tu condominio. Condofy no procesa ese pago: muestra los datos de transferencia a cada residente y directiva marca la cuota como pagada al recibirla."}},
+            {"@type": "Question", "name": "¿Mis datos están separados de otros condominios?", "acceptedAnswer": {"@type": "Answer", "text": "Sí. Cada condominio es completamente independiente: nadie fuera del tuyo puede ver tus alertas, avisos, accesos ni gastos comunes."}},
+            {"@type": "Question", "name": "¿Necesito instalar una aplicación?", "acceptedAnswer": {"@type": "Answer", "text": "No por ahora: se usa desde el navegador del celular o computador, sin instalar nada. Una app móvil para residentes está en desarrollo."}}
+        ]
+    }
+    </script>
     <style>
         :root {
             --condofy-primary: #4F46E5;
@@ -76,7 +103,7 @@
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(49, 30, 129, 0.93) 0%, rgba(79, 70, 229, 0.82) 55%, rgba(67, 56, 202, 0.55) 100%);
+            background: linear-gradient(135deg, rgba(49, 30, 129, 0.94) 0%, rgba(79, 70, 229, 0.88) 55%, rgba(67, 56, 202, 0.8) 100%);
         }
         .hero > .container { position: relative; z-index: 1; }
         .eyebrow {
@@ -382,28 +409,28 @@
                         <form method="post" action="{% url 'solicitar-acceso' %}" class="row g-3">
                             {% csrf_token %}
                             <div class="col-md-6">
-                                <label class="form-label small">Nombre</label>
-                                <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+                                <label for="id_sol_nombre" class="form-label small">Nombre</label>
+                                <input type="text" id="id_sol_nombre" name="nombre" class="form-control" placeholder="Tu nombre" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small">Condominio o junta de vecinos</label>
-                                <input type="text" name="condominio" class="form-control" placeholder="Nombre del condominio" required>
+                                <label for="id_sol_condominio" class="form-label small">Condominio o junta de vecinos</label>
+                                <input type="text" id="id_sol_condominio" name="condominio" class="form-control" placeholder="Nombre del condominio" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small">Comuna</label>
-                                <input type="text" name="comuna" class="form-control" placeholder="Comuna">
+                                <label for="id_sol_comuna" class="form-label small">Comuna</label>
+                                <input type="text" id="id_sol_comuna" name="comuna" class="form-control" placeholder="Comuna">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small">Teléfono</label>
-                                <input type="text" name="telefono" class="form-control" placeholder="+56 9 ..." required>
+                                <label for="id_sol_telefono" class="form-label small">Teléfono</label>
+                                <input type="text" id="id_sol_telefono" name="telefono" class="form-control" placeholder="+56 9 ..." required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label small">Email (opcional)</label>
-                                <input type="email" name="email" class="form-control" placeholder="tu@email.cl">
+                                <label for="id_sol_email" class="form-label small">Email (opcional)</label>
+                                <input type="email" id="id_sol_email" name="email" class="form-control" placeholder="tu@email.cl">
                             </div>
                             <div class="col-12">
-                                <label class="form-label small">Mensaje (opcional)</label>
-                                <textarea name="mensaje" class="form-control" rows="2" placeholder="Cuéntanos un poco de tu comunidad"></textarea>
+                                <label for="id_sol_mensaje" class="form-label small">Mensaje (opcional)</label>
+                                <textarea id="id_sol_mensaje" name="mensaje" class="form-control" rows="2" placeholder="Cuéntanos un poco de tu comunidad"></textarea>
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary w-100 btn-lg">Enviar solicitud</button>
