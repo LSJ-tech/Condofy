@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -124,11 +125,18 @@ class Membresia(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="membresia")
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="membresias")
-    unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True, blank=True, related_name="membresias", help_text="Solo aplica a residentes.")
+    unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True, blank=True, related_name="membresias", help_text="Obligatoria para residentes. No aplica a directiva/administración/conserjería.")
     rol = models.CharField(max_length=15, choices=ROL_CHOICES, default="residente")
 
     def __str__(self):
         return f"{self.user} ({self.get_rol_display()} de {self.condominio})"
+
+    def clean(self):
+        super().clean()
+        if self.rol == "residente" and self.unidad_id is None:
+            raise ValidationError({"unidad": "Las cuentas de residente deben tener una unidad asignada."})
+        if self.unidad_id and self.condominio_id and self.unidad.condominio_id != self.condominio_id:
+            raise ValidationError({"unidad": "La unidad debe pertenecer al mismo condominio de la membresía."})
 
 
 class CodigoInvitacion(models.Model):
