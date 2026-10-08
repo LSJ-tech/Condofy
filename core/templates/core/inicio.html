@@ -32,6 +32,7 @@
 {% endif %}
 
 <div id="aviso-panico" class="alert alert-success d-none"><i class="bi bi-check-circle"></i> Alerta enviada — directiva y conserjería fueron notificados.</div>
+<div id="error-panico" class="alert alert-danger d-none"></div>
 
 <div class="card mb-4 border-danger">
     <div class="card-body text-center py-4">
@@ -109,7 +110,10 @@ function csrfToken() {
 const modalPanico = new bootstrap.Modal(document.getElementById("modalPanico"));
 document.getElementById("btn-confirmar-panico").addEventListener("click", function () {
     const boton = this;
+    const avisoError = document.getElementById("error-panico");
+    avisoError.classList.add("d-none");
     boton.disabled = true;
+    boton.textContent = "Enviando...";
     fetch("/api/v1/alertas/", {
         method: "POST",
         credentials: "same-origin",
@@ -119,12 +123,17 @@ document.getElementById("btn-confirmar-panico").addEventListener("click", functi
             mensaje: document.getElementById("panico-mensaje").value,
         }),
     }).then(r => {
-        boton.disabled = false;
-        if (!r.ok) return;
+        if (!r.ok) throw new Error("No se pudo enviar la alerta (" + r.status + ").");
         modalPanico.hide();
         document.getElementById("panico-mensaje").value = "";
         document.getElementById("aviso-panico").classList.remove("d-none");
         if (typeof cargarAlertas === "function") cargarAlertas();
+    }).catch(function () {
+        avisoError.textContent = "No se pudo enviar la alerta. Revisa tu conexión e inténtalo de nuevo.";
+        avisoError.classList.remove("d-none");
+    }).finally(function () {
+        boton.disabled = false;
+        boton.textContent = "Enviar alerta";
     });
 });
 
@@ -141,7 +150,7 @@ function cargarAlertas() {
             }
             cont.innerHTML = alertas.map(a => `
                 <div class="border rounded p-2 mb-2">
-                    <strong>${a.tipo}</strong> — ${a.autor_nombre || ""} ${a.autor_unidad ? "(Unidad " + a.autor_unidad + ")" : ""}
+                    <strong>${a.tipo_display}</strong> — ${a.autor_nombre || ""} ${a.autor_unidad ? "(Unidad " + a.autor_unidad + ")" : ""}
                     <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()}</div>
                     ${a.mensaje ? `<div>${a.mensaje}</div>` : ""}
                     <button class="btn btn-sm btn-outline-success mt-1" onclick="resolverAlerta(${a.id}, 'resuelta')">Resolver</button>
