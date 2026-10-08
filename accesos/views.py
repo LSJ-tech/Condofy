@@ -14,7 +14,7 @@ class RegistroIngresoListView(SoloDirectivaOConserjeMixin, CondominioRequiredMix
     context_object_name = "registros"
 
     def get_queryset(self):
-        return RegistroIngreso.objects.filter(unidad__condominio=self.condominio).select_related("unidad", "registrado_por")
+        return RegistroIngreso.objects.filter(unidad__condominio=self.condominio).select_related("unidad", "unidad__torre", "registrado_por")
 
 
 class RegistroIngresoCreateView(SoloDirectivaOConserjeMixin, CondominioRequiredMixin, CreateView):

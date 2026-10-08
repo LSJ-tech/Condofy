@@ -128,6 +128,8 @@ class Unidad(models.Model):
         ]
 
     def __str__(self):
+        if self.torre_id:
+            return f"Torre {self.torre.nombre} - Depto {self.numero}"
         return f"{self.numero} - {self.condominio}"
 
 
