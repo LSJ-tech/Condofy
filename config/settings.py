@@ -126,7 +126,13 @@ STORAGES = {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        # El hash en el nombre de archivo (para cache-busting) solo hace falta
+        # en producción -- en local exige correr collectstatic cada vez que
+        # se agrega un static nuevo, si no {% static %} tira ValueError.
+        'BACKEND': (
+            'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG
+            else 'django.contrib.staticfiles.storage.StaticFilesStorage'
+        ),
     },
 }
 

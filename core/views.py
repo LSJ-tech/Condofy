@@ -10,6 +10,7 @@ from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import PasswordChangeView
+from django.contrib.staticfiles.finders import find as find_static
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.validators import validate_email
@@ -371,6 +372,28 @@ class InicioView(TemplateView):
 
 class CuentaDesactivadaView(TemplateView):
     template_name = "core/cuenta_desactivada.html"
+
+
+class OfflineView(TemplateView):
+    """A donde cae el service worker (sw.js) cuando no hay conexión -- página
+    autocontenida, sin depender del Bootstrap de un CDN que tampoco cargaría
+    sin red."""
+
+    template_name = "core/offline.html"
+
+
+class ServiceWorkerView(View):
+    """Sirve sw.js en la raíz del sitio (no bajo /static/) para que su scope
+    cubra todo el dominio -- el scope por defecto de un service worker es el
+    directorio desde el que se sirve."""
+
+    def get(self, request, *args, **kwargs):
+        ruta = find_static("core/sw.js")
+        with open(ruta, "rb") as archivo:
+            contenido = archivo.read()
+        response = HttpResponse(contenido, content_type="application/javascript")
+        response["Service-Worker-Allowed"] = "/"
+        return response
 
 
 class PrivacidadView(TemplateView):
