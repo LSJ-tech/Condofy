@@ -8,15 +8,22 @@ ESTADO_PAGO_CHOICES = [
     ("rechazado", "Rechazado"),
 ]
 
+TIPO_PAGO_CHOICES = [
+    ("suscripcion", "Suscripción"),
+    ("donacion", "Donación"),
+]
+
 
 class Pago(models.Model):
-    """Pago de la suscripción SaaS (condominio -> DevQuad). No confundir con
-    los pagos de gastos comunes (residente -> su propio condominio, ver
-    la app `gastoscomunes` -- ese flujo de dinero es de terceros y usa un
-    mecanismo distinto, ver el plan del proyecto)."""
+    """Pago de la suscripción SaaS (condominio -> DevQuad), o una donación
+    voluntaria de un condominio para apoyar el desarrollo de la plataforma
+    (ver `tipo`) -- ninguna de las dos se debe confundir con los pagos de
+    gastos comunes (residente -> su propio condominio, ver la app
+    `gastoscomunes`, un flujo de dinero de terceros con mecanismo distinto)."""
 
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="pagos")
-    plan = models.CharField(max_length=10, choices=PLAN_CHOICES)
+    tipo = models.CharField(max_length=15, choices=TIPO_PAGO_CHOICES, default="suscripcion")
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, blank=True, help_text="Vacío si es una donación -- no está ligada a ningún plan.")
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(max_length=10, choices=ESTADO_PAGO_CHOICES, default="pendiente")
     mercadopago_preference_id = models.CharField(max_length=100, blank=True)

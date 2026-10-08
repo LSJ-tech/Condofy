@@ -19,9 +19,13 @@ def crear_preferencia_pago(pago, request):
     a la que hay que redirigir al condominio para pagar. None si Mercado
     Pago rechazó la solicitud."""
     base_url = request.build_absolute_uri("/").rstrip("/")
+    if pago.tipo == "donacion":
+        titulo = f"Donación a {settings.PLATFORM_NAME} - {pago.condominio.nombre}"
+    else:
+        titulo = f"Suscripción {settings.PLATFORM_NAME} - {pago.condominio.nombre}"
     preferencia = {
         "items": [{
-            "title": f"Suscripción Condofy - {pago.condominio.nombre}",
+            "title": titulo,
             "quantity": 1,
             "unit_price": float(pago.monto),
             "currency_id": "CLP",

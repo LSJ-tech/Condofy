@@ -1,5 +1,6 @@
 import datetime
 import json
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.contrib import messages
@@ -45,18 +46,53 @@ class IniciarPagoView(LoginRequiredMixin, View):
 
         monto = settings.PRECIOS_PLAN[plan]
 
-        pago = Pago.objects.filter(condominio=condominio, estado="pendiente").order_by("-fecha_creacion").first()
+        pago = Pago.objects.filter(condominio=condominio, tipo="suscripcion", estado="pendiente").order_by("-fecha_creacion").first()
         if pago:
             pago.monto = monto
             pago.plan = plan
             pago.save(update_fields=["monto", "plan"])
         else:
-            pago = Pago.objects.create(condominio=condominio, monto=monto, plan=plan)
+            pago = Pago.objects.create(condominio=condominio, tipo="suscripcion", monto=monto, plan=plan)
 
         url_pago = crear_preferencia_pago(pago, request)
         if not url_pago:
             messages.error(request, "No pudimos iniciar el pago. Intenta de nuevo en un momento.")
             return redirect(destino)
+        return redirect(url_pago)
+
+
+class DonarView(LoginRequiredMixin, View):
+    """Para que un condominio apoye económicamente el desarrollo de la
+    plataforma -- sin relación con su propia suscripción: no extiende
+    `pagado_hasta` ni cambia el plan (ver WebhookMercadoPagoView)."""
+
+    def post(self, request, *args, **kwargs):
+        membresia = getattr(request.user, "membresia", None)
+        if membresia is None:
+            messages.error(request, "Tu cuenta no está vinculada a ningún condominio.")
+            return redirect("login")
+
+        if membresia.rol != "directiva":
+            messages.error(request, "Solo la directiva puede gestionar donaciones.")
+            return redirect("mi-condominio")
+
+        if not settings.MERCADOPAGO_ACCESS_TOKEN:
+            messages.error(request, "El pago en línea todavía no está disponible. Escríbenos para donar.")
+            return redirect("mi-condominio")
+
+        try:
+            monto = Decimal((request.POST.get("monto") or "").replace(",", "."))
+        except InvalidOperation:
+            monto = None
+        if not monto or monto <= 0:
+            messages.error(request, "Ingresa un monto válido para donar.")
+            return redirect("mi-condominio")
+
+        pago = Pago.objects.create(condominio=membresia.condominio, tipo="donacion", monto=monto)
+        url_pago = crear_preferencia_pago(pago, request)
+        if not url_pago:
+            messages.error(request, "No pudimos iniciar la donación. Intenta de nuevo en un momento.")
+            return redirect("mi-condominio")
         return redirect(url_pago)
 
 
@@ -102,12 +138,13 @@ class WebhookMercadoPagoView(View):
             pago.fecha_confirmacion = timezone.now()
             pago.save(update_fields=["estado", "mercadopago_payment_id", "fecha_confirmacion"])
 
-            condominio = pago.condominio
-            hoy = timezone.localdate()
-            desde = condominio.pagado_hasta if condominio.pagado_hasta and condominio.pagado_hasta > hoy else hoy
-            condominio.pagado_hasta = desde + datetime.timedelta(days=30)
-            condominio.plan = pago.plan
-            condominio.save(update_fields=["pagado_hasta", "plan"])
+            if pago.tipo == "suscripcion":
+                condominio = pago.condominio
+                hoy = timezone.localdate()
+                desde = condominio.pagado_hasta if condominio.pagado_hasta and condominio.pagado_hasta > hoy else hoy
+                condominio.pagado_hasta = desde + datetime.timedelta(days=30)
+                condominio.plan = pago.plan
+                condominio.save(update_fields=["pagado_hasta", "plan"])
         elif estado_mp == "rejected" and pago.estado == "pendiente":
             pago.estado = "rechazado"
             pago.save(update_fields=["estado"])
