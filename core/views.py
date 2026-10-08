@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import Length
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -279,7 +279,48 @@ class InicioView(TemplateView):
                 pendientes = CuotaUnidad.objects.filter(unidad=self.membresia.unidad).exclude(estado="pagado")
                 context["deuda_pendiente"] = sum((c.monto for c in pendientes), Decimal("0"))
                 context["cuotas_pendientes_count"] = pendientes.count()
+            if self.membresia.rol in ("directiva", "administracion"):
+                context.update(self._resumen_administracion())
         return context
+
+    def _resumen_administracion(self):
+        from alertas.models import Alerta
+        from gastoscomunes.models import CuotaUnidad, GastoComun
+
+        condominio = self.condominio
+        resumen = {
+            "total_unidades": condominio.total_unidades,
+            "total_miembros": Membresia.objects.filter(condominio=condominio).count(),
+            "alertas_activas_count": Alerta.objects.filter(condominio=condominio, estado="activa").count(),
+        }
+
+        gasto_actual = GastoComun.objects.filter(condominio=condominio).order_by("-periodo").first()
+        if gasto_actual:
+            cuotas = CuotaUnidad.objects.filter(gasto_comun=gasto_actual)
+            agregados = cuotas.aggregate(
+                pagadas=Count("id", filter=Q(estado="pagado")),
+                total=Count("id"),
+                recaudado=Sum("monto", filter=Q(estado="pagado")),
+                pendiente=Sum("monto", filter=~Q(estado="pagado")),
+            )
+            resumen["gasto_actual"] = gasto_actual
+            resumen["gasto_actual_cuotas_pagadas"] = agregados["pagadas"]
+            resumen["gasto_actual_cuotas_total"] = agregados["total"]
+            resumen["gasto_actual_recaudado"] = agregados["recaudado"] or 0
+            resumen["gasto_actual_pendiente"] = agregados["pendiente"] or 0
+
+        hoy = timezone.localdate()
+        cuotas_atrasadas = CuotaUnidad.objects.filter(gasto_comun__condominio=condominio, estado="pendiente", gasto_comun__fecha_vencimiento__lt=hoy)
+        morosos_qs = (
+            cuotas_atrasadas.values("unidad_id", "unidad__numero", "unidad__torre__nombre")
+            .annotate(total_adeudado=Sum("monto"), cuotas_atrasadas=Count("id"))
+            .order_by("-total_adeudado")
+        )
+        totales = cuotas_atrasadas.aggregate(total=Sum("monto"))
+        resumen["morosos"] = list(morosos_qs[:10])
+        resumen["morosos_count"] = morosos_qs.count()
+        resumen["morosos_total_adeudado"] = totales["total"] or 0
+        return resumen
 
 
 class SuscripcionVencidaView(TemplateView):
