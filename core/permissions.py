@@ -26,6 +26,11 @@ class EsDirectivaOConserje(BasePermission):
         return _rol(request) in ("directiva", "conserje")
 
 
+class EsDirectivaOAdministracion(BasePermission):
+    def has_permission(self, request, view):
+        return _rol(request) in ("directiva", "administracion")
+
+
 class TieneMembresia(BasePermission):
     """Cualquier rol, siempre que tenga una Membresia asociada (aislamiento básico de tenant)."""
 

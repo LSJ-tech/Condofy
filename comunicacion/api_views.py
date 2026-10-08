@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from core.permissions import CondominioQuerysetMixin, EsDirectiva, TieneMembresia
+from core.permissions import CondominioQuerysetMixin, EsDirectivaOAdministracion, TieneMembresia
 
 from .models import Aviso
 from .serializers import AvisoSerializer
@@ -15,7 +15,7 @@ class AvisoViewSet(CondominioQuerysetMixin, viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.request.method in ("POST", "DELETE"):
-            return [IsAuthenticated(), EsDirectiva()]
+            return [IsAuthenticated(), EsDirectivaOAdministracion()]
         return super().get_permissions()
 
     def perform_create(self, serializer):

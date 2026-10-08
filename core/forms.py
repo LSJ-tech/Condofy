@@ -72,7 +72,12 @@ class RegistroCondominioForm(ConfirmacionContrasenaMixin):
 
 
 class CrearMiembroForm(forms.Form):
-    """Directiva/conserjería crea la cuenta de otro miembro del condominio (residente o conserje)."""
+    """Directiva/administración crea la cuenta de otro miembro del condominio.
+
+    Solo directiva puede nombrar directiva/administración (cuentas de
+    gobierno/gestión) -- administración solo puede crear conserjería o
+    residentes (cuentas operativas), nunca a su propio nivel o superior.
+    """
 
     nombre = forms.CharField(max_length=150, label="Nombre", widget=forms.TextInput(attrs={"class": "form-control"}))
     apellido = forms.CharField(max_length=150, label="Apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
@@ -80,8 +85,12 @@ class CrearMiembroForm(forms.Form):
     rol = forms.ChoiceField(choices=[c for c in ROL_CHOICES if c[0] != "directiva"], widget=forms.Select(attrs={"class": "form-select"}))
     unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), required=False, label="Unidad (obligatorio para residentes)", widget=forms.Select(attrs={"class": "form-select"}))
 
-    def __init__(self, *args, condominio=None, **kwargs):
+    def __init__(self, *args, condominio=None, creador_rol=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if creador_rol == "directiva":
+            self.fields["rol"].choices = ROL_CHOICES
+        else:
+            self.fields["rol"].choices = [c for c in ROL_CHOICES if c[0] in ("conserje", "residente")]
         if condominio is not None:
             self.fields["unidad"].queryset = (
                 Unidad.objects.filter(condominio=condominio)

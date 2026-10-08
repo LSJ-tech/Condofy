@@ -25,7 +25,7 @@ from django.views.generic import CreateView, FormView, ListView, TemplateView, U
 from django.views.generic.base import View
 
 from .forms import CondominioForm, CrearMiembroForm, MiCambiarContrasenaForm, MiPerfilForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
-from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
+from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloDirectivaMixin
 from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
@@ -286,7 +286,7 @@ class SuscripcionVencidaView(TemplateView):
     template_name = "core/suscripcion_vencida.html"
 
 
-class MiembroListView(SoloDirectivaMixin, CondominioRequiredMixin, ListView):
+class MiembroListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, ListView):
     template_name = "core/miembro_list.html"
     context_object_name = "membresias"
     paginate_by = 50
@@ -315,7 +315,7 @@ class MiembroListView(SoloDirectivaMixin, CondominioRequiredMixin, ListView):
         return context
 
 
-class CrearMiembroView(SoloDirectivaMixin, CondominioRequiredMixin, FormView):
+class CrearMiembroView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, FormView):
     template_name = "core/miembro_form.html"
     form_class = CrearMiembroForm
     success_url = reverse_lazy("miembros")
@@ -323,6 +323,7 @@ class CrearMiembroView(SoloDirectivaMixin, CondominioRequiredMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["condominio"] = self.condominio
+        kwargs["creador_rol"] = self.membresia.rol
         return kwargs
 
     def form_valid(self, form):
@@ -356,7 +357,7 @@ class CondominioUpdateView(SoloDirectivaMixin, CondominioRequiredMixin, UpdateVi
         return self.condominio
 
 
-class TorreListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
+class TorreListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, ListView):
     model = Torre
     template_name = "core/torre_list.html"
     context_object_name = "torres"
@@ -365,14 +366,14 @@ class TorreListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
         return super().get_queryset().annotate(_len=Length("nombre")).order_by("_len", "nombre")
 
 
-class TorreCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
+class TorreCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin, CreateView):
     model = Torre
     form_class = TorreForm
     template_name = "core/torre_form.html"
     success_url = reverse_lazy("torres")
 
 
-class UnidadListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
+class UnidadListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, ListView):
     model = Unidad
     template_name = "core/unidad_list.html"
     context_object_name = "unidades"
@@ -392,7 +393,7 @@ class UnidadListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
         return context
 
 
-class AplicarAlicuotaMasivaView(SoloDirectivaMixin, CondominioRequiredMixin, View):
+class AplicarAlicuotaMasivaView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, View):
     def post(self, request):
         try:
             valor = Decimal(request.POST.get("alicuota", "").replace(",", ".")).quantize(Decimal("0.0001"))
@@ -407,7 +408,7 @@ class AplicarAlicuotaMasivaView(SoloDirectivaMixin, CondominioRequiredMixin, Vie
         return redirect("unidades")
 
 
-class UnidadCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
+class UnidadCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin, CreateView):
     model = Unidad
     form_class = UnidadForm
     template_name = "core/unidad_form.html"

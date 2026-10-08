@@ -87,7 +87,7 @@
 
 <div class="card">
     <div class="card-header">Últimos avisos</div>
-    {% if membresia.rol == "directiva" %}
+    {% if membresia.rol == "directiva" or membresia.rol == "administracion" %}
     <div class="card-body border-bottom">
         <form id="form-aviso" class="row g-2">
             <div class="col-md-4">
@@ -269,7 +269,7 @@ function cargarAvisos() {
 }
 cargarAvisos();
 
-{% if membresia.rol == "directiva" %}
+{% if membresia.rol == "directiva" or membresia.rol == "administracion" %}
 document.getElementById("form-aviso").addEventListener("submit", function (e) {
     e.preventDefault();
     const titulo = document.getElementById("aviso-titulo").value;

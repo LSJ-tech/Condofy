@@ -38,6 +38,7 @@ PLAN_LIMITE_UNIDADES = {
 
 ROL_CHOICES = [
     ("directiva", "Directiva"),
+    ("administracion", "Administración"),
     ("conserje", "Conserjería"),
     ("residente", "Residente"),
 ]
@@ -139,7 +140,7 @@ class Membresia(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="membresia")
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="membresias")
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True, blank=True, related_name="membresias", help_text="Solo aplica a residentes.")
-    rol = models.CharField(max_length=10, choices=ROL_CHOICES, default="residente")
+    rol = models.CharField(max_length=15, choices=ROL_CHOICES, default="residente")
 
     def __str__(self):
         return f"{self.user} ({self.get_rol_display()} de {self.condominio})"

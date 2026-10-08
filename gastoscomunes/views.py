@@ -7,20 +7,20 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, View
 
-from core.mixins import CondominioFormMixin, CondominioRequiredMixin, SoloDirectivaMixin
+from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin
 from core.models import Torre
 
 from .forms import GastoComunForm
 from .models import CuotaUnidad, GastoComun
 
 
-class GastoComunListView(SoloDirectivaMixin, CondominioFormMixin, ListView):
+class GastoComunListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, ListView):
     model = GastoComun
     template_name = "gastoscomunes/gasto_list.html"
     context_object_name = "gastos"
 
 
-class GastoComunCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
+class GastoComunCreateView(EsDirectivaOAdministracionMixin, CondominioFormMixin, CreateView):
     model = GastoComun
     form_class = GastoComunForm
     template_name = "gastoscomunes/gasto_form.html"
@@ -42,7 +42,7 @@ class GastoComunCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
         return response
 
 
-class CuotaListView(SoloDirectivaMixin, CondominioRequiredMixin, ListView):
+class CuotaListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, ListView):
     template_name = "gastoscomunes/cuota_list.html"
     context_object_name = "cuotas"
     paginate_by = 50
@@ -65,7 +65,7 @@ class CuotaListView(SoloDirectivaMixin, CondominioRequiredMixin, ListView):
         return context
 
 
-class MarcarCuotaPagadaView(SoloDirectivaMixin, CondominioRequiredMixin, View):
+class MarcarCuotaPagadaView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, View):
     def post(self, request, pk):
         cuota = get_object_or_404(CuotaUnidad, pk=pk, gasto_comun__condominio=self.condominio)
         cuota.estado = "pagado"

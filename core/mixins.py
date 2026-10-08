@@ -47,7 +47,13 @@ class CondominioFormMixin(CondominioRequiredMixin):
 
 
 class SoloDirectivaMixin:
-    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige rol 'directiva'."""
+    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige rol 'directiva' exacto.
+
+    Uso deliberadamente angosto: solo para lo que es "configuración de fondo"
+    de la directiva (Mi condominio, regenerar el link de autoregistro) -- no
+    para tareas operativas del día a día, que le corresponden a Administración
+    también (ver EsDirectivaOAdministracionMixin).
+    """
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -58,14 +64,29 @@ class SoloDirectivaMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-class SoloDirectivaOConserjeMixin:
-    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige rol 'directiva' o 'conserje'."""
+class EsDirectivaOAdministracionMixin:
+    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: tareas operativas del
+    día a día (miembros, torres, unidades, gastos comunes) -- directiva supervisa y también
+    puede hacerlas, administración las hace en el día a día."""
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             membresia = getattr(request.user, "membresia", None)
-            if membresia and membresia.rol not in ("directiva", "conserje"):
-                messages.error(request, "Esta acción es exclusiva de la directiva/conserjería.")
+            if membresia and membresia.rol not in ("directiva", "administracion"):
+                messages.error(request, "Esta acción es exclusiva de la directiva/administración.")
+                return redirect("inicio")
+        return super().dispatch(request, *args, **kwargs)
+
+
+class EsDirectivaAdministracionOConserjeMixin:
+    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige directiva,
+    administración o conserjería (ej. accesos)."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            membresia = getattr(request.user, "membresia", None)
+            if membresia and membresia.rol not in ("directiva", "administracion", "conserje"):
+                messages.error(request, "Esta acción es exclusiva de la directiva/administración/conserjería.")
                 return redirect("inicio")
         return super().dispatch(request, *args, **kwargs)
 
