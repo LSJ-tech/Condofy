@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import PasswordChangeView
 from django.core.exceptions import ValidationError
@@ -17,7 +18,7 @@ from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Length
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.html import escape
@@ -27,7 +28,7 @@ from django.views.generic.base import View
 
 from .forms import CondominioForm, CrearMiembroForm, MiCambiarContrasenaForm, MiPerfilForm, RegistroCondominioForm, RegistroResidenteForm, SolicitudAccesoForm, TorreForm, UnidadForm
 from .mixins import MENSAJE_SIN_CONDOMINIO, CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloDirectivaMixin, SoloStaffMixin
-from .models import CodigoInvitacion, Condominio, Membresia, Torre, Unidad
+from .models import CodigoInvitacion, Condominio, Membresia, SolicitudEliminacion, Torre, Unidad
 from .usuarios import generar_password_temporal, generar_username
 
 EMAIL_CONTACTO_DEVQUAD = "contacto@devquad.cl"
@@ -154,7 +155,7 @@ class RegistroCondominioView(FormView):
                 username=username, password=datos["password1"],
                 first_name=datos["nombre"], last_name=datos["apellido"],
             )
-            Membresia.objects.create(user=user, condominio=condominio, rol="directiva")
+            Membresia.objects.create(user=user, condominio=condominio, rol="directiva", terminos_aceptados_en=timezone.now())
             codigo_obj.condominio = condominio
             codigo_obj.fecha_uso = timezone.now()
             codigo_obj.save()
@@ -211,7 +212,10 @@ class RegistroResidenteView(FormView):
             username=username, password=datos["password1"],
             first_name=datos["nombre"], last_name=datos["apellido"],
         )
-        Membresia.objects.create(user=user, condominio=self.condominio, unidad=datos["unidad"], rol="residente")
+        Membresia.objects.create(
+            user=user, condominio=self.condominio, unidad=datos["unidad"], rol="residente",
+            terminos_aceptados_en=timezone.now(),
+        )
         login(self.request, user)
         messages.success(
             self.request,
@@ -260,6 +264,8 @@ class InicioView(TemplateView):
             return redirect("login")
         if not membresia.condominio.puede_operar:
             return redirect("cuenta-desactivada")
+        if not membresia.terminos_aceptados_en:
+            return redirect("aceptar-terminos")
 
         self.membresia = membresia
         self.condominio = membresia.condominio
@@ -322,6 +328,74 @@ class InicioView(TemplateView):
 
 class CuentaDesactivadaView(TemplateView):
     template_name = "core/cuenta_desactivada.html"
+
+
+class PrivacidadView(TemplateView):
+    template_name = "core/privacidad.html"
+
+
+class TerminosView(TemplateView):
+    template_name = "core/terminos.html"
+
+
+class AceptarTerminosView(LoginRequiredMixin, View):
+    """Interstitial que se muestra una sola vez por cuenta -- a propósito NO
+    usa CondominioRequiredMixin (ese mixin exige haber aceptado los términos,
+    así que crearía un loop infinito acá mismo)."""
+
+    def get(self, request, *args, **kwargs):
+        membresia = getattr(request.user, "membresia", None)
+        if membresia is None or membresia.terminos_aceptados_en:
+            return redirect("inicio")
+        return render(request, "core/aceptar_terminos.html")
+
+    def post(self, request, *args, **kwargs):
+        membresia = getattr(request.user, "membresia", None)
+        if membresia is None:
+            messages.error(request, MENSAJE_SIN_CONDOMINIO)
+            return redirect("login")
+        if not request.POST.get("acepto"):
+            messages.error(request, "Tienes que aceptar los Términos de Uso y la Política de Privacidad para continuar.")
+            return redirect("aceptar-terminos")
+        membresia.terminos_aceptados_en = timezone.now()
+        membresia.save(update_fields=["terminos_aceptados_en"])
+        return redirect("inicio")
+
+
+class SolicitarEliminacionView(LoginRequiredMixin, View):
+    """Pide eliminar la cuenta y los datos personales -- no borra nada al tiro,
+    deja la solicitud registrada y avisa a DevQuad para procesarla a mano (ver
+    SolicitudEliminacion). A propósito NO usa CondominioRequiredMixin: tiene que
+    seguir siendo alcanzable aunque la persona no haya aceptado los términos."""
+
+    def get(self, request, *args, **kwargs):
+        return render(request, "core/solicitar_eliminacion.html")
+
+    def post(self, request, *args, **kwargs):
+        membresia = getattr(request.user, "membresia", None)
+        motivo = request.POST.get("motivo", "").strip()
+        SolicitudEliminacion.objects.create(
+            membresia=membresia,
+            nombre=request.user.get_full_name() or request.user.username,
+            username=request.user.username,
+            condominio_nombre=membresia.condominio.nombre if membresia else "",
+            motivo=motivo,
+        )
+        send_mail(
+            subject=f"Solicitud de eliminación de cuenta — {request.user.get_full_name() or request.user.username}",
+            message=(
+                f"Usuario: {request.user.username}\n"
+                f"Condominio: {membresia.condominio.nombre if membresia else '(sin condominio vinculado)'}\n"
+                f"Motivo: {motivo or '(sin detalle)'}"
+            ),
+            from_email=None,
+            recipient_list=[EMAIL_CONTACTO_DEVQUAD],
+        )
+        messages.success(
+            request,
+            "Recibimos tu solicitud. Nos vamos a poner en contacto contigo para confirmar la eliminación de tu cuenta y tus datos.",
+        )
+        return redirect("mi-perfil")
 
 
 class MiembroListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, ListView):

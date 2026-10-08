@@ -25,4 +25,10 @@
 </div>
 
 <a href="{% url 'cambiar-contrasena' %}" class="btn btn-outline-secondary">Cambiar contraseña</a>
+
+<div class="mt-4 pt-3 border-top">
+    <h2 class="h6 text-muted">Privacidad de mis datos</h2>
+    <p class="text-muted small mb-2">Lee la <a href="{% url 'privacidad' %}">Política de Privacidad</a> para saber qué datos guardamos y cómo los usamos.</p>
+    <a href="{% url 'solicitar-eliminacion' %}" class="btn btn-sm btn-outline-danger">Eliminar mi cuenta y mis datos</a>
+</div>
 {% endblock %}

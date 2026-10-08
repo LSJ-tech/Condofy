@@ -127,6 +127,10 @@ class Membresia(models.Model):
     condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE, related_name="membresias")
     unidad = models.ForeignKey(Unidad, on_delete=models.SET_NULL, null=True, blank=True, related_name="membresias", help_text="Obligatoria para residentes. No aplica a directiva/administración/conserjería.")
     rol = models.CharField(max_length=15, choices=ROL_CHOICES, default="residente")
+    terminos_aceptados_en = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Cuándo esta persona aceptó los Términos de Uso y la Política de Privacidad. Vacío = todavía no los ha aceptado.",
+    )
 
     def __str__(self):
         return f"{self.user} ({self.get_rol_display()} de {self.condominio})"
@@ -175,3 +179,27 @@ class SolicitudAcceso(models.Model):
 
     def __str__(self):
         return f"{self.condominio} ({self.nombre})"
+
+
+class SolicitudEliminacion(models.Model):
+    """Pedido de un miembro de eliminar su cuenta y sus datos personales (derecho de
+    cancelación/eliminación). No borra nada solo -- queda registrada para que DevQuad
+    la procese manualmente (ver también el correo que se envía al crearla)."""
+
+    membresia = models.ForeignKey(
+        Membresia, on_delete=models.SET_NULL, null=True, blank=True, related_name="solicitudes_eliminacion",
+        help_text="Puede quedar vacío si la cuenta ya fue eliminada -- los campos de abajo son una copia al momento del pedido.",
+    )
+    nombre = models.CharField(max_length=150)
+    username = models.CharField(max_length=150)
+    condominio_nombre = models.CharField(max_length=150)
+    motivo = models.TextField(blank=True)
+    atendida = models.BooleanField(default=False, help_text="Marca cuando ya se procesó la eliminación.")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_atencion = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-fecha_creacion"]
+
+    def __str__(self):
+        return f"{self.nombre} ({self.username}) - {self.condominio_nombre}"

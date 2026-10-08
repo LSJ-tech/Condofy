@@ -1,0 +1,57 @@
+{% extends "core/base.html" %}
+{% block titulo %}Política de Privacidad{% endblock %}
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <h1 class="h3 mb-1">Política de Privacidad</h1>
+        <p class="text-muted small mb-4">Última actualización: 8 de octubre de 2026</p>
+
+        <p>Esta política explica qué datos personales recopila {{ PLATFORM_NAME }}, para qué los usa, con quién los comparte y qué derechos tienes sobre ellos.</p>
+
+        <h2 class="h5 mt-4">1. Quién es responsable de tus datos</h2>
+        <p>{{ PLATFORM_NAME }} es un servicio desarrollado y operado por DevQuad. DevQuad es responsable del tratamiento de los datos personales que se ingresan a la plataforma. Puedes contactarnos en <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a> para cualquier consulta sobre esta política o sobre tus datos.</p>
+
+        <h2 class="h5 mt-4">2. Qué datos recopilamos</h2>
+        <ul>
+            <li><strong>Datos de cuenta:</strong> nombre, apellido, nombre de usuario, email (opcional) y contraseña (guardada como hash, nunca en texto plano).</li>
+            <li><strong>Datos de tu condominio:</strong> el condominio o junta de vecinos a la que perteneces, tu torre y unidad (si eres residente), y tu rol dentro de la plataforma (residente, directiva, administración o conserjería).</li>
+            <li><strong>Ubicación precisa, solo si usas el botón de pánico:</strong> cuando activas una alerta de emergencia, tu navegador nos pide permiso para capturar tu ubicación GPS en ese momento y la enviamos junto con la alerta. No recopilamos tu ubicación en ningún otro momento ni de ninguna otra forma.</li>
+            <li><strong>Registro de accesos:</strong> si tu condominio usa el módulo de conserjería, se guarda el nombre de las visitas que ingresan, el motivo de la visita y a qué unidad van, junto con la hora de entrada y salida.</li>
+            <li><strong>Datos de pago y donaciones:</strong> si tu condominio o tú hacen una donación voluntaria a través de Mercado Pago, guardamos el monto, el estado del pago y un identificador de la transacción. No almacenamos los datos de tu tarjeta ni medio de pago — esos quedan directamente en Mercado Pago.</li>
+            <li><strong>Datos de contacto, si nos escribes desde la página pública:</strong> nombre, teléfono, email y el mensaje que nos envíes para pedir acceso a la plataforma.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">3. El botón de pánico y quién ve tu ubicación</h2>
+        <p>Cuando activas una alerta, tu nombre, tu unidad, tu mensaje (si escribiste uno) y tu ubicación en ese momento quedan visibles para <strong>todos los miembros de tu condominio</strong> — no solo para la directiva o conserjería — para que cualquier vecino pueda ir a ayudar si es necesario. Esta visibilidad amplia es intencional: en una emergencia, priorizamos que la ayuda llegue rápido por sobre restringir quién puede verla. Si resuelves la alerta o la marcas como falsa alarma, queda registrado quién lo hizo.</p>
+
+        <h2 class="h5 mt-4">4. Con quién compartimos tus datos</h2>
+        <p>No vendemos tus datos. Los compartimos únicamente con proveedores que nos ayudan a operar el servicio, y solo con la información necesaria para que cumplan su función:</p>
+        <ul>
+            <li><strong>Mercado Pago:</strong> procesa los pagos y donaciones. Recibe el monto a cobrar y, si donas, tu torre y unidad como referencia — no tu nombre completo.</li>
+            <li><strong>Expo (notificaciones push):</strong> entrega las notificaciones a tu celular (ej. avisos de pánico). Recibe un identificador técnico de tu dispositivo y el texto de la notificación.</li>
+            <li><strong>Resend:</strong> envía los correos que la plataforma genera (ej. cuando alguien solicita acceso desde la página pública).</li>
+            <li><strong>Render:</strong> nuestro proveedor de hosting, donde vive la base de datos y el servidor de la aplicación.</li>
+        </ul>
+        <p>Todos ellos actúan como encargados de tratamiento: procesan los datos por nuestra instrucción, no para fines propios.</p>
+
+        <h2 class="h5 mt-4">5. Cuánto tiempo guardamos tus datos</h2>
+        <p>Guardamos tus datos mientras tu cuenta y tu condominio estén activos en la plataforma. Si solicitas la eliminación de tu cuenta (ver sección 7), procesamos el borrado de tus datos personales, salvo aquellos que debamos conservar por obligación legal o porque son necesarios para registros compartidos del condominio (ej. el historial de gastos comunes ya emitidos).</p>
+
+        <h2 class="h5 mt-4">6. Seguridad</h2>
+        <p>Tu contraseña se guarda siempre como un hash, nunca en texto plano. El acceso a la plataforma es siempre por conexión cifrada (HTTPS). El acceso a los datos de cada condominio está restringido según tu rol: por ejemplo, el registro de accesos y la lista de miembros solo la ven directiva, administración y/o conserjería, no cualquier residente.</p>
+
+        <h2 class="h5 mt-4">7. Tus derechos</h2>
+        <p>Puedes:</p>
+        <ul>
+            <li><strong>Acceder y rectificar</strong> tus datos de cuenta (nombre, apellido, email) en cualquier momento desde "Mi perfil".</li>
+            <li><strong>Pedir la eliminación</strong> de tu cuenta y tus datos personales desde "Mi perfil" → "Eliminar mi cuenta y mis datos", o escribiéndonos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a>.</li>
+            <li><strong>Oponerte</strong> a un uso específico de tus datos, escribiéndonos al mismo correo.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">8. Cambios a esta política</h2>
+        <p>Si hacemos cambios importantes a esta política, te lo vamos a pedir aceptar de nuevo la próxima vez que inicies sesión.</p>
+
+        <p class="text-muted small mt-4">Esta política se rige por las leyes de Chile en materia de protección de datos personales.</p>
+    </div>
+</div>
+{% endblock %}

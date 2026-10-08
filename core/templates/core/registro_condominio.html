@@ -13,13 +13,23 @@
                 <form method="post">
                     {% csrf_token %}
                     {% for field in form %}
+                    {% if field.name != "acepto_terminos" %}
                     <div class="mb-3">
                         <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
                         {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                         {{ field.errors }}
                     </div>
+                    {% endif %}
                     {% endfor %}
+                    <div class="form-check mb-3">
+                        {{ form.acepto_terminos }}
+                        <label class="form-check-label" for="{{ form.acepto_terminos.id_for_label }}">
+                            Acepto los <a href="{% url 'terminos' %}" target="_blank">Términos de Uso</a> y la
+                            <a href="{% url 'privacidad' %}" target="_blank">Política de Privacidad</a>
+                        </label>
+                        {{ form.acepto_terminos.errors }}
+                    </div>
                     <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
                 </form>
             </div>

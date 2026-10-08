@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% block titulo %}Términos de Uso{% endblock %}
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <h1 class="h3 mb-1">Términos de Uso</h1>
+        <p class="text-muted small mb-4">Última actualización: 8 de octubre de 2026</p>
+
+        <p>Al crear una cuenta en {{ PLATFORM_NAME }} aceptas estos términos. {{ PLATFORM_NAME }} es un servicio de DevQuad para la gestión de condominios y juntas de vecinos: botón de pánico, avisos, control de accesos y gastos comunes.</p>
+
+        <h2 class="h5 mt-4">1. El servicio es gratuito</h2>
+        <p>{{ PLATFORM_NAME }} es gratuito, sin límite de unidades ni de tiempo. Existe la opción de hacer una donación voluntaria para apoyar el desarrollo de la plataforma — es completamente opcional y no da acceso a ninguna función adicional.</p>
+
+        <h2 class="h5 mt-4">2. Cuentas y roles</h2>
+        <p>Cada condominio tiene una directiva, que puede nombrar cuentas de administración, conserjería y residentes. Cada persona es responsable de mantener su contraseña en secreto y de la actividad que ocurra con su cuenta. Las cuentas de residente deben tener asociada una unidad real del condominio.</p>
+
+        <h2 class="h5 mt-4">3. Uso aceptable</h2>
+        <ul>
+            <li>El botón de pánico es para emergencias reales. Activarlo de forma reiterada sin motivo real afecta a todo el condominio y puede llevar a la suspensión de la cuenta.</li>
+            <li>Los avisos y mensajes publicados deben ser respetuosos — no está permitido publicar contenido ofensivo, discriminatorio o ilegal.</li>
+            <li>No está permitido usar la plataforma para suplantar a otra persona o condominio.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">4. Tus datos</h2>
+        <p>El tratamiento de tus datos personales se describe en nuestra <a href="{% url 'privacidad' %}">Política de Privacidad</a>, que forma parte de estos términos.</p>
+
+        <h2 class="h5 mt-4">5. Disponibilidad del servicio</h2>
+        <p>Hacemos nuestro mejor esfuerzo para que la plataforma esté siempre disponible, pero no garantizamos un funcionamiento ininterrumpido. Podemos realizar mantenciones o cambios al servicio en cualquier momento.</p>
+
+        <h2 class="h5 mt-4">6. Responsabilidad</h2>
+        <p>{{ PLATFORM_NAME }} es una herramienta de gestión y comunicación: no reemplaza a los servicios de emergencia oficiales (Carabineros, bomberos, ambulancia). DevQuad no es responsable por decisiones tomadas con base en la información de la plataforma, ni por fallas o demoras de servicios de terceros (Mercado Pago, Expo, nuestro proveedor de hosting).</p>
+
+        <h2 class="h5 mt-4">7. Término del servicio</h2>
+        <p>Un condominio puede dejar de usar {{ PLATFORM_NAME }} cuando quiera. Cualquier persona puede solicitar la eliminación de su cuenta y datos personales desde "Mi perfil", según se describe en la <a href="{% url 'privacidad' %}">Política de Privacidad</a>. DevQuad puede desactivar una cuenta en caso de uso indebido de la plataforma.</p>
+
+        <h2 class="h5 mt-4">8. Cambios a estos términos</h2>
+        <p>Si hacemos cambios importantes a estos términos, te los vamos a pedir aceptar de nuevo la próxima vez que inicies sesión.</p>
+
+        <h2 class="h5 mt-4">9. Ley aplicable</h2>
+        <p>Estos términos se rigen por las leyes de Chile. Ante cualquier duda, puedes escribirnos a <a href="mailto:contacto@devquad.cl">contacto@devquad.cl</a>.</p>
+    </div>
+</div>
+{% endblock %}

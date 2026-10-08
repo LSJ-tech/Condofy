@@ -24,6 +24,8 @@ class CondominioRequiredMixin(LoginRequiredMixin):
                 return redirect("login")
             if not membresia.condominio.puede_operar:
                 return redirect("cuenta-desactivada")
+            if not membresia.terminos_aceptados_en:
+                return redirect("aceptar-terminos")
             self.membresia = membresia
             self.condominio = membresia.condominio
         return super().dispatch(request, *args, **kwargs)

@@ -29,7 +29,7 @@ class RegistroCondominioForm(ConfirmacionContrasenaMixin):
 
     field_order = [
         "codigo_invitacion", "nombre_condominio", "direccion_condominio", "comuna_condominio", "region_condominio",
-        "nombre", "apellido", "password1", "password2",
+        "nombre", "apellido", "password1", "password2", "acepto_terminos",
     ]
 
     codigo_invitacion = forms.CharField(
@@ -60,6 +60,11 @@ class RegistroCondominioForm(ConfirmacionContrasenaMixin):
     apellido = forms.CharField(
         max_length=150, label="Tu apellido",
         widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    acepto_terminos = forms.BooleanField(
+        required=True, label="Acepto los Términos de Uso y la Política de Privacidad",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        error_messages={"required": "Tienes que aceptar los Términos de Uso y la Política de Privacidad para continuar."},
     )
 
     def clean_codigo_invitacion(self):
@@ -109,11 +114,16 @@ class CrearMiembroForm(forms.Form):
 class RegistroResidenteForm(ConfirmacionContrasenaMixin):
     """Autoregistro público de un residente -- elige su propio depto de una lista, vía el link/QR del condominio."""
 
-    field_order = ["nombre", "apellido", "unidad", "password1", "password2"]
+    field_order = ["nombre", "apellido", "unidad", "password1", "password2", "acepto_terminos"]
 
     nombre = forms.CharField(max_length=150, label="Tu nombre", widget=forms.TextInput(attrs={"class": "form-control"}))
     apellido = forms.CharField(max_length=150, label="Tu apellido", widget=forms.TextInput(attrs={"class": "form-control"}))
     unidad = forms.ModelChoiceField(queryset=Unidad.objects.none(), label="Tu departamento", widget=forms.Select(attrs={"class": "form-select"}))
+    acepto_terminos = forms.BooleanField(
+        required=True, label="Acepto los Términos de Uso y la Política de Privacidad",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        error_messages={"required": "Tienes que aceptar los Términos de Uso y la Política de Privacidad para continuar."},
+    )
 
     def __init__(self, *args, condominio=None, **kwargs):
         super().__init__(*args, **kwargs)
