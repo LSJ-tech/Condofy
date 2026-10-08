@@ -197,10 +197,9 @@ function cargarAlertas() {
                 if (!a.latitud || !a.longitud) return;
                 const lat = parseFloat(a.latitud), lng = parseFloat(a.longitud);
                 const mapa = L.map(`mapa-alerta-${a.id}`, { zoomControl: false }).setView([lat, lng], 17);
-                L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-                    subdomains: "abcd",
+                L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
                     maxZoom: 19,
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    attribution: "Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom",
                 }).addTo(mapa);
                 L.marker([lat, lng]).addTo(mapa);
                 mapasActivos[a.id] = mapa;
