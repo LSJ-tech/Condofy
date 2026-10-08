@@ -1,3 +1,6 @@
+import calendar
+from datetime import date
+
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -27,6 +30,11 @@ class GastoComunCreateView(SoloDirectivaMixin, CondominioFormMixin, CreateView):
             form.instance.monto_total = form.cleaned_data["monto_por_unidad"] * num_unidades
         else:
             form.instance.monto_por_unidad = None
+
+        anio, mes = map(int, form.cleaned_data["periodo"].split("-"))
+        ultimo_dia = calendar.monthrange(anio, mes)[1]
+        form.instance.fecha_vencimiento = date(anio, mes, ultimo_dia)
+
         response = super().form_valid(form)
         self.object.generar_cuotas()
         return response

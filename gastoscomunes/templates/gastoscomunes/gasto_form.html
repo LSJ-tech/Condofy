@@ -6,13 +6,14 @@
 <form method="post" class="col-md-6">
     {% csrf_token %}
     <div class="mb-3">
-        <label class="form-label">{{ form.periodo.label }}</label>
+        <label class="form-label" for="{{ form.periodo.id_for_label }}">{{ form.periodo.label }}</label>
         {{ form.periodo }}
+        <div class="form-text">{{ form.periodo.help_text }}</div>
         {{ form.periodo.errors }}
     </div>
 
     <div class="mb-3">
-        <label class="form-label">{{ form.modo.label }}</label>
+        <label class="form-label" for="{{ form.modo.id_for_label }}">{{ form.modo.label }}</label>
         {{ form.modo }}
     </div>
 
@@ -27,12 +28,6 @@
         {{ form.monto_por_unidad }}
         <div class="form-text">Se calcula el total multiplicando por el número de unidades del condominio.</div>
         {{ form.monto_por_unidad.errors }}
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label" for="{{ form.fecha_vencimiento.id_for_label }}">{{ form.fecha_vencimiento.label }}</label>
-        {{ form.fecha_vencimiento }}
-        {{ form.fecha_vencimiento.errors }}
     </div>
 
     {{ form.non_field_errors }}
