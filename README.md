@@ -2,7 +2,7 @@
 
 SaaS de emergencias y gestión para juntas de vecinos y condominios en Chile — segundo producto de [DevQuad](https://devquad.cl), en la misma línea que [PataAgenda](https://patagenda.devquad.cl).
 
-Botón de pánico con notificación push, comunicación vecinal (avisos), gestión de accesos y gastos comunes, con un panel web para directiva/administración/conserjería y una app móvil (React Native + Expo) para residentes.
+Botón de pánico con notificación push, comunicación vecinal (avisos), gestión de accesos y gastos comunes, con un panel web (instalable como PWA) para directiva/administración/conserjería/residentes. Una app nativa (React Native + Expo) es el siguiente paso si el volumen de clientes lo justifica.
 
 **Condofy es gratis, sin límite de unidades ni de tiempo** — no hay plan pago ni suscripción. Existe una donación voluntaria opcional (condominio → DevQuad) para apoyar el desarrollo.
 
@@ -22,8 +22,9 @@ Implementado y probado de punta a punta:
 - Política de Privacidad y Términos de Uso (`/privacidad/`, `/terminos/`), con aceptación obligatoria al registrarse (o en el primer login para cuentas creadas por la directiva), y solicitud de eliminación de cuenta/datos desde "Mi perfil".
 - Panel de administración (django-unfold) para el dueño de la plataforma.
 - API REST documentada con Swagger en `/api/docs/` (drf-spectacular).
+- PWA instalable (manifest + service worker en `/sw.js`, íconos propios): ícono en el escritorio del celular, ventana standalone, página de respaldo sin conexión en `/offline/`. Todavía sin push notifications vía Web Push (eso sigue siendo solo para la futura app nativa vía Expo).
 
-No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes, confirmaciones de alerta entre vecinos, reportes, donación recurrente/mensual.
+No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes, confirmaciones de alerta entre vecinos, reportes, donación recurrente/mensual, push notifications desde la PWA, app nativa.
 
 ## Stack
 
