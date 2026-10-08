@@ -47,3 +47,15 @@ class MarcarCuotaPagadaView(SoloDirectivaMixin, CondominioRequiredMixin, View):
         cuota.fecha_pago = timezone.localdate()
         cuota.save()
         return redirect("gastos-comunes-cuotas", gasto_pk=cuota.gasto_comun_id)
+
+
+class MisCuotasView(CondominioRequiredMixin, ListView):
+    """Vista del residente para sus propias cuotas -- antes solo existía por API (pensada para la futura app móvil)."""
+
+    template_name = "gastoscomunes/mis_cuotas.html"
+    context_object_name = "cuotas"
+
+    def get_queryset(self):
+        if self.membresia.unidad_id is None:
+            return CuotaUnidad.objects.none()
+        return CuotaUnidad.objects.filter(unidad=self.membresia.unidad).select_related("gasto_comun").order_by("-gasto_comun__fecha_emision")

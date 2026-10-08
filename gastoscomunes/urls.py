@@ -7,4 +7,5 @@ urlpatterns = [
     path("gastos-comunes/nuevo/", views.GastoComunCreateView.as_view(), name="gastos-comunes-crear"),
     path("gastos-comunes/<int:gasto_pk>/cuotas/", views.CuotaListView.as_view(), name="gastos-comunes-cuotas"),
     path("cuotas/<int:pk>/marcar-pagada/", views.MarcarCuotaPagadaView.as_view(), name="cuota-marcar-pagada"),
+    path("mis-cuotas/", views.MisCuotasView.as_view(), name="mis-cuotas"),
 ]

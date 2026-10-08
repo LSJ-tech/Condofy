@@ -59,6 +59,9 @@
                     {% if user.membresia.rol == "directiva" or user.membresia.rol == "conserje" %}
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'registro-ingreso-list' %}active{% endif %}" href="{% url 'registro-ingreso-list' %}"><i class="bi bi-door-open"></i> Accesos</a></li>
                     {% endif %}
+                    {% if user.membresia.rol == "residente" %}
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'mis-cuotas' %}active{% endif %}" href="{% url 'mis-cuotas' %}"><i class="bi bi-cash-coin"></i> Mis gastos comunes</a></li>
+                    {% endif %}
                     {% if user.membresia.rol == "directiva" %}
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'miembros' %}active{% endif %}" href="{% url 'miembros' %}"><i class="bi bi-people"></i> Miembros</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'unidades' %}active{% endif %}" href="{% url 'unidades' %}"><i class="bi bi-building"></i> Unidades</a></li>
