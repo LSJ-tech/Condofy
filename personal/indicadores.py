@@ -24,21 +24,25 @@ class IndicadorNoDisponibleError(Exception):
 # periodo llega desde request.POST (LiquidacionGenerarView) y termina dentro
 # de la URL que se le pide a mindicador.cl -- sin validar el formato acá,
 # un valor armado a mano podría meter cualquier cosa en esa URL (ver
-# python:S7044 en SonarCloud). Mismo patrón que gastoscomunes/forms.py.
-PERIODO_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+# python:S7044 en SonarCloud). anio/mes se extraen de los grupos del propio
+# match (no con un .split() aparte) para que el análisis de taint de Sonar
+# pueda rastrear que salen de un valor ya validado por regex, no del string
+# original sin sanitizar.
+PERIODO_RE = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])$")
 
 
 def _validar_periodo(periodo):
-    if not PERIODO_RE.match(periodo):
+    match = PERIODO_RE.match(periodo)
+    if not match:
         raise IndicadorNoDisponibleError(f"Periodo inválido: {periodo!r} (formato esperado 'YYYY-MM').")
+    return match.group(1), match.group(2)
 
 
 def obtener_utm(periodo):
     """periodo: 'YYYY-MM'. Lanza IndicadorNoDisponibleError si el formato no
     es válido, si todavía no está publicada (ej. un mes futuro), o si la API
     no responde."""
-    _validar_periodo(periodo)
-    anio, mes = periodo.split("-")
+    anio, mes = _validar_periodo(periodo)
     try:
         r = requests.get(f"{BASE_URL}/utm/{anio}", timeout=TIMEOUT)
         r.raise_for_status()
@@ -56,8 +60,8 @@ def obtener_utm(periodo):
 def obtener_uf(periodo):
     """UF del último día del periodo -- si el mes todavía no terminó (o la
     fecha es futura), usa el último valor disponible como aproximación."""
-    _validar_periodo(periodo)
-    anio, mes = (int(p) for p in periodo.split("-"))
+    anio_str, mes_str = _validar_periodo(periodo)
+    anio, mes = int(anio_str), int(mes_str)
     ultimo_dia = calendar.monthrange(anio, mes)[1]
     fecha_objetivo = date(anio, mes, ultimo_dia)
 
