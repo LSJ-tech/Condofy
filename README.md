@@ -2,9 +2,9 @@
 
 SaaS de emergencias y gestión para juntas de vecinos y condominios en Chile — segundo producto de [DevQuad](https://devquad.cl), en la misma línea que [PataAgenda](https://patagenda.devquad.cl).
 
-Botón de pánico con notificación push, comunicación vecinal (avisos), gestión de accesos y gastos comunes, con un panel web (instalable como PWA) para directiva/administración/conserjería/residentes. Una app nativa (React Native + Expo) es el siguiente paso si el volumen de clientes lo justifica.
+Botón de pánico con notificación push, comunicación vecinal (avisos), gestión de accesos, gastos comunes y gestión de personal (empleados + liquidaciones de sueldo reales), con un panel web (instalable como PWA) para directiva/administración/conserjería/residentes. Una app nativa (React Native + Expo) es el siguiente paso si el volumen de clientes lo justifica.
 
-**Condofy es gratis, sin límite de unidades ni de tiempo** — no hay plan pago ni suscripción. Existe una donación voluntaria opcional (condominio → DevQuad) para apoyar el desarrollo.
+**Condofy cuesta $19.990 al mes por condominio**, sin importar cantidad de unidades ni de residentes -- lo paga la administración, igual que cualquier otra suscripción de software, e incluye soporte continuo. La cobranza en sí (transferencia a DevQuad, o como ítem del gasto común) es manual por ahora, no hay un flujo de cobro automático en la app todavía. Además existe una donación voluntaria opcional (condominio → DevQuad) vía Mercado Pago, para quien quiera aportar más.
 
 ## Estado actual
 
@@ -23,12 +23,17 @@ Implementado y probado de punta a punta:
 - Panel de administración (django-unfold) para el dueño de la plataforma.
 - API REST documentada con Swagger en `/api/docs/` (drf-spectacular).
 - PWA instalable (manifest + service worker en `/sw.js`, íconos propios): ícono en el escritorio del celular, ventana standalone, página de respaldo sin conexión en `/offline/`. **Con Web Push real**: botón de pánico y avisos llegan como notificación del sistema aunque la PWA esté cerrada (VAPID + `pywebpush`, generar el par de llaves con `manage.py generar_vapid_keys`) -- separado de `DispositivoPush`/Expo, que sigue siendo solo para la futura app nativa.
+- Comprobante de pago (boucher) en PDF para cada cuota de gasto común pagada, con firma electrónica simple (sello + código de verificación) -- descargable y enviable por correo a un destinatario elegido por quien marca la cuota como pagada (no se manda solo a todos los residentes de la unidad).
+- Compartir una alerta activa por WhatsApp (link `wa.me`, mensaje armado con condominio/torre/unidad/autor), además de la notificación push normal.
+- Etiquetas de "Torre" y "Unidad" configurables por condominio (ej. "Block"/"Departamento" para Empart) -- las fija DevQuad vía `/admin/core/condominio/`, no hay form en la app para esto.
+- Correo de bienvenida en HTML al registrarse (autoregistro o alta por directiva/administración), con el mismo look del panel.
+- **Gestión de personal** (`personal/`): empleados del condominio (conserjería, aseo) con datos laborales, y liquidaciones de sueldo reales -- AFP, salud (Fonasa o Isapre en UF), seguro de cesantía según tipo de contrato, impuesto único por tramos (UTM), gratificación legal opcional (configurable por empleado, apagada por defecto). La UTM/UF de cada periodo se consultan solas en `mindicador.cl`; las tasas de AFP y los tramos de impuesto único son tablas globales que DevQuad mantiene a mano cuando cambien (cambian con 90 días de aviso por ley, no es mensual). PDF de la liquidación con el mismo formato de una liquidación real (dos columnas, certificado de recepción con firma), descargable y enviable por correo.
 
-No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes, confirmaciones de alerta entre vecinos, reportes, donación recurrente/mensual, app nativa.
+No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes ni de la suscripción de Condofy (ambos son manuales/por transferencia hoy), confirmaciones de alerta entre vecinos, reportes, asignación familiar/horas extra en liquidaciones, app nativa.
 
 ## Stack
 
-Django 6 + Django REST Framework + JWT (`djangorestframework-simplejwt`) + PostgreSQL (SQLite en desarrollo) + Bootstrap (panel web) + django-unfold (admin) + Mercado Pago (donaciones) + Expo push notifications.
+Django 6 + Django REST Framework + JWT (`djangorestframework-simplejwt`) + PostgreSQL (SQLite en desarrollo) + Bootstrap (panel web) + django-unfold (admin) + Mercado Pago (donaciones) + Expo/Web Push (notificaciones) + reportlab (PDFs: boucher y liquidación de sueldo) + mindicador.cl (UTM/UF en vivo para liquidaciones).
 
 ## Desarrollo local
 
@@ -53,9 +58,10 @@ core/               # Condominio, Torre, Unidad, Membresia, auth JWT, mixins de 
 alertas/            # botón de pánico
 comunicacion/       # avisos
 accesos/            # registro de ingresos (conserjería)
-gastoscomunes/      # cuotas del condominio
-notificaciones/     # dispositivos push y envío vía Expo
+gastoscomunes/      # cuotas del condominio, comprobante de pago (boucher)
+notificaciones/     # dispositivos push y envío vía Expo/Web Push
 pagos/              # donaciones voluntarias (Mercado Pago)
+personal/           # empleados y liquidaciones de sueldo
 ```
 
 Cada app de dominio (excepto `core`) sigue el mismo patrón: `models.py`, `serializers.py` + `api_views.py` + `api_urls.py` (API para la app móvil, bajo `/api/v1/`), y `views.py`/`forms.py`/`urls.py` cuando además tiene panel web.
@@ -66,8 +72,8 @@ Mismo patrón que PataAgenda: `build.sh` + `render.yaml` para Render (Blueprint 
 
 ## Roles
 
-- **directiva**: miembros, unidades, avisos, accesos, más lo exclusivo de gobierno (Mi condominio, link/QR de autoregistro, nombrar otra directiva/administración). **No** incluye generar gastos comunes ni editar los datos de transferencia -- eso es exclusivo de administración, a pedido explícito del cliente (es la única área donde administración tiene más permiso que directiva).
-- **administracion**: el día a día del condominio (miembros, unidades, avisos, accesos), más lo exclusivo de gastos comunes: generar el cargo del periodo y los datos de transferencia — puede ser un tercero contratado, no necesariamente un vecino elegido.
+- **directiva**: miembros, unidades, avisos, accesos, más lo exclusivo de gobierno (Mi condominio, link/QR de autoregistro, nombrar otra directiva/administración). **No** incluye generar gastos comunes, editar los datos de transferencia, ni crear/editar empleados o liquidaciones -- eso es exclusivo de administración, a pedido explícito del cliente (es la única área donde administración tiene más permiso que directiva). Directiva sí puede ver la lista de personal y sus liquidaciones, solo no generarlas.
+- **administracion**: el día a día del condominio (miembros, unidades, avisos, accesos), más lo exclusivo de gastos comunes (generar el cargo del periodo, datos de transferencia) y de personal (crear/editar empleados, generar liquidaciones de sueldo) -- puede ser un tercero contratado, no necesariamente un vecino elegido.
 - **conserje**: registra accesos.
 - **residente**: dispara alertas, lee avisos y sus propias cuotas (uso principal: la app móvil).
 
