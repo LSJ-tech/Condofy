@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: condofy
+    name: securapp-copropiedad
     env: python
     plan: free  # Pasar a un plan pago cuando el servicio esté listo para producción real.
     buildCommand: "./build.sh"
@@ -12,18 +12,22 @@ services:
         generateValue: true
       - key: DJANGO_DEBUG
         value: "False"
+      # securapp-copropiedad.onrender.com es la URL esperada -- Render le
+      # agrega un sufijo random solo si ese nombre ya está tomado. Verificar
+      # la URL real asignada en el dashboard tras el primer deploy y
+      # corregir acá (y en CSRF_TRUSTED_ORIGINS abajo) si difiere.
       - key: DJANGO_ALLOWED_HOSTS
-        value: condofy-k4ah.onrender.com,condofy.devquad.cl
+        value: securapp-copropiedad.onrender.com,condofy.devquad.cl
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
-        value: https://condofy-k4ah.onrender.com,https://condofy.devquad.cl
+        value: https://securapp-copropiedad.onrender.com,https://condofy.devquad.cl
       - key: DATABASE_URL
         fromDatabase:
-          name: condofy-db
+          name: securapp-copropiedad-db
           property: connectionString
       # Configurar antes de aceptar clientes reales (ver README):
       # RESEND_API_KEY, DEFAULT_FROM_EMAIL (sin RESEND_API_KEY los correos solo se imprimen en logs)
       # MERCADOPAGO_ACCESS_TOKEN (sin ella no aparece el botón de pago en línea)
 
 databases:
-  - name: condofy-db
+  - name: securapp-copropiedad-db
     plan: free
