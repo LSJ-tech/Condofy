@@ -39,18 +39,22 @@ def calcular_liquidacion(empleado, parametros, tramos_impuesto):
     total_imponible = sueldo_base + gratificacion
     total_haberes = total_imponible + empleado.asignacion_colacion + empleado.asignacion_movilizacion
 
-    tope_imponible_pesos = round(parametros.tope_imponible_uf * parametros.valor_uf)
-    base_descuentos = min(total_imponible, tope_imponible_pesos)
+    # AFP y salud comparten un tope imponible distinto (más bajo) al del
+    # seguro de cesantía -- por ley no son el mismo monto.
+    tope_afp_salud_pesos = round(parametros.tope_imponible_afp_salud_uf * parametros.valor_uf)
+    tope_cesantia_pesos = round(parametros.tope_imponible_cesantia_uf * parametros.valor_uf)
+    base_afp_salud = min(total_imponible, tope_afp_salud_pesos)
+    base_cesantia = min(total_imponible, tope_cesantia_pesos)
 
-    descuento_afp = round(base_descuentos * empleado.afp.tasa_total_pct / 100)
+    descuento_afp = round(base_afp_salud * empleado.afp.tasa_total_pct / 100)
 
     if empleado.sistema_salud == "isapre" and empleado.plan_isapre_uf:
         descuento_salud = round(empleado.plan_isapre_uf * parametros.valor_uf)
     else:
-        descuento_salud = round(base_descuentos * PORCENTAJE_SALUD_FONASA / 100)
+        descuento_salud = round(base_afp_salud * PORCENTAJE_SALUD_FONASA / 100)
 
     tasa_cesantia = _tasa_cesantia_trabajador(empleado, parametros)
-    descuento_cesantia = round(base_descuentos * tasa_cesantia / 100)
+    descuento_cesantia = round(base_cesantia * tasa_cesantia / 100)
 
     base_tributable = total_imponible - descuento_afp - descuento_salud - descuento_cesantia
     base_tributable_utm = base_tributable / parametros.valor_utm

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from core.models import Condominio, Membresia
@@ -66,7 +68,8 @@ class ParametrosPeriodo(models.Model):
     valor_utm = models.DecimalField(max_digits=10, decimal_places=2)
     valor_uf = models.DecimalField(max_digits=10, decimal_places=2)
     ingreso_minimo_mensual = models.PositiveIntegerField(help_text="En pesos chilenos -- sin centavos.")
-    tope_imponible_uf = models.DecimalField(max_digits=6, decimal_places=2, help_text="Tope imponible para AFP/salud/cesantía, en UF.")
+    tope_imponible_afp_salud_uf = models.DecimalField(max_digits=6, decimal_places=2, default=90, help_text="Tope imponible para AFP y salud, en UF (distinto del de cesantía).")
+    tope_imponible_cesantia_uf = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal("135.2"), help_text="Tope imponible para el seguro de cesantía, en UF (más alto que el de AFP/salud).")
     tasa_cesantia_trabajador_indefinido_pct = models.DecimalField(max_digits=4, decimal_places=2, default=0.6)
     tasa_cesantia_trabajador_plazo_fijo_pct = models.DecimalField(max_digits=4, decimal_places=2, default=0)
 

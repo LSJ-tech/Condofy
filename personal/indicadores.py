@@ -94,7 +94,8 @@ def asegurar_parametros_periodo(periodo):
         valor_utm=valor_utm,
         valor_uf=valor_uf,
         ingreso_minimo_mensual=anterior.ingreso_minimo_mensual,
-        tope_imponible_uf=anterior.tope_imponible_uf,
+        tope_imponible_afp_salud_uf=anterior.tope_imponible_afp_salud_uf,
+        tope_imponible_cesantia_uf=anterior.tope_imponible_cesantia_uf,
         tasa_cesantia_trabajador_indefinido_pct=anterior.tasa_cesantia_trabajador_indefinido_pct,
         tasa_cesantia_trabajador_plazo_fijo_pct=anterior.tasa_cesantia_trabajador_plazo_fijo_pct,
     )

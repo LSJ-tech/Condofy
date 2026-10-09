@@ -20,7 +20,7 @@ def crear_membresia(condominio, rol, unidad=None, **user_kwargs):
 def _parametros(**overrides):
     datos = dict(
         periodo="2026-10", valor_utm=Decimal("65000"), valor_uf=Decimal("38000"),
-        ingreso_minimo_mensual=500000, tope_imponible_uf=Decimal("87.8"),
+        ingreso_minimo_mensual=500000, tope_imponible_afp_salud_uf=Decimal("87.8"), tope_imponible_cesantia_uf=Decimal("131.8"),
         tasa_cesantia_trabajador_indefinido_pct=Decimal("0.6"), tasa_cesantia_trabajador_plazo_fijo_pct=Decimal("0"),
     )
     datos.update(overrides)
@@ -89,16 +89,21 @@ class CalculoLiquidacionTests(TestCase):
         self.assertEqual(resultado["liquido_a_pagar"], 1434089)
 
     def test_tope_imponible_limita_la_base_de_descuentos(self):
-        parametros = _parametros(tope_imponible_uf=Decimal("10"))  # tope bajo a propósito, en pesos: 10*38000=380000
+        # tope AFP/salud bajo a propósito (10 UF = 380000), tope cesantía alto
+        # (131.8 UF) para probar que son dos topes independientes -- por ley
+        # el de cesantía siempre es más alto que el de AFP/salud.
+        parametros = _parametros(tope_imponible_afp_salud_uf=Decimal("10"), tope_imponible_cesantia_uf=Decimal("131.8"))
         empleado = Empleado(
             sueldo_base=1000000, asignacion_colacion=0, asignacion_movilizacion=0,
             tipo_contrato="indefinido", sistema_salud="fonasa", aplica_gratificacion=False,
             afp=Afp(nombre="Test AFP", tasa_total_pct=Decimal("10")),
         )
         resultado = calcular_liquidacion(empleado, parametros, _tramos())
-        # el descuento de AFP/salud/cesantía se calcula sobre el tope (380000), no sobre el sueldo completo
+        # AFP/salud se calculan sobre el tope (380000), no sobre el sueldo completo
         self.assertEqual(resultado["descuento_afp"], 38000)
         self.assertEqual(resultado["descuento_salud"], 26600)
+        # cesantía no está topada acá (tope mucho más alto que el sueldo) -- se calcula sobre el sueldo completo
+        self.assertEqual(resultado["descuento_cesantia"], 6000)
 
 
 class EmpleadoPermisosTests(TestCase):
@@ -172,7 +177,7 @@ class LiquidacionGenerarTests(TestCase):
 
         ParametrosPeriodo.objects.create(
             periodo="2026-09", valor_utm=Decimal("65000"), valor_uf=Decimal("38000"),
-            ingreso_minimo_mensual=500000, tope_imponible_uf=Decimal("87.8"),
+            ingreso_minimo_mensual=500000, tope_imponible_afp_salud_uf=Decimal("87.8"), tope_imponible_cesantia_uf=Decimal("131.8"),
         )
         self.client.force_login(self.administracion.user)
         with patch("personal.indicadores.obtener_utm", return_value=Decimal("72151")) as mock_utm, \
@@ -187,7 +192,8 @@ class LiquidacionGenerarTests(TestCase):
         self.assertEqual(parametros.valor_uf, Decimal("41130"))
         # heredado del periodo anterior, no se volvió a pedir
         self.assertEqual(parametros.ingreso_minimo_mensual, 500000)
-        self.assertEqual(parametros.tope_imponible_uf, Decimal("87.8"))
+        self.assertEqual(parametros.tope_imponible_afp_salud_uf, Decimal("87.8"))
+        self.assertEqual(parametros.tope_imponible_cesantia_uf, Decimal("131.8"))
         self.assertTrue(Liquidacion.objects.filter(empleado=self.empleado, periodo="2026-10").exists())
 
     def test_genera_liquidacion_y_manda_correo_si_se_indica(self):
@@ -195,7 +201,7 @@ class LiquidacionGenerarTests(TestCase):
 
         ParametrosPeriodo.objects.create(
             periodo="2026-10", valor_utm=Decimal("65000"), valor_uf=Decimal("38000"),
-            ingreso_minimo_mensual=500000, tope_imponible_uf=Decimal("87.8"),
+            ingreso_minimo_mensual=500000, tope_imponible_afp_salud_uf=Decimal("87.8"), tope_imponible_cesantia_uf=Decimal("131.8"),
         )
         self.client.force_login(self.administracion.user)
         r = self.client.post(
@@ -216,7 +222,7 @@ class LiquidacionGenerarTests(TestCase):
     def test_no_permite_duplicar_liquidacion_del_mismo_periodo(self):
         ParametrosPeriodo.objects.create(
             periodo="2026-10", valor_utm=Decimal("65000"), valor_uf=Decimal("38000"),
-            ingreso_minimo_mensual=500000, tope_imponible_uf=Decimal("87.8"),
+            ingreso_minimo_mensual=500000, tope_imponible_afp_salud_uf=Decimal("87.8"), tope_imponible_cesantia_uf=Decimal("131.8"),
         )
         self.client.force_login(self.administracion.user)
         self.client.post(reverse("liquidacion-generar", args=[self.empleado.pk]), {"periodo": "2026-10"})
@@ -226,7 +232,7 @@ class LiquidacionGenerarTests(TestCase):
     def test_pdf_descargable_despues_de_generar(self):
         ParametrosPeriodo.objects.create(
             periodo="2026-10", valor_utm=Decimal("65000"), valor_uf=Decimal("38000"),
-            ingreso_minimo_mensual=500000, tope_imponible_uf=Decimal("87.8"),
+            ingreso_minimo_mensual=500000, tope_imponible_afp_salud_uf=Decimal("87.8"), tope_imponible_cesantia_uf=Decimal("131.8"),
         )
         self.client.force_login(self.administracion.user)
         self.client.post(reverse("liquidacion-generar", args=[self.empleado.pk]), {"periodo": "2026-10"})

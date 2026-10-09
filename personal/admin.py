@@ -16,7 +16,7 @@ class TramoImpuestoUnicoAdmin(ModelAdmin):
 
 @admin.register(ParametrosPeriodo)
 class ParametrosPeriodoAdmin(ModelAdmin):
-    list_display = ["periodo", "valor_utm", "valor_uf", "ingreso_minimo_mensual", "tope_imponible_uf"]
+    list_display = ["periodo", "valor_utm", "valor_uf", "ingreso_minimo_mensual", "tope_imponible_afp_salud_uf", "tope_imponible_cesantia_uf"]
 
 
 @admin.register(Empleado)
