@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 from django.contrib.auth.models import User
@@ -43,6 +44,17 @@ GENERO_UNIDAD_CHOICES = [
     ("m", "Masculino (el/un/nuevo departamento)"),
 ]
 
+DIAS_PRUEBA_GRATIS = 20
+
+
+def _pagado_hasta_prueba_gratis():
+    """20 días de prueba gratis del sistema de gestión (gastos comunes y
+    personal/liquidaciones) para cualquier condominio nuevo -- mismo campo
+    que ya usa SuscripcionActivaMixin, sin lógica de trial aparte. Se aplica
+    tanto al registro self-service como a un alta manual (Django admin,
+    management command) que no fije pagado_hasta explícito."""
+    return timezone.localdate() + datetime.timedelta(days=DIAS_PRUEBA_GRATIS)
+
 
 class Condominio(models.Model):
     """El tenant: una junta de vecinos o condominio cliente de la plataforma.
@@ -58,7 +70,12 @@ class Condominio(models.Model):
     region = models.CharField(max_length=100, blank=True)
     activo = models.BooleanField(default=True, help_text="Interruptor manual: desactivarlo bloquea todo (ej. un cliente que dejó de serlo).")
     plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default="premium", help_text="Legado -- hoy el precio es fijo ($19.990/mes, ver README), este campo es solo registro interno de DevQuad y no limita nada.")
-    pagado_hasta = models.DateField(null=True, blank=True, help_text="Legado de cuando el acceso se cortaba por falta de pago. Ya no restringe nada -- hoy la cobranza es manual, ver README.")
+    pagado_hasta = models.DateField(
+        null=True, blank=True, default=_pagado_hasta_prueba_gratis,
+        help_text=f"Hasta cuándo puede generar gastos comunes/personal nuevos sin pagar (ver SuscripcionActivaMixin) -- "
+        f"{DIAS_PRUEBA_GRATIS} días de prueba gratis al crear el condominio, después hay que pagar la suscripción. "
+        "El resto de la app (alertas, avisos, accesos) nunca depende de este campo.",
+    )
     es_fundador = models.BooleanField(default=False, help_text="Uno de los primeros condominios en registrarse.")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     datos_transferencia = models.TextField(

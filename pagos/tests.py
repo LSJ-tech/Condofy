@@ -74,7 +74,10 @@ class SuscripcionPagarViewTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.condominio = Condominio.objects.create(nombre="Test Suscripcion", plan="premium")
+        # pagado_hasta=None a propósito -- Condominio ahora trae 20 días de
+        # prueba gratis por defecto (ver _pagado_hasta_prueba_gratis), pero
+        # estos tests quieren probar el caso de "todavía no está pagado".
+        cls.condominio = Condominio.objects.create(nombre="Test Suscripcion", plan="premium", pagado_hasta=None)
 
     def setUp(self):
         self.administracion = crear_membresia(self.condominio, "administracion", username="susc_admon")

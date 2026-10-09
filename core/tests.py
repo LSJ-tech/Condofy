@@ -273,3 +273,34 @@ class CorreoBienvenidaTests(TestCase):
         user = User.objects.get(email="pedro@example.com")
         self.assertNotIn(user.password, mail.outbox[0].body)
         self.assertNotRegex(mail.outbox[0].body, r"contraseña")
+
+
+class PruebaGratisTests(TestCase):
+    """20 días de prueba gratis del sistema de gestión (gastos comunes y
+    personal) para cualquier condominio nuevo, sin importar cómo se crea --
+    mismo pagado_hasta que ya usa SuscripcionActivaMixin, sin lógica aparte."""
+
+    def test_condominio_nuevo_trae_20_dias_de_prueba_por_defecto(self):
+        condominio = Condominio.objects.create(nombre="Test Prueba Gratis", plan="premium")
+        dias_restantes = (condominio.pagado_hasta - timezone.localdate()).days
+        self.assertEqual(dias_restantes, 20)
+
+    def test_registro_self_service_tambien_trae_la_prueba_gratis(self):
+        codigo = CodigoInvitacion.objects.create()
+        r = self.client.post(reverse("registro-condominio"), {
+            "codigo_invitacion": codigo.codigo, "nombre_condominio": "Condo Prueba Self Service",
+            "nombre": "Logan", "apellido": "Test",
+            "password1": "unaClaveSegura123", "password2": "unaClaveSegura123",
+            "acepto_terminos": True,
+        })
+        self.assertEqual(r.status_code, 302)
+        condominio = Condominio.objects.get(nombre="Condo Prueba Self Service")
+        self.assertIsNotNone(condominio.pagado_hasta)
+        self.assertGreaterEqual(condominio.pagado_hasta, timezone.localdate())
+
+    def test_se_puede_crear_sin_prueba_explicitamente(self):
+        """Los management commands de alta manual (ej. crear_condominio_empart)
+        pueden seguir pasando pagado_hasta=None a propósito si no quieren dar
+        el trial -- el default no lo fuerza."""
+        condominio = Condominio.objects.create(nombre="Test Sin Prueba", plan="premium", pagado_hasta=None)
+        self.assertIsNone(condominio.pagado_hasta)
