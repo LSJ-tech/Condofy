@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.generic import CreateView, ListView, UpdateView, View
 
 from core.forms import CondominioForm
-from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
+from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin, SuscripcionActivaMixin
 from core.models import Condominio, Membresia, Torre
 
 from .boucher import enviar_boucher_por_correo, generar_boucher_pdf
@@ -24,7 +24,7 @@ class GastoComunListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, L
     context_object_name = "gastos"
 
 
-class GastoComunCreateView(SoloAdministracionMixin, CondominioFormMixin, CreateView):
+class GastoComunCreateView(SoloAdministracionMixin, SuscripcionActivaMixin, CondominioFormMixin, CreateView):
     model = GastoComun
     form_class = GastoComunForm
     template_name = "gastoscomunes/gasto_form.html"

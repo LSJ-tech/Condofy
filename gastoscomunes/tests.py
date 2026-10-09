@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -22,7 +24,10 @@ class GenerarGastoComunPermisosTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.condominio = Condominio.objects.create(nombre="Test Gasto Permisos", plan="premium")
+        cls.condominio = Condominio.objects.create(
+            nombre="Test Gasto Permisos", plan="premium",
+            pagado_hasta=timezone.localdate() + datetime.timedelta(days=30),
+        )
 
     def setUp(self):
         self.administracion = crear_membresia(self.condominio, "administracion", username="gasto_admon")
@@ -51,6 +56,31 @@ class GenerarGastoComunPermisosTests(TestCase):
         r = self.client.get(reverse("gastos-comunes-list"))
         self.assertEqual(r.status_code, 200)
         self.assertNotIn(reverse("gastos-comunes-crear").encode(), r.content)
+
+
+class GenerarGastoComunSuscripcionTests(TestCase):
+    """Generar un gasto común nuevo exige suscripción al día (SuscripcionActivaMixin)
+    -- el resto de gastos comunes (ver, marcar pagado) sigue disponible aunque venza."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Gasto Suscripcion", plan="premium", pagado_hasta=None)
+
+    def setUp(self):
+        self.administracion = crear_membresia(self.condominio, "administracion", username="gasto_susc_admon")
+
+    def test_bloqueado_si_la_suscripcion_no_esta_al_dia(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("gastos-comunes-crear"), {
+            "periodo": "2026-11", "modo": "total", "monto_total": "240000",
+        })
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(GastoComun.objects.filter(condominio=self.condominio, periodo="2026-11").exists())
+
+    def test_la_lista_sigue_disponible_aunque_venza(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.get(reverse("gastos-comunes-list"))
+        self.assertEqual(r.status_code, 200)
 
 
 class DatosTransferenciaPermisosTests(TestCase):

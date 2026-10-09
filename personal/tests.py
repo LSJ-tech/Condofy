@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -15,6 +16,13 @@ def crear_membresia(condominio, rol, unidad=None, **user_kwargs):
     username = user_kwargs.pop("username", f"t_{rol}_{Membresia.objects.count()}")
     user = User.objects.create_user(username=username, **user_kwargs)
     return Membresia.objects.create(user=user, condominio=condominio, rol=rol, unidad=unidad, terminos_aceptados_en=timezone.now())
+
+
+def _pagado_hasta_al_dia():
+    """Crear/generar empleados y liquidaciones exige suscripción al día
+    (SuscripcionActivaMixin) -- la mayoría de estos tests no prueban ESE
+    permiso puntual, así que parten con la suscripción vigente."""
+    return timezone.localdate() + datetime.timedelta(days=30)
 
 
 def _parametros(**overrides):
@@ -112,7 +120,7 @@ class EmpleadoPermisosTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.condominio = Condominio.objects.create(nombre="Test Personal", plan="premium")
+        cls.condominio = Condominio.objects.create(nombre="Test Personal", plan="premium", pagado_hasta=_pagado_hasta_al_dia())
         cls.afp = Afp.objects.create(nombre="Test AFP", tasa_total_pct=Decimal("11.44"))
 
     def setUp(self):
@@ -151,6 +159,46 @@ class EmpleadoPermisosTests(TestCase):
         self.assertEqual(r.status_code, 302)
 
 
+class PersonalSuscripcionTests(TestCase):
+    """Crear un empleado o generar una liquidación exigen suscripción al día
+    (SuscripcionActivaMixin) -- ver/editar lo que ya existe sigue disponible."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Personal Suscripcion", plan="premium", pagado_hasta=None)
+        cls.afp = Afp.objects.create(nombre="Test AFP", tasa_total_pct=Decimal("11.44"))
+        cls.empleado = Empleado.objects.create(
+            condominio=cls.condominio, nombre="Pedro Soto", rut="22.222.222-2", cargo="Aseo",
+            tipo_contrato="indefinido", fecha_ingreso="2026-01-01", afp=cls.afp,
+            sistema_salud="fonasa", sueldo_base=450000,
+        )
+
+    def setUp(self):
+        self.administracion = crear_membresia(self.condominio, "administracion", username="personal_susc_admon")
+
+    def test_crear_empleado_bloqueado_si_la_suscripcion_no_esta_al_dia(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("empleado-crear"), {
+            "nombre": "Ana Lopez", "rut": "33.333.333-3", "cargo": "Conserje",
+            "tipo_contrato": "indefinido", "fecha_ingreso": "2026-01-01",
+            "afp": self.afp.pk, "sistema_salud": "fonasa", "sueldo_base": "500000",
+            "asignacion_colacion": "0", "asignacion_movilizacion": "0",
+        })
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Empleado.objects.filter(rut="33.333.333-3").exists())
+
+    def test_generar_liquidacion_bloqueado_si_la_suscripcion_no_esta_al_dia(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("liquidacion-generar", args=[self.empleado.pk]), {"periodo": "2026-10"})
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(Liquidacion.objects.filter(empleado=self.empleado).count(), 0)
+
+    def test_editar_empleado_sigue_disponible_aunque_venza(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.get(reverse("empleado-editar", args=[self.empleado.pk]))
+        self.assertEqual(r.status_code, 200)
+
+
 class EmpleadoTipoContratoTests(TestCase):
     """Un contrato indefinido no tiene fecha de término; uno a plazo fijo sí
     la necesita. Al editar un empleado de plazo fijo a indefinido (lo que
@@ -159,7 +207,7 @@ class EmpleadoTipoContratoTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.condominio = Condominio.objects.create(nombre="Test Tipo Contrato", plan="premium")
+        cls.condominio = Condominio.objects.create(nombre="Test Tipo Contrato", plan="premium", pagado_hasta=_pagado_hasta_al_dia())
         cls.afp = Afp.objects.create(nombre="Test AFP", tasa_total_pct=Decimal("11.44"))
 
     def setUp(self):
@@ -217,7 +265,7 @@ class EmpleadoTipoContratoTests(TestCase):
 class LiquidacionGenerarTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.condominio = Condominio.objects.create(nombre="Test Liquidaciones", plan="premium")
+        cls.condominio = Condominio.objects.create(nombre="Test Liquidaciones", plan="premium", pagado_hasta=_pagado_hasta_al_dia())
         cls.afp = Afp.objects.create(nombre="Test AFP", tasa_total_pct=Decimal("11.44"))
         cls.empleado = Empleado.objects.create(
             condominio=cls.condominio, nombre="Juan Pérez", rut="11.111.111-1", cargo="Conserje",

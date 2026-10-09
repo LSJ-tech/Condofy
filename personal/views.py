@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView
 from django.views.generic.base import View
 
-from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
+from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin, SuscripcionActivaMixin
 
 from .calculo import calcular_liquidacion
 from .forms import EmpleadoForm
@@ -22,7 +22,7 @@ class EmpleadoListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, Lis
         return super().get_queryset().order_by("-activo", "nombre")
 
 
-class EmpleadoCreateView(SoloAdministracionMixin, CondominioFormMixin, CreateView):
+class EmpleadoCreateView(SoloAdministracionMixin, SuscripcionActivaMixin, CondominioFormMixin, CreateView):
     model = Empleado
     form_class = EmpleadoForm
     template_name = "personal/empleado_form.html"
@@ -50,7 +50,7 @@ class LiquidacionListView(EsDirectivaOAdministracionMixin, CondominioRequiredMix
         return context
 
 
-class LiquidacionGenerarView(SoloAdministracionMixin, CondominioRequiredMixin, View):
+class LiquidacionGenerarView(SoloAdministracionMixin, SuscripcionActivaMixin, CondominioRequiredMixin, View):
     def post(self, request, empleado_pk):
         empleado = get_object_or_404(Empleado, pk=empleado_pk, condominio=self.condominio)
         periodo = request.POST.get("periodo", "").strip()

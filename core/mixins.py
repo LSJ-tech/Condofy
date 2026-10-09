@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import ProtectedError
 from django.shortcuts import redirect
+from django.utils import timezone
 
 MENSAJE_SIN_CONDOMINIO = "Tu cuenta no está vinculada a ningún condominio."
 
@@ -96,6 +97,30 @@ class SoloAdministracionMixin:
             if membresia and membresia.rol != "administracion":
                 messages.error(request, "Esta acción es exclusiva de administración.")
                 return redirect("inicio")
+        return super().dispatch(request, *args, **kwargs)
+
+
+class SuscripcionActivaMixin:
+    """Mezclar ANTES de CondominioRequiredMixin/CondominioFormMixin: exige que
+    la suscripción del condominio esté al día (pagado_hasta en el futuro).
+
+    Uso deliberadamente angosto: solo para las acciones que generan NUEVO
+    valor cobrable cada mes -- generar un gasto común nuevo, crear un
+    empleado, generar una liquidación -- no para ver o editar lo que ya
+    existe (eso sigue disponible aunque venza la suscripción, ver
+    SoloAdministracionMixin en cada app para el resto de permisos)."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            membresia = getattr(request.user, "membresia", None)
+            if membresia:
+                condominio = membresia.condominio
+                if not (condominio.pagado_hasta and condominio.pagado_hasta >= timezone.localdate()):
+                    messages.error(
+                        request,
+                        "Esta función requiere que la suscripción esté al día -- puedes pagarla desde el inicio.",
+                    )
+                    return redirect("inicio")
         return super().dispatch(request, *args, **kwargs)
 
 
