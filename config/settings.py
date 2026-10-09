@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'gastoscomunes',
     'notificaciones',
     'pagos',
+    'personal',
 ]
 
 MIDDLEWARE = [
