@@ -307,9 +307,9 @@ class PruebaGratisTests(TestCase):
 
 
 class DonacionVisibilidadTests(TestCase):
-    """La donación es cosa de residentes/conserjería -- directiva/administración
-    solo ven la suscripción (que es la que de verdad pagan), para no mezclar
-    los dos conceptos en su panel."""
+    """La donación es exclusiva de residentes -- directiva/administración solo
+    ven la suscripción (que es la que de verdad pagan), y conserjería no ve
+    ninguna de las dos (no le corresponde ninguno de los dos pagos)."""
 
     @classmethod
     def setUpTestData(cls):
@@ -336,3 +336,10 @@ class DonacionVisibilidadTests(TestCase):
         r = self.client.get(reverse("inicio"))
         self.assertEqual(r.status_code, 200)
         self.assertIn(b"Apoya el proyecto", r.content)
+
+    def test_conserje_no_ve_la_tarjeta_de_donacion(self):
+        membresia = crear_membresia(self.condominio, "conserje", username="donvis_conserje")
+        self.client.force_login(membresia.user)
+        r = self.client.get(reverse("inicio"))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn(b"Apoya el proyecto", r.content)
