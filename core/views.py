@@ -40,7 +40,7 @@ def enviar_correo_bienvenida(user, condominio):
     (ya sea porque la eligió él mismo al autoregistrarse, o porque es
     temporal y se entrega aparte, ver CrearMiembroView). No bloquea el alta
     si Resend falla: el correo es un plus, no un requisito."""
-    login_url = "https://condofy.devquad.cl/login/"
+    login_url = "https://securapp.devquad.cl/login/"
     contexto = {
         "platform_name": settings.PLATFORM_NAME,
         "nombre": user.first_name,
