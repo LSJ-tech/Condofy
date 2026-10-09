@@ -1,6 +1,7 @@
 import calendar
 from datetime import date
 
+from django.contrib import messages
 from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -11,6 +12,7 @@ from core.forms import CondominioForm
 from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
 from core.models import Condominio, Torre
 
+from .boucher import generar_boucher_pdf
 from .forms import GastoComunForm
 from .models import CuotaUnidad, GastoComun
 
@@ -88,6 +90,26 @@ class MarcarCuotaPagadaView(EsDirectivaOAdministracionMixin, CondominioRequiredM
         cuota.fecha_pago = timezone.localdate()
         cuota.save()
         return redirect("gastos-comunes-cuotas", gasto_pk=cuota.gasto_comun_id)
+
+
+class BoucherPDFView(CondominioRequiredMixin, View):
+    """Comprobante de pago descargable -- el residente solo ve el de su propia
+    unidad, directiva/administración ven el de cualquiera en su condominio."""
+
+    def get(self, request, pk):
+        cuota = get_object_or_404(
+            CuotaUnidad.objects.select_related("unidad", "unidad__torre", "gasto_comun", "gasto_comun__condominio"),
+            pk=pk, gasto_comun__condominio=self.condominio,
+        )
+        es_gestion = self.membresia.rol in ("directiva", "administracion")
+        es_propia = self.membresia.unidad_id == cuota.unidad_id
+        if not (es_gestion or es_propia):
+            messages.error(request, "No puedes ver el comprobante de otra unidad.")
+            return redirect("inicio")
+        if cuota.estado != "pagado":
+            messages.error(request, "Esta cuota todavía no está pagada.")
+            return redirect("gastos-comunes-cuotas", gasto_pk=cuota.gasto_comun_id) if es_gestion else redirect("mis-cuotas")
+        return generar_boucher_pdf(cuota)
 
 
 class MisCuotasView(CondominioRequiredMixin, ListView):

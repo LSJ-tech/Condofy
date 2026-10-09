@@ -19,6 +19,9 @@
                 </div>
                 <p class="fs-4 fw-bold mb-1">${{ c.monto }}</p>
                 <p class="text-muted small mb-2">Vence el {{ c.gasto_comun.fecha_vencimiento }}{% if c.fecha_pago %} · Pagado el {{ c.fecha_pago }}{% endif %}</p>
+                {% if c.estado == "pagado" %}
+                <a href="{% url 'cuota-boucher' c.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-pdf"></i> Descargar comprobante</a>
+                {% endif %}
                 {% if c.estado != "pagado" and condominio.datos_transferencia %}
                 <div class="border-top pt-2 mt-2">
                     <p class="small fw-semibold mb-1">Datos para transferir:</p>

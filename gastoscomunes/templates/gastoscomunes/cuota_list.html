@@ -43,6 +43,8 @@
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-success">Marcar pagada</button>
                 </form>
+                {% else %}
+                <a href="{% url 'cuota-boucher' c.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-pdf"></i> Comprobante</a>
                 {% endif %}
             </td>
         </tr>

@@ -8,5 +8,6 @@ urlpatterns = [
     path("gastos-comunes/datos-transferencia/", views.DatosTransferenciaUpdateView.as_view(), name="datos-transferencia"),
     path("gastos-comunes/<int:gasto_pk>/cuotas/", views.CuotaListView.as_view(), name="gastos-comunes-cuotas"),
     path("cuotas/<int:pk>/marcar-pagada/", views.MarcarCuotaPagadaView.as_view(), name="cuota-marcar-pagada"),
+    path("cuotas/<int:pk>/boucher/", views.BoucherPDFView.as_view(), name="cuota-boucher"),
     path("mis-cuotas/", views.MisCuotasView.as_view(), name="mis-cuotas"),
 ]
