@@ -65,6 +65,11 @@ class Condominio(models.Model):
         default=uuid.uuid4, unique=True, editable=False,
         help_text="Identifica el link/QR público de autoregistro de residentes de este condominio.",
     )
+    etiqueta_torre = models.CharField(
+        max_length=30, default="Torre",
+        help_text="Cómo le dicen en este condominio a la agrupación de unidades (Torre, Block, Edificio, "
+        "Pabellón...) -- se usa tal cual en el panel, en vez de 'Torre' a secas.",
+    )
 
     class Meta:
         ordering = ["nombre"]

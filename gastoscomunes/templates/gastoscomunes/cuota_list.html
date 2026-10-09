@@ -13,12 +13,12 @@
         </select>
     </div>
     <div class="col-md-4">
-        <label class="form-label small text-muted" for="cuotas-torre">Torre</label>
+        <label class="form-label small text-muted" for="cuotas-torre">{{ condominio.etiqueta_torre }}</label>
         <form method="get">
             <select id="cuotas-torre" name="torre" class="form-select" onchange="this.form.submit()">
-                <option value="">Todas las torres</option>
+                <option value="">Todas las {{ condominio.etiqueta_torre|lower }}s</option>
                 {% for t in torres %}
-                <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>Torre {{ t.nombre }}</option>
+                <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>{{ condominio.etiqueta_torre }} {{ t.nombre }}</option>
                 {% endfor %}
             </select>
         </form>

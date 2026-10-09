@@ -12,7 +12,7 @@
         <div>
             <div class="text-muted small">Mi unidad</div>
             <div class="fw-semibold">
-                {% if membresia.unidad %}Torre {{ membresia.unidad.torre.nombre|default:"—" }}, depto {{ membresia.unidad.numero }}{% else %}Sin unidad asignada — pídesela a tu directiva{% endif %}
+                {% if membresia.unidad %}{{ condominio.etiqueta_torre }} {{ membresia.unidad.torre.nombre|default:"—" }}, depto {{ membresia.unidad.numero }}{% else %}Sin unidad asignada — pídesela a tu directiva{% endif %}
             </div>
         </div>
         {% if membresia.unidad %}
@@ -82,7 +82,7 @@
         <ul class="list-group list-group-flush">
             {% for m in morosos %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 px-0">
-                <span>{% if m.unidad__torre__nombre %}Torre {{ m.unidad__torre__nombre }} - {% endif %}Depto {{ m.unidad__numero }}</span>
+                <span>{% if m.unidad__torre__nombre %}{{ condominio.etiqueta_torre }} {{ m.unidad__torre__nombre }} - {% endif %}Depto {{ m.unidad__numero }}</span>
                 <span class="text-danger fw-semibold">${{ m.total_adeudado }} <span class="text-muted small">({{ m.cuotas_atrasadas }} cuota{{ m.cuotas_atrasadas|pluralize }})</span></span>
             </li>
             {% endfor %}
@@ -96,7 +96,7 @@
 
 <div class="row row-cols-2 row-cols-md-4 g-2 mb-4">
     <div class="col"><a href="{% url 'miembros' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-people d-block fs-4 mb-1"></i> Miembros</a></div>
-    <div class="col"><a href="{% url 'torres' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-buildings d-block fs-4 mb-1"></i> Torres</a></div>
+    <div class="col"><a href="{% url 'torres' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-buildings d-block fs-4 mb-1"></i> {{ condominio.etiqueta_torre }}s</a></div>
     <div class="col"><a href="{% url 'unidades' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-building d-block fs-4 mb-1"></i> Unidades</a></div>
     <div class="col"><a href="{% url 'gastos-comunes-list' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-cash-coin d-block fs-4 mb-1"></i> Gastos comunes</a></div>
     <div class="col"><a href="{% url 'registro-ingreso-list' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-door-open d-block fs-4 mb-1"></i> Accesos</a></div>
@@ -216,12 +216,13 @@ function csrfToken() {
 // quiera (su grupo del edificio, un vecino puntual), sin ninguna API ni
 // integración de por medio: solo un link wa.me con el mensaje ya armado.
 const CONDOMINIO_NOMBRE_WHATSAPP = "{{ condominio.nombre|default:PLATFORM_NAME|escapejs }}";
+const ETIQUETA_TORRE = "{{ condominio.etiqueta_torre|default:"Torre"|escapejs }}";
 
 function mensajeAlertaWhatsApp(alerta) {
     const lineas = [`🚨 *Alerta de ${alerta.tipo_display || alerta.tipo}* en ${CONDOMINIO_NOMBRE_WHATSAPP}`, ""];
     if (alerta.autor_nombre) lineas.push(`Reportado por: ${alerta.autor_nombre}`);
     if (alerta.autor_unidad) {
-        const unidad = alerta.autor_torre ? `Torre ${alerta.autor_torre}, depto ${alerta.autor_unidad}` : `Depto ${alerta.autor_unidad}`;
+        const unidad = alerta.autor_torre ? `${ETIQUETA_TORRE} ${alerta.autor_torre}, depto ${alerta.autor_unidad}` : `Depto ${alerta.autor_unidad}`;
         lineas.push(`Unidad: ${unidad}`);
     }
     if (alerta.mensaje) lineas.push(`Mensaje: "${alerta.mensaje}"`);

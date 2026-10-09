@@ -16,21 +16,21 @@
                     {% for field in form %}
                     {% if field.name == "unidad" %}
                     <div class="mb-3">
-                        <label class="form-label" for="id_torre_selector">Torre</label>
+                        <label class="form-label" for="id_torre_selector">{{ condominio.etiqueta_torre }}</label>
                         <select id="id_torre_selector" class="form-select">
-                            <option value="">— Elige tu torre —</option>
+                            <option value="">— Elige tu {{ condominio.etiqueta_torre|lower }} —</option>
                             {% for t in torres %}
-                            <option value="{{ t.pk }}">Torre {{ t.nombre }}</option>
+                            <option value="{{ t.pk }}">{{ condominio.etiqueta_torre }} {{ t.nombre }}</option>
                             {% endfor %}
                             {% if hay_unidades_sin_torre %}
-                            <option value="sin-torre">Sin torre</option>
+                            <option value="sin-torre">Sin {{ condominio.etiqueta_torre|lower }}</option>
                             {% endif %}
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
-                        <div class="form-text">Elige primero tu torre.</div>
+                        <div class="form-text">Elige primero tu {{ condominio.etiqueta_torre|lower }}.</div>
                         {{ field.errors }}
                     </div>
                     {% elif field.name != "acepto_terminos" %}
@@ -77,7 +77,7 @@ function actualizarUnidades() {
     var torreId = selectorTorre.value;
     selectorUnidad.innerHTML = "";
     if (!torreId) {
-        agregarOpcion(selectorUnidad, "", "— Elige tu torre primero —");
+        agregarOpcion(selectorUnidad, "", "— Elige tu {{ condominio.etiqueta_torre|lower|escapejs }} primero —");
         selectorUnidad.disabled = true;
         return;
     }

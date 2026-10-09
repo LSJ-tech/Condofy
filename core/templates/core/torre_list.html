@@ -1,13 +1,13 @@
 {% extends "core/base.html" %}
-{% block titulo %}Torres{% endblock %}
+{% block titulo %}{{ condominio.etiqueta_torre }}s{% endblock %}
 {% block contenido %}
-<h1 class="h4 mb-3">Torres</h1>
-<p class="text-muted small">La estructura de torres la configura el administrador de la plataforma al dar de alta el condominio. Si necesitas agregar o corregir una torre, contáctanos.</p>
+<h1 class="h4 mb-3">{{ condominio.etiqueta_torre }}s</h1>
+<p class="text-muted small">La estructura de {{ condominio.etiqueta_torre|lower }}s la configura el administrador de la plataforma al dar de alta el condominio. Si necesitas agregar o corregir una, contáctanos.</p>
 <ul class="list-group">
     {% for t in torres %}
     <li class="list-group-item">{{ t.nombre }}</li>
     {% empty %}
-    <li class="list-group-item text-muted">Sin torres registradas (opcional, solo para condominios grandes).</li>
+    <li class="list-group-item text-muted">Sin {{ condominio.etiqueta_torre|lower }}s registradas (opcional, solo para condominios grandes).</li>
     {% endfor %}
 </ul>
 {% endblock %}

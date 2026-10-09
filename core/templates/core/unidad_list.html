@@ -8,11 +8,11 @@
 <div class="row g-3 mb-3">
     <div class="col-md-5">
         <form method="get" class="d-flex gap-2">
-            <label for="unidades-torre" class="visually-hidden">Filtrar por torre</label>
+            <label for="unidades-torre" class="visually-hidden">Filtrar por {{ condominio.etiqueta_torre|lower }}</label>
             <select id="unidades-torre" name="torre" class="form-select" onchange="this.form.submit()">
-                <option value="">Todas las torres</option>
+                <option value="">Todas las {{ condominio.etiqueta_torre|lower }}s</option>
                 {% for t in torres %}
-                <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>Torre {{ t.nombre }}</option>
+                <option value="{{ t.pk }}" {% if torre_seleccionada == t.pk|stringformat:"s" %}selected{% endif %}>{{ condominio.etiqueta_torre }} {{ t.nombre }}</option>
                 {% endfor %}
             </select>
             {% if torre_seleccionada %}<a href="{% url 'unidades' %}" class="btn btn-outline-secondary">Quitar filtro</a>{% endif %}
@@ -31,7 +31,7 @@
 
 <div class="table-responsive">
 <table class="table table-striped">
-    <thead><tr><th>Número</th><th>Torre</th><th>Alícuota</th></tr></thead>
+    <thead><tr><th>Número</th><th>{{ condominio.etiqueta_torre }}</th><th>Alícuota</th></tr></thead>
     <tbody>
         {% for u in unidades %}
         <tr><td>{{ u.numero }}</td><td>{{ u.torre|default:"—" }}</td><td>{{ u.alicuota }}</td></tr>
