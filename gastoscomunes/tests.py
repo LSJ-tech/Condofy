@@ -129,3 +129,47 @@ class BoucherPDFPermisosTests(TestCase):
         self.client.force_login(self.otro_residente.user)
         r = self.client.get(reverse("cuota-boucher", args=[self.cuota_pendiente.pk]))
         self.assertEqual(r.status_code, 302)
+
+
+class MarcarCuotaPagadaEnviaBoucherTests(TestCase):
+    """Al marcar una cuota como pagada, el comprobante se manda por correo al
+    residente de esa unidad, con el PDF adjunto."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Boucher Correo", plan="premium")
+        cls.unidad = Unidad.objects.create(condominio=cls.condominio, numero="201")
+        cls.unidad_sin_correo = Unidad.objects.create(condominio=cls.condominio, numero="202")
+        cls.gasto = GastoComun.objects.create(condominio=cls.condominio, periodo="2026-12", monto_total=0, fecha_vencimiento="2026-12-31")
+        cls.cuota = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad, monto=19990)
+        cls.cuota_sin_correo = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad_sin_correo, monto=19990)
+
+    def setUp(self):
+        self.administracion = crear_membresia(self.condominio, "administracion", username="marcar_admon")
+        crear_membresia(self.condominio, "residente", username="marcar_residente", unidad=self.unidad, email="vecino@example.com")
+        crear_membresia(self.condominio, "residente", username="marcar_sin_correo", unidad=self.unidad_sin_correo)
+
+    def test_marcar_pagada_manda_correo_con_pdf_adjunto(self):
+        from django.core import mail
+
+        self.client.force_login(self.administracion.user)
+        self.client.post(reverse("cuota-marcar-pagada", args=[self.cuota.pk]))
+
+        self.assertEqual(len(mail.outbox), 1)
+        correo = mail.outbox[0]
+        self.assertEqual(correo.to, ["vecino@example.com"])
+        self.assertEqual(len(correo.attachments), 1)
+        nombre, contenido, tipo = correo.attachments[0]
+        self.assertEqual(tipo, "application/pdf")
+        self.assertTrue(contenido.startswith(b"%PDF"))
+
+    def test_marcar_pagada_no_falla_si_el_residente_no_tiene_correo(self):
+        from django.core import mail
+
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("cuota-marcar-pagada", args=[self.cuota_sin_correo.pk]))
+
+        self.assertEqual(r.status_code, 302)
+        self.cuota_sin_correo.refresh_from_db()
+        self.assertEqual(self.cuota_sin_correo.estado, "pagado")
+        self.assertEqual(len(mail.outbox), 0)

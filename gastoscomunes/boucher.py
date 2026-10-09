@@ -1,6 +1,7 @@
 import hashlib
 from io import BytesIO
 
+from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.utils import timezone
 from reportlab.lib.colors import HexColor
@@ -17,7 +18,11 @@ def _codigo_verificacion(cuota):
     return hashlib.sha256(base.encode()).hexdigest()[:8].upper()
 
 
-def generar_boucher_pdf(cuota):
+def nombre_archivo_boucher(cuota):
+    return f"boucher_{cuota.unidad.numero}_{cuota.gasto_comun.periodo}.pdf".replace(" ", "_")
+
+
+def generar_boucher_pdf_bytes(cuota):
     """Comprobante de pago de una cuota de gasto común -- reemplaza el talonario
     de papel que llena a mano quien cobra. Firma electrónica simple (un sello
     con código de verificación derivado de los datos del pago), no una firma
@@ -86,8 +91,43 @@ def generar_boucher_pdf(cuota):
     c.showPage()
     c.save()
     buffer.seek(0)
+    return buffer.read()
 
-    response = HttpResponse(buffer.read(), content_type="application/pdf")
-    nombre_archivo = f"boucher_{unidad.numero}_{cuota.gasto_comun.periodo}.pdf".replace(" ", "_")
-    response["Content-Disposition"] = f'inline; filename="{nombre_archivo}"'
+
+def generar_boucher_pdf(cuota):
+    """Para la descarga desde el navegador -- ver generar_boucher_pdf_bytes para el PDF en sí."""
+    response = HttpResponse(generar_boucher_pdf_bytes(cuota), content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="{nombre_archivo_boucher(cuota)}"'
     return response
+
+
+def enviar_boucher_por_correo(cuota):
+    """Al marcar una cuota como pagada, se manda el comprobante por correo a
+    los residentes de esa unidad. No bloquea el marcado como pagada si el
+    correo falla (mismo criterio que enviar_correo_bienvenida en core/views.py)."""
+    from core.models import Membresia
+    from core.views import EMAIL_CONTACTO_DEVQUAD
+
+    condominio = cuota.gasto_comun.condominio
+    destinatarios = list(
+        Membresia.objects.filter(unidad=cuota.unidad, rol="residente")
+        .exclude(user__email="")
+        .values_list("user__email", flat=True)
+    )
+    if not destinatarios:
+        return
+    try:
+        correo = EmailMessage(
+            subject=f"Comprobante de pago -- {condominio.etiqueta_unidad} {cuota.unidad.numero}, periodo {cuota.gasto_comun.periodo}",
+            body=(
+                f"Hola,\n\nAdjunto el comprobante de pago del gasto común de {condominio.nombre}, "
+                f"periodo {cuota.gasto_comun.periodo}.\n\n"
+                f"Cualquier duda, escríbenos a {EMAIL_CONTACTO_DEVQUAD}."
+            ),
+            from_email=None,
+            to=destinatarios,
+        )
+        correo.attach(nombre_archivo_boucher(cuota), generar_boucher_pdf_bytes(cuota), "application/pdf")
+        correo.send()
+    except Exception:
+        pass

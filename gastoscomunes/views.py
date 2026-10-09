@@ -12,7 +12,7 @@ from core.forms import CondominioForm
 from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
 from core.models import Condominio, Torre
 
-from .boucher import generar_boucher_pdf
+from .boucher import enviar_boucher_por_correo, generar_boucher_pdf
 from .forms import GastoComunForm
 from .models import CuotaUnidad, GastoComun
 
@@ -85,10 +85,14 @@ class CuotaListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, Li
 
 class MarcarCuotaPagadaView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, View):
     def post(self, request, pk):
-        cuota = get_object_or_404(CuotaUnidad, pk=pk, gasto_comun__condominio=self.condominio)
+        cuota = get_object_or_404(
+            CuotaUnidad.objects.select_related("unidad", "unidad__torre", "gasto_comun", "gasto_comun__condominio"),
+            pk=pk, gasto_comun__condominio=self.condominio,
+        )
         cuota.estado = "pagado"
         cuota.fecha_pago = timezone.localdate()
         cuota.save()
+        enviar_boucher_por_correo(cuota)
         return redirect("gastos-comunes-cuotas", gasto_pk=cuota.gasto_comun_id)
 
 
