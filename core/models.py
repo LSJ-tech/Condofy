@@ -57,8 +57,8 @@ class Condominio(models.Model):
     comuna = models.CharField(max_length=100, blank=True)
     region = models.CharField(max_length=100, blank=True)
     activo = models.BooleanField(default=True, help_text="Interruptor manual: desactivarlo bloquea todo (ej. un cliente que dejó de serlo).")
-    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default="premium", help_text="Condofy es gratis para todos -- este campo es solo registro interno de DevQuad, no limita nada.")
-    pagado_hasta = models.DateField(null=True, blank=True, help_text="Histórico de cuando Condofy todavía cobraba suscripción. Ya no restringe el acceso.")
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default="premium", help_text="Legado -- hoy el precio es fijo ($19.990/mes, ver README), este campo es solo registro interno de DevQuad y no limita nada.")
+    pagado_hasta = models.DateField(null=True, blank=True, help_text="Legado de cuando el acceso se cortaba por falta de pago. Ya no restringe nada -- hoy la cobranza es manual, ver README.")
     es_fundador = models.BooleanField(default=False, help_text="Uno de los primeros condominios en registrarse.")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     datos_transferencia = models.TextField(
@@ -98,7 +98,8 @@ class Condominio(models.Model):
 
     @property
     def puede_operar(self):
-        """Condofy es gratis y sin límites -- lo único que puede bloquear el
+        """El precio es fijo y la cobranza manual (ver README) -- no hay
+        corte automático por falta de pago. Lo único que puede bloquear el
         acceso es el interruptor manual `activo` (ver su help_text)."""
         return self.activo
 

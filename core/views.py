@@ -81,7 +81,7 @@ def probar_correo(request):
     except ValidationError:
         return HttpResponse("Agrega ?destino=tu@email.com (una dirección válida) a la URL.", status=400)
     send_mail(
-        subject="Correo de prueba de Condofy",
+        subject="Correo de prueba de SecurApp Copropiedad",
         message="Si recibiste esto, el envío de correo (Resend) está funcionando correctamente.",
         from_email=None,
         recipient_list=[destino],
@@ -153,7 +153,7 @@ class SolicitarAccesoView(FormView):
         solicitud = form.save()
         try:
             send_mail(
-                subject=f"Nueva solicitud de acceso a Condofy: {solicitud.condominio}",
+                subject=f"Nueva solicitud de acceso a SecurApp Copropiedad: {solicitud.condominio}",
                 message=(
                     f"Nombre: {solicitud.nombre}\nCondominio: {solicitud.condominio}\nComuna: {solicitud.comuna}\n"
                     f"Teléfono: {solicitud.telefono}\nEmail: {solicitud.email}\nMensaje: {solicitud.mensaje}\n\n"

@@ -1,5 +1,5 @@
 """
-Django settings for config project (Condofy).
+Django settings for config project (SecurApp Copropiedad).
 """
 
 import datetime
@@ -137,7 +137,7 @@ STORAGES = {
     },
 }
 
-PLATFORM_NAME = os.environ.get('PLATFORM_NAME', 'Condofy')
+PLATFORM_NAME = os.environ.get('PLATFORM_NAME', 'SecurApp Copropiedad')
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'inicio'
@@ -161,12 +161,13 @@ if os.environ.get('RESEND_API_KEY'):
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@condofy.local')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@securapp.local')
 
 
 # Donación voluntaria vía Mercado Pago (Checkout Pro) de un condominio a
-# DevQuad -- Condofy es gratis, no hay suscripción paga. Distinto del pago
-# de gastos comunes, ver gastoscomunes/models.py.
+# DevQuad, además de la suscripción mensual ($19.990, ver README) -- no
+# extiende ni cambia el plan interno de Condominio (legado, ver core/models.py).
+# Distinto del pago de gastos comunes, ver gastoscomunes/models.py.
 MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', '')
 
 
@@ -205,7 +206,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Condofy API',
+    'TITLE': 'SecurApp Copropiedad API',
     'DESCRIPTION': 'API para la app móvil de residentes (alertas, avisos, gastos comunes, dispositivos push).',
     'VERSION': '1.0.0',
 }
@@ -237,8 +238,8 @@ LOGGING = {
 
 # Tema del admin (django-unfold).
 UNFOLD = {
-    "SITE_TITLE": "Condofy · Admin",
-    "SITE_HEADER": "Condofy",
+    "SITE_TITLE": "SecurApp Copropiedad · Admin",
+    "SITE_HEADER": "SecurApp Copropiedad",
     "SITE_SYMBOL": "shield",
     "SHOW_HISTORY": True,
     "COLORS": {

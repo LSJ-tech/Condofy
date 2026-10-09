@@ -88,8 +88,8 @@ def generar_liquidacion_pdf_bytes(liquidacion):
     c.setFillColor(NAVY)
     c.rect(0, alto - 75, ancho, 75, fill=True, stroke=False)
     c.setFillColor(BLANCO)
-    c.setFont("Helvetica-Bold", 19)
-    c.drawString(margen, alto - 32, "Condofy")
+    c.setFont("Helvetica-Bold", 15)
+    c.drawString(margen, alto - 32, "SecurApp Copropiedad")
     c.setFont("Helvetica", 10)
     c.drawString(margen, alto - 48, "Liquidación de remuneraciones")
     c.setFont("Helvetica-Bold", 12)
@@ -207,7 +207,7 @@ def generar_liquidacion_pdf_bytes(liquidacion):
         y -= 10
     y -= 4
     generado = timezone.localtime().strftime("%d-%m-%Y %H:%M")
-    c.drawString(margen, y, f"Comprobante generado digitalmente por Condofy el {generado}.")
+    c.drawString(margen, y, f"Comprobante generado digitalmente por SecurApp Copropiedad el {generado}.")
     y -= 10
     c.drawString(margen, y, f"Código de verificación: {_codigo_verificacion(liquidacion)}")
 

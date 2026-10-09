@@ -36,8 +36,8 @@ def generar_boucher_pdf_bytes(cuota):
     c.setFillColor(NAVY)
     c.rect(0, alto - 60, ancho, 60, fill=True, stroke=False)
     c.setFillColor(HexColor("#FFFFFF"))
-    c.setFont("Helvetica-Bold", 16)
-    c.drawCentredString(ancho / 2, alto - 35, "Condofy")
+    c.setFont("Helvetica-Bold", 12)
+    c.drawCentredString(ancho / 2, alto - 35, "SecurApp Copropiedad")
     c.setFont("Helvetica", 9)
     c.drawCentredString(ancho / 2, alto - 50, "Comprobante de pago")
 
@@ -84,7 +84,9 @@ def generar_boucher_pdf_bytes(cuota):
     c.setFillColor(GRIS)
     c.setFont("Helvetica-Oblique", 7)
     generado = timezone.localtime().strftime("%d-%m-%Y %H:%M")
-    c.drawString(20, y, f"Comprobante generado digitalmente por Condofy el {generado}.")
+    c.drawString(20, y, "Comprobante generado digitalmente por")
+    y -= 10
+    c.drawString(20, y, f"SecurApp Copropiedad el {generado}.")
     y -= 11
     c.drawString(20, y, f"Código de verificación: {_codigo_verificacion(cuota)}")
 

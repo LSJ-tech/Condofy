@@ -1,7 +1,7 @@
 {
-    "name": "Condofy",
-    "short_name": "Condofy",
-    "description": "Botón de pánico, avisos, accesos y gastos comunes para tu condominio.",
+    "name": "SecurApp Copropiedad",
+    "short_name": "SecurApp",
+    "description": "Botón de pánico, avisos, accesos, gastos comunes y gestión de personal para tu condominio.",
     "start_url": "/",
     "scope": "/",
     "id": "/",
