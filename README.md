@@ -4,7 +4,7 @@ SaaS de emergencias y gestión para juntas de vecinos y condominios en Chile —
 
 Botón de pánico con notificación push, comunicación vecinal (avisos), gestión de accesos, gastos comunes y gestión de personal (empleados + liquidaciones de sueldo reales), con un panel web (instalable como PWA) para directiva/administración/conserjería/residentes. Una app nativa (React Native + Expo) es el siguiente paso si el volumen de clientes lo justifica.
 
-**SecurApp Copropiedad cuesta $19.990 al mes por condominio**, sin importar cantidad de unidades ni de residentes -- lo paga la administración, igual que cualquier otra suscripción de software, e incluye soporte continuo. La cobranza en sí (transferencia a DevQuad, o como ítem del gasto común) es manual por ahora, no hay un flujo de cobro automático en la app todavía. Además existe una donación voluntaria opcional (condominio → DevQuad) vía Mercado Pago, para quien quiera aportar más.
+**SecurApp Copropiedad es gratis para lo esencial** (botón de pánico, avisos, accesos). El sistema de gestión de administración -- generar gastos comunes y gestionar personal/liquidaciones de sueldo -- **cuesta $19.990 al mes, fijo**, sin importar cantidad de unidades ni de residentes, lo paga administración, e incluye soporte continuo. Si la suscripción no está al día, los residentes nunca pierden acceso a lo ya generado (sus cuotas, sus comprobantes) -- solo se pausa generar cosas nuevas (`SuscripcionActivaMixin`, ver `core/mixins.py`). Todo condominio nuevo parte con **20 días de prueba gratis** (default de `Condominio.pagado_hasta`, ver `core/models.py`). El pago se puede hacer en línea con Mercado Pago (`SuscripcionPagarView`) o coordinarlo directo con administración. Además, cualquier residente puede hacer una donación voluntaria (condominio → DevQuad) vía Mercado Pago, para quien quiera aportar más.
 
 ## Estado actual
 
@@ -16,9 +16,9 @@ Implementado y probado de punta a punta:
 - Botón de pánico: la app/API crea una `Alerta` con ubicación GPS, se envía push a todo el condominio (vía Expo), y **cualquier miembro** (no solo directiva/conserjería) puede ver el mapa y resolverla o marcarla como falsa alarma. Se auto-cierra sola si nadie responde en 30 minutos. Historial completo filtrable en `/alertas/historial/`.
 - Avisos (muro de noticias simple): directiva/administración publican, todos los miembros leen.
 - Accesos: registro manual de ingresos por conserjería/directiva/administración desde el panel (sin QR todavía).
-- Gastos comunes: **administración** (exclusivo, ni directiva) genera el cargo del periodo (se prorratea automático por alícuota, cuota fija por unidad, o en partes iguales) y define los datos de transferencia; directiva/administración marcan cuotas como pagadas a mano; cada residente solo lee las suyas (sin pago online todavía).
+- Gastos comunes: **administración** (exclusivo, ni directiva, y solo con la suscripción al día) genera el cargo del periodo (se prorratea automático por alícuota, cuota fija por unidad, o en partes iguales) y define los datos de transferencia; directiva/administración marcan cuotas como pagadas a mano; cada residente solo lee las suyas (sin pago online todavía), y nunca pierde acceso a lo ya generado aunque la suscripción venza.
 - Panel de directiva/administración con KPIs (unidades, miembros, alertas activas, morosidad) y accesos directos a las secciones principales.
-- Donación voluntaria (condominio → DevQuad) vía Mercado Pago Checkout Pro, mismo patrón de seguridad que PataAgenda (el webhook siempre re-consulta el pago por ID, nunca confía en el body; no extiende ni cambia el plan interno legado de `Condominio`, que ya no limita nada -- el precio real es el fijo mencionado arriba).
+- Pago de la suscripción online (`SuscripcionPagarView`, exclusivo directiva/administración, monto fijo) y donación voluntaria (exclusiva residente), ambos vía Mercado Pago Checkout Pro, mismo patrón de seguridad que PataAgenda (el webhook siempre re-consulta el pago por ID, nunca confía en el body). Solo un pago de tipo "suscripcion" aprobado extiende `Condominio.pagado_hasta` 30 días -- una donación nunca lo toca. Bloqueo anti-duplicado: no se puede pagar de nuevo si el mes ya está cubierto.
 - Política de Privacidad y Términos de Uso (`/privacidad/`, `/terminos/`), con aceptación obligatoria al registrarse (o en el primer login para cuentas creadas por la directiva), y solicitud de eliminación de cuenta/datos desde "Mi perfil".
 - Panel de administración (django-unfold) para el dueño de la plataforma.
 - API REST documentada con Swagger en `/api/docs/` (drf-spectacular).
@@ -27,9 +27,9 @@ Implementado y probado de punta a punta:
 - Compartir una alerta activa por WhatsApp (link `wa.me`, mensaje armado con condominio/torre/unidad/autor), además de la notificación push normal.
 - Etiquetas de "Torre" y "Unidad" configurables por condominio (ej. "Block"/"Departamento" para Empart) -- las fija DevQuad vía `/admin/core/condominio/`, no hay form en la app para esto.
 - Correo de bienvenida en HTML al registrarse (autoregistro o alta por directiva/administración), con el mismo look del panel.
-- **Gestión de personal** (`personal/`): empleados del condominio (conserjería, aseo) con datos laborales, y liquidaciones de sueldo reales -- AFP, salud (Fonasa o Isapre en UF), seguro de cesantía según tipo de contrato, impuesto único por tramos (UTM), gratificación legal opcional (configurable por empleado, apagada por defecto). La UTM/UF de cada periodo se consultan solas en `mindicador.cl`; las tasas de AFP y los tramos de impuesto único son tablas globales que DevQuad mantiene a mano cuando cambien (cambian con 90 días de aviso por ley, no es mensual). PDF de la liquidación con el mismo formato de una liquidación real (dos columnas, certificado de recepción con firma), descargable y enviable por correo.
+- **Gestión de personal** (`personal/`, crear empleado/generar liquidación exigen la suscripción al día): empleados del condominio (conserjería, aseo) con datos laborales, y liquidaciones de sueldo reales -- AFP, salud (Fonasa o Isapre en UF), seguro de cesantía según tipo de contrato, impuesto único por tramos (UTM), gratificación legal opcional (configurable por empleado, apagada por defecto). La UTM/UF de cada periodo se consultan solas en `mindicador.cl`; las tasas de AFP y los tramos de impuesto único son tablas globales que DevQuad mantiene a mano cuando cambien (cambian con 90 días de aviso por ley, no es mensual). PDF de la liquidación con el mismo formato de una liquidación real (dos columnas, certificado de recepción con firma), descargable y enviable por correo.
 
-No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes ni de la suscripción de SecurApp Copropiedad (ambos son manuales/por transferencia hoy), confirmaciones de alerta entre vecinos, reportes, asignación familiar/horas extra en liquidaciones, app nativa.
+No implementado a propósito todavía: QR de visitas, encuestas, pago online de gastos comunes (residente → administración, eso sigue siendo manual/por transferencia; el pago de la suscripción condominio → DevQuad sí es online), confirmaciones de alerta entre vecinos, reportes, asignación familiar/horas extra en liquidaciones, app nativa.
 
 ## Stack
 
@@ -48,7 +48,7 @@ python manage.py runserver
 
 Panel web: `http://127.0.0.1:8000/`. Documentación de la API: `http://127.0.0.1:8000/api/docs/`.
 
-Tests: `python manage.py test` (cubre permisos por rol, el gate de Términos/Privacidad, y donaciones/webhook de Mercado Pago).
+Tests: `python manage.py test` (cubre permisos por rol, el gate de Términos/Privacidad, el gate de suscripción, y pagos/webhook de Mercado Pago).
 
 ## Estructura
 
@@ -60,7 +60,7 @@ comunicacion/       # avisos
 accesos/            # registro de ingresos (conserjería)
 gastoscomunes/      # cuotas del condominio, comprobante de pago (boucher)
 notificaciones/     # dispositivos push y envío vía Expo/Web Push
-pagos/              # donaciones voluntarias (Mercado Pago)
+pagos/              # suscripción online + donaciones voluntarias (Mercado Pago)
 personal/           # empleados y liquidaciones de sueldo
 ```
 
@@ -77,4 +77,4 @@ Mismo patrón que PataAgenda: `build.sh` + `render.yaml` para Render (Blueprint 
 - **conserje**: registra accesos.
 - **residente**: dispara alertas, lee avisos y sus propias cuotas (uso principal: la app móvil).
 
-Cualquier rol puede ver y resolver alertas de pánico, y donar. Las cuentas de conserjería y residentes las puede crear tanto directiva como administración desde `/miembros/nuevo/` (contraseña temporal generada automáticamente, se muestra una sola vez); solo directiva puede nombrar otra directiva o administración.
+Cualquier rol puede ver y resolver alertas de pánico. Solo residente puede donar; solo directiva/administración pueden pagar la suscripción. Las cuentas de conserjería y residentes las puede crear tanto directiva como administración desde `/miembros/nuevo/` (contraseña temporal generada automáticamente, se muestra una sola vez); solo directiva puede nombrar otra directiva o administración.
