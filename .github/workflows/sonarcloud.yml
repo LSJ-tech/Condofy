@@ -18,15 +18,18 @@ jobs:
         with:
           python-version: "3.12.7" # misma versión que PYTHON_VERSION en render.yaml (producción)
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias (fijadas por hash)
         run: |
-          # Mismo patrón que build.sh (producción en Render): --only-binary :all:
-          # evita que un paquete comprometido ejecute código arbitrario vía su
-          # script de build (setup.py) al instalar. http-ece (dependencia de
-          # pywebpush) solo publica .tar.gz en PyPI, nunca wheel -- se excluye,
-          # es puro Python así que compilarla no necesita nada más que pip.
-          pip install --only-binary :all: --no-binary http-ece -r requirements.txt
-          pip install --only-binary :all: coverage
+          # requirements-ci-lock.txt fija por hash sha256 cada paquete que este
+          # workflow instala (directo + transitivo, incluido coverage) -- pip
+          # rechaza instalar cualquier archivo cuyo hash no coincida, aunque el
+          # índice de paquetes esté comprometido o alguien resuba la misma
+          # versión con contenido distinto. Mismo criterio --only-binary :all:
+          # que build.sh en producción (evita ejecutar setup.py de un paquete
+          # comprometido); --no-binary http-ece es la única excepción, igual
+          # que en build.sh (pywebpush la necesita, solo publica .tar.gz, es
+          # puro Python).
+          pip install --require-hashes --only-binary :all: --no-binary http-ece -r requirements-ci-lock.txt
 
       - name: Correr tests con coverage
         run: |
