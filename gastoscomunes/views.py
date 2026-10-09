@@ -2,6 +2,7 @@ import calendar
 from datetime import date
 
 from django.contrib import messages
+from django.db.models import Prefetch
 from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -10,7 +11,7 @@ from django.views.generic import CreateView, ListView, UpdateView, View
 
 from core.forms import CondominioForm
 from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectivaOAdministracionMixin, SoloAdministracionMixin
-from core.models import Condominio, Torre
+from core.models import Condominio, Membresia, Torre
 
 from .boucher import enviar_boucher_por_correo, generar_boucher_pdf
 from .forms import GastoComunForm
@@ -66,9 +67,12 @@ class CuotaListView(EsDirectivaOAdministracionMixin, CondominioRequiredMixin, Li
     paginate_by = 50
 
     def get_queryset(self):
+        residentes_con_correo = Membresia.objects.filter(rol="residente").exclude(user__email="").select_related("user")
         qs = CuotaUnidad.objects.filter(
             gasto_comun__condominio=self.condominio, gasto_comun_id=self.kwargs["gasto_pk"]
-        ).select_related("unidad", "unidad__torre")
+        ).select_related("unidad", "unidad__torre").prefetch_related(
+            Prefetch("unidad__membresias", queryset=residentes_con_correo, to_attr="residentes_con_correo")
+        )
         torre_id = self.request.GET.get("torre")
         if torre_id:
             qs = qs.filter(unidad__torre_id=torre_id)
@@ -92,7 +96,9 @@ class MarcarCuotaPagadaView(EsDirectivaOAdministracionMixin, CondominioRequiredM
         cuota.estado = "pagado"
         cuota.fecha_pago = timezone.localdate()
         cuota.save()
-        enviar_boucher_por_correo(cuota)
+        correo_destino = request.POST.get("correo_destino", "").strip()
+        if correo_destino:
+            enviar_boucher_por_correo(cuota, correo_destino)
         return redirect("gastos-comunes-cuotas", gasto_pk=cuota.gasto_comun_id)
 
 

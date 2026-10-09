@@ -101,21 +101,16 @@ def generar_boucher_pdf(cuota):
     return response
 
 
-def enviar_boucher_por_correo(cuota):
-    """Al marcar una cuota como pagada, se manda el comprobante por correo a
-    los residentes de esa unidad. No bloquea el marcado como pagada si el
-    correo falla (mismo criterio que enviar_correo_bienvenida en core/views.py)."""
-    from core.models import Membresia
+def enviar_boucher_por_correo(cuota, destinatario):
+    """Correo con el comprobante a UN destinatario, elegido por quien marca la
+    cuota como pagada -- a propósito no se manda automáticamente a todos los
+    residentes de la unidad (puede haber más de una cuenta por depto, incluida
+    la de un menor de edad, y no corresponde mandarle a todos un comprobante
+    de pago). No bloquea el marcado como pagada si el correo falla (mismo
+    criterio que enviar_correo_bienvenida en core/views.py)."""
     from core.views import EMAIL_CONTACTO_DEVQUAD
 
     condominio = cuota.gasto_comun.condominio
-    destinatarios = list(
-        Membresia.objects.filter(unidad=cuota.unidad, rol="residente")
-        .exclude(user__email="")
-        .values_list("user__email", flat=True)
-    )
-    if not destinatarios:
-        return
     try:
         correo = EmailMessage(
             subject=f"Comprobante de pago -- {condominio.etiqueta_unidad} {cuota.unidad.numero}, periodo {cuota.gasto_comun.periodo}",
@@ -125,7 +120,7 @@ def enviar_boucher_por_correo(cuota):
                 f"Cualquier duda, escríbenos a {EMAIL_CONTACTO_DEVQUAD}."
             ),
             from_email=None,
-            to=destinatarios,
+            to=[destinatario],
         )
         correo.attach(nombre_archivo_boucher(cuota), generar_boucher_pdf_bytes(cuota), "application/pdf")
         correo.send()

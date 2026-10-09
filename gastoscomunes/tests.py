@@ -132,28 +132,32 @@ class BoucherPDFPermisosTests(TestCase):
 
 
 class MarcarCuotaPagadaEnviaBoucherTests(TestCase):
-    """Al marcar una cuota como pagada, el comprobante se manda por correo al
-    residente de esa unidad, con el PDF adjunto."""
+    """Al marcar una cuota como pagada, el comprobante SOLO se manda si quien
+    la marca eligió un correo de destino -- a propósito no se manda solo a
+    todos los residentes de la unidad (puede haber más de una cuenta por
+    depto, incluida la de un menor de edad). La lista de cuotas sugiere el
+    correo del residente cuando hay uno solo, pero es editable."""
 
     @classmethod
     def setUpTestData(cls):
         cls.condominio = Condominio.objects.create(nombre="Test Boucher Correo", plan="premium")
         cls.unidad = Unidad.objects.create(condominio=cls.condominio, numero="201")
-        cls.unidad_sin_correo = Unidad.objects.create(condominio=cls.condominio, numero="202")
+        cls.unidad_dos_residentes = Unidad.objects.create(condominio=cls.condominio, numero="202")
         cls.gasto = GastoComun.objects.create(condominio=cls.condominio, periodo="2026-12", monto_total=0, fecha_vencimiento="2026-12-31")
         cls.cuota = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad, monto=19990)
-        cls.cuota_sin_correo = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad_sin_correo, monto=19990)
+        cls.cuota_dos_residentes = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad_dos_residentes, monto=19990)
 
     def setUp(self):
         self.administracion = crear_membresia(self.condominio, "administracion", username="marcar_admon")
         crear_membresia(self.condominio, "residente", username="marcar_residente", unidad=self.unidad, email="vecino@example.com")
-        crear_membresia(self.condominio, "residente", username="marcar_sin_correo", unidad=self.unidad_sin_correo)
+        crear_membresia(self.condominio, "residente", username="marcar_padre", unidad=self.unidad_dos_residentes, email="padre@example.com")
+        crear_membresia(self.condominio, "residente", username="marcar_hijo_menor", unidad=self.unidad_dos_residentes, email="hijo@example.com")
 
-    def test_marcar_pagada_manda_correo_con_pdf_adjunto(self):
+    def test_marcar_pagada_con_correo_destino_manda_el_comprobante(self):
         from django.core import mail
 
         self.client.force_login(self.administracion.user)
-        self.client.post(reverse("cuota-marcar-pagada", args=[self.cuota.pk]))
+        self.client.post(reverse("cuota-marcar-pagada", args=[self.cuota.pk]), {"correo_destino": "vecino@example.com"})
 
         self.assertEqual(len(mail.outbox), 1)
         correo = mail.outbox[0]
@@ -163,13 +167,28 @@ class MarcarCuotaPagadaEnviaBoucherTests(TestCase):
         self.assertEqual(tipo, "application/pdf")
         self.assertTrue(contenido.startswith(b"%PDF"))
 
-    def test_marcar_pagada_no_falla_si_el_residente_no_tiene_correo(self):
+    def test_marcar_pagada_sin_correo_destino_no_manda_nada(self):
         from django.core import mail
 
         self.client.force_login(self.administracion.user)
-        r = self.client.post(reverse("cuota-marcar-pagada", args=[self.cuota_sin_correo.pk]))
+        r = self.client.post(reverse("cuota-marcar-pagada", args=[self.cuota.pk]))
 
         self.assertEqual(r.status_code, 302)
-        self.cuota_sin_correo.refresh_from_db()
-        self.assertEqual(self.cuota_sin_correo.estado, "pagado")
+        self.cuota.refresh_from_db()
+        self.assertEqual(self.cuota.estado, "pagado")
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_lista_de_cuotas_sugiere_el_correo_cuando_hay_un_solo_residente(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.get(reverse("gastos-comunes-cuotas", args=[self.gasto.pk]))
+        self.assertIn(b'value="vecino@example.com"', r.content)
+
+    def test_lista_de_cuotas_no_sugiere_nada_si_hay_mas_de_un_residente(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.get(reverse("gastos-comunes-cuotas", args=[self.gasto.pk]))
+        contenido = r.content.decode()
+        # el input de la cuota 2 (dos residentes) no debe traer un "value" precargado
+        self.assertIn('placeholder="Correo del comprobante (opcional)"\n                           >', contenido)
+        # pero ambos correos sí aparecen como sugerencias del datalist
+        self.assertIn('<option value="padre@example.com">', contenido)
+        self.assertIn('<option value="hijo@example.com">', contenido)

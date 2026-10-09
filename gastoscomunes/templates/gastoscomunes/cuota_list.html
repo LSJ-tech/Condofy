@@ -39,9 +39,17 @@
             <td>{{ c.fecha_pago|default:"—" }}</td>
             <td>
                 {% if c.estado != "pagado" %}
-                <form method="post" action="{% url 'cuota-marcar-pagada' c.pk %}">
+                <form method="post" action="{% url 'cuota-marcar-pagada' c.pk %}" class="d-flex gap-1">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-success">Marcar pagada</button>
+                    <input type="email" name="correo_destino" list="correos-{{ c.pk }}" class="form-control form-control-sm" style="min-width: 170px;"
+                           placeholder="Correo del comprobante (opcional)"
+                           {% if c.unidad.residentes_con_correo|length == 1 %}value="{{ c.unidad.residentes_con_correo.0.user.email }}"{% endif %}>
+                    <datalist id="correos-{{ c.pk }}">
+                        {% for r in c.unidad.residentes_con_correo %}
+                        <option value="{{ r.user.email }}">{{ r.user.get_full_name|default:r.user.username }}</option>
+                        {% endfor %}
+                    </datalist>
+                    <button type="submit" class="btn btn-sm btn-outline-success text-nowrap">Marcar pagada</button>
                 </form>
                 {% else %}
                 <a href="{% url 'cuota-boucher' c.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-pdf"></i> Comprobante</a>
