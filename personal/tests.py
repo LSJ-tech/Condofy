@@ -161,11 +161,34 @@ class LiquidacionGenerarTests(TestCase):
     def setUp(self):
         self.administracion = crear_membresia(self.condominio, "administracion", username="liq_admon")
 
-    def test_falla_con_mensaje_claro_si_faltan_parametros_del_periodo(self):
+    def test_sin_ningun_periodo_previo_pide_cargar_el_primero_a_mano(self):
         self.client.force_login(self.administracion.user)
         r = self.client.post(reverse("liquidacion-generar", args=[self.empleado.pk]), {"periodo": "2099-01"})
         self.assertEqual(r.status_code, 302)
         self.assertEqual(Liquidacion.objects.count(), 0)
+
+    def test_periodo_nuevo_hereda_parametros_y_consulta_utm_uf_solo(self):
+        from unittest.mock import patch
+
+        ParametrosPeriodo.objects.create(
+            periodo="2026-09", valor_utm=Decimal("65000"), valor_uf=Decimal("38000"),
+            ingreso_minimo_mensual=500000, tope_imponible_uf=Decimal("87.8"),
+        )
+        self.client.force_login(self.administracion.user)
+        with patch("personal.indicadores.obtener_utm", return_value=Decimal("72151")) as mock_utm, \
+             patch("personal.indicadores.obtener_uf", return_value=Decimal("41130")) as mock_uf:
+            r = self.client.post(reverse("liquidacion-generar", args=[self.empleado.pk]), {"periodo": "2026-10"})
+
+        self.assertEqual(r.status_code, 302)
+        mock_utm.assert_called_once_with("2026-10")
+        mock_uf.assert_called_once_with("2026-10")
+        parametros = ParametrosPeriodo.objects.get(periodo="2026-10")
+        self.assertEqual(parametros.valor_utm, Decimal("72151"))
+        self.assertEqual(parametros.valor_uf, Decimal("41130"))
+        # heredado del periodo anterior, no se volvió a pedir
+        self.assertEqual(parametros.ingreso_minimo_mensual, 500000)
+        self.assertEqual(parametros.tope_imponible_uf, Decimal("87.8"))
+        self.assertTrue(Liquidacion.objects.filter(empleado=self.empleado, periodo="2026-10").exists())
 
     def test_genera_liquidacion_y_manda_correo_si_se_indica(self):
         from django.core import mail

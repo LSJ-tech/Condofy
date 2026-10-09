@@ -8,8 +8,9 @@ from core.mixins import CondominioFormMixin, CondominioRequiredMixin, EsDirectiv
 
 from .calculo import calcular_liquidacion
 from .forms import EmpleadoForm
+from .indicadores import IndicadorNoDisponibleError, asegurar_parametros_periodo
 from .liquidacion_pdf import enviar_liquidacion_por_correo, generar_liquidacion_pdf
-from .models import Empleado, Liquidacion, ParametrosPeriodo, TramoImpuestoUnico
+from .models import Empleado, Liquidacion, TramoImpuestoUnico
 
 
 class EmpleadoListView(EsDirectivaOAdministracionMixin, CondominioFormMixin, ListView):
@@ -62,12 +63,9 @@ class LiquidacionGenerarView(SoloAdministracionMixin, CondominioRequiredMixin, V
             return redirect("liquidaciones", empleado_pk=empleado.pk)
 
         try:
-            parametros = ParametrosPeriodo.objects.get(periodo=periodo)
-        except ParametrosPeriodo.DoesNotExist:
-            messages.error(
-                request,
-                f"Faltan los parámetros legales de {periodo}. Configúralos en /admin/personal/parametrosperiodo/ antes de generar liquidaciones de ese mes.",
-            )
+            parametros = asegurar_parametros_periodo(periodo)
+        except (ValueError, IndicadorNoDisponibleError) as exc:
+            messages.error(request, str(exc))
             return redirect("liquidaciones", empleado_pk=empleado.pk)
 
         tramos = list(TramoImpuestoUnico.objects.all())
