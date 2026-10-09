@@ -210,10 +210,11 @@
 </div>
 {% endif %}
 
+{% if membresia.rol != "administracion" and membresia.rol != "directiva" %}
 <div class="card mt-4">
     <div class="card-body">
         <h2 class="h6 mb-1"><i class="bi bi-heart text-danger"></i> Apoya el proyecto</h2>
-        <p class="text-muted small mb-2">¿{{ PLATFORM_NAME }} les ha sido útil? Además de la suscripción, pueden hacer una donación voluntaria extra para apoyar el desarrollo de la plataforma.</p>
+        <p class="text-muted small mb-2">¿{{ PLATFORM_NAME }} te ha sido útil? Puedes hacer una donación voluntaria para apoyar el desarrollo de la plataforma.</p>
         <form method="post" action="{% url 'donar' %}" class="d-flex gap-2">
             {% csrf_token %}
             <label for="donar-monto" class="visually-hidden">Monto a donar en CLP</label>
@@ -222,6 +223,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 {% endblock %}
 

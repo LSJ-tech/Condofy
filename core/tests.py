@@ -304,3 +304,35 @@ class PruebaGratisTests(TestCase):
         el trial -- el default no lo fuerza."""
         condominio = Condominio.objects.create(nombre="Test Sin Prueba", plan="premium", pagado_hasta=None)
         self.assertIsNone(condominio.pagado_hasta)
+
+
+class DonacionVisibilidadTests(TestCase):
+    """La donación es cosa de residentes/conserjería -- directiva/administración
+    solo ven la suscripción (que es la que de verdad pagan), para no mezclar
+    los dos conceptos en su panel."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Donacion Visibilidad", plan="premium")
+
+    def test_administracion_no_ve_la_tarjeta_de_donacion(self):
+        membresia = crear_membresia(self.condominio, "administracion", username="donvis_admon")
+        self.client.force_login(membresia.user)
+        r = self.client.get(reverse("inicio"))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn(b"Apoya el proyecto", r.content)
+        self.assertIn("Suscripción de".encode(), r.content)
+
+    def test_directiva_no_ve_la_tarjeta_de_donacion(self):
+        membresia = crear_membresia(self.condominio, "directiva", username="donvis_directiva")
+        self.client.force_login(membresia.user)
+        r = self.client.get(reverse("inicio"))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotIn(b"Apoya el proyecto", r.content)
+
+    def test_residente_si_ve_la_tarjeta_de_donacion(self):
+        membresia = crear_membresia(self.condominio, "residente", username="donvis_residente")
+        self.client.force_login(membresia.user)
+        r = self.client.get(reverse("inicio"))
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b"Apoya el proyecto", r.content)
