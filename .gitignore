@@ -6,3 +6,6 @@ db.sqlite3
 server*.log
 *.sqlite3
 staticfiles/
+.coverage
+coverage.xml
+htmlcov/
