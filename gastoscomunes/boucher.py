@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from io import BytesIO
 
 from django.core.mail import EmailMessage
@@ -11,6 +12,7 @@ from reportlab.pdfgen import canvas
 NAVY = HexColor("#1A2E40")
 TERRACOTA = HexColor("#E07A5F")
 GRIS = HexColor("#6B7280")
+logger = logging.getLogger(__name__)
 
 
 def _codigo_verificacion(cuota):
@@ -129,4 +131,4 @@ def enviar_boucher_por_correo(cuota, destinatario):
         correo.attach(nombre_archivo_boucher(cuota), generar_boucher_pdf_bytes(cuota), "application/pdf")
         correo.send()
     except Exception:
-        pass
+        logger.exception("No se pudo enviar el comprobante de pago a %s (cuota #%s).", destinatario, cuota.pk)

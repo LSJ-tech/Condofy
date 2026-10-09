@@ -1,3 +1,4 @@
+import logging
 import uuid
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -33,6 +34,7 @@ from .models import CodigoInvitacion, Condominio, Membresia, SolicitudEliminacio
 from .usuarios import generar_password_temporal, generar_username
 
 EMAIL_CONTACTO_DEVQUAD = "contacto@devquad.cl"
+logger = logging.getLogger(__name__)
 
 
 def enviar_correo_bienvenida(user, condominio):
@@ -68,7 +70,7 @@ def enviar_correo_bienvenida(user, condominio):
         correo.attach_alternative(render_to_string("core/emails/bienvenida.html", contexto), "text/html")
         correo.send()
     except Exception:
-        pass
+        logger.exception("No se pudo enviar el correo de bienvenida a %s (usuario %s, condominio %s).", user.email, user.username, condominio.nombre)
 
 
 @staff_member_required
