@@ -12,14 +12,12 @@ services:
         generateValue: true
       - key: DJANGO_DEBUG
         value: "False"
-      # securapp-copropiedad.onrender.com es la URL esperada -- Render le
-      # agrega un sufijo random solo si ese nombre ya está tomado. Verificar
-      # la URL real asignada en el dashboard tras el primer deploy y
-      # corregir acá (y en CSRF_TRUSTED_ORIGINS abajo) si difiere.
+      # El subdominio .onrender.com está desactivado a propósito (solo se usa
+      # el dominio propio) -- no hace falta listarlo acá.
       - key: DJANGO_ALLOWED_HOSTS
-        value: securapp-copropiedad.onrender.com,securapp.devquad.cl,condofy.devquad.cl
+        value: securapp.devquad.cl,condofy.devquad.cl
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
-        value: https://securapp-copropiedad.onrender.com,https://securapp.devquad.cl,https://condofy.devquad.cl
+        value: https://securapp.devquad.cl,https://condofy.devquad.cl
       - key: DATABASE_URL
         fromDatabase:
           name: securapp-copropiedad-db
