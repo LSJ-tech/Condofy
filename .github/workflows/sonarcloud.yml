@@ -16,12 +16,17 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12.7" # misma versión que PYTHON_VERSION en render.yaml (producción)
 
       - name: Instalar dependencias
         run: |
-          pip install -r requirements.txt
-          pip install coverage
+          # Mismo patrón que build.sh (producción en Render): --only-binary :all:
+          # evita que un paquete comprometido ejecute código arbitrario vía su
+          # script de build (setup.py) al instalar. http-ece (dependencia de
+          # pywebpush) solo publica .tar.gz en PyPI, nunca wheel -- se excluye,
+          # es puro Python así que compilarla no necesita nada más que pip.
+          pip install --only-binary :all: --no-binary http-ece -r requirements.txt
+          pip install --only-binary :all: coverage
 
       - name: Correr tests con coverage
         run: |
@@ -29,7 +34,7 @@ jobs:
           coverage xml
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
