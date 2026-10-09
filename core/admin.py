@@ -32,18 +32,43 @@ cambiar_a_free = _cambiar_plan("free")
 cambiar_a_premium = _cambiar_plan("premium")
 
 
+# Tope de filas que se muestran inline en el admin de Condominio. Un condominio
+# real (ej. Empart: ~300 unidades) vuelve la página lentísima si se listan
+# TODAS sus unidades/membresías ahí -- para eso ya existen las páginas propias
+# de Unidad y Membresia (paginadas y filtrables por condominio).
+MAX_FILAS_INLINE = 30
+
+
 class UnidadInline(TabularInline):
     model = Unidad
     extra = 0
     fields = ["numero", "torre", "alicuota"]
+    verbose_name_plural = f"Unidades (primeras {MAX_FILAS_INLINE} -- para ver/editar el resto, ir a Unidades y filtrar por este condominio)"
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request).order_by("torre__nombre", "numero")
+        ids = list(qs.values_list("pk", flat=True)[:MAX_FILAS_INLINE])
+        return qs.filter(pk__in=ids)
 
 
 class MembresiaInline(TabularInline):
     model = Membresia
     extra = 0
-    autocomplete_fields = ["user"]
+    # autocomplete en "unidad" es obligatorio, no solo prolijo: sin esto Django
+    # arma un <select> con TODAS las unidades del sistema por cada fila, y con
+    # un condominio real (ej. Empart: 300 unidades x 300 membresías) la página
+    # tarda minutos y pesa decenas de MB -- se cae con timeout en producción.
+    autocomplete_fields = ["user", "unidad"]
     verbose_name = "Usuario vinculado"
-    verbose_name_plural = "Usuarios vinculados (directiva / conserjería / residentes)"
+    verbose_name_plural = (
+        f"Usuarios vinculados (directiva / conserjería / residentes) -- primeros {MAX_FILAS_INLINE}, "
+        "para ver/editar el resto ir a Membresías y filtrar por este condominio"
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request).order_by("rol", "user__username")
+        ids = list(qs.values_list("pk", flat=True)[:MAX_FILAS_INLINE])
+        return qs.filter(pk__in=ids)
 
 
 @admin.register(Condominio)
@@ -71,13 +96,14 @@ class TorreAdmin(ModelAdmin):
 class UnidadAdmin(ModelAdmin):
     list_display = ["numero", "condominio", "torre", "alicuota"]
     list_filter = ["condominio"]
+    search_fields = ["numero", "torre__nombre", "condominio__nombre"]
 
 
 @admin.register(Membresia)
 class MembresiaAdmin(ModelAdmin):
     list_display = ["user", "condominio", "rol", "unidad"]
     list_filter = ["rol", "condominio"]
-    autocomplete_fields = ["user"]
+    autocomplete_fields = ["user", "unidad"]
 
 
 @admin.register(CodigoInvitacion)
