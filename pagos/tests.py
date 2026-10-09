@@ -1,3 +1,4 @@
+import datetime
 import json
 from decimal import Decimal
 from unittest.mock import patch
@@ -63,6 +64,62 @@ class DonarViewTests(TestCase):
         r = self.client.post(reverse("donar"), {"monto": "3000"})
         self.assertEqual(r.status_code, 302)
         self.assertFalse(Pago.objects.exists())
+
+
+@override_settings(MERCADOPAGO_ACCESS_TOKEN="TEST-fake-token")
+class SuscripcionPagarViewTests(TestCase):
+    """Solo directiva/administración pagan la suscripción (monto fijo, no lo
+    elige quien paga), y se bloquea si el mes ya está pagado -- para no
+    duplicar el cobro."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Suscripcion", plan="premium")
+
+    def setUp(self):
+        self.administracion = crear_membresia(self.condominio, "administracion", username="susc_admon")
+        self.directiva = crear_membresia(self.condominio, "directiva", username="susc_directiva")
+        self.residente = crear_membresia(self.condominio, "residente", username="susc_residente")
+
+    @patch("pagos.views.crear_preferencia_pago", return_value="https://fake-mp.test/pagar/1")
+    def test_administracion_puede_pagar_la_suscripcion(self, mock_pref):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("pagar-suscripcion"))
+        self.assertEqual(r.status_code, 302)
+        pago = Pago.objects.get(condominio=self.condominio, tipo="suscripcion")
+        self.assertEqual(pago.monto, Decimal("19990"))
+        self.assertEqual(pago.plan, "premium")
+        self.assertEqual(pago.membresia_id, self.administracion.pk)
+
+    @patch("pagos.views.crear_preferencia_pago", return_value="https://fake-mp.test/pagar/1")
+    def test_directiva_tambien_puede_pagar(self, mock_pref):
+        self.client.force_login(self.directiva.user)
+        r = self.client.post(reverse("pagar-suscripcion"))
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(Pago.objects.filter(condominio=self.condominio, tipo="suscripcion").exists())
+
+    def test_residente_no_puede_pagar_la_suscripcion(self):
+        self.client.force_login(self.residente.user)
+        r = self.client.post(reverse("pagar-suscripcion"))
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Pago.objects.filter(condominio=self.condominio, tipo="suscripcion").exists())
+
+    def test_no_deja_pagar_de_nuevo_si_el_mes_ya_esta_pagado(self):
+        self.condominio.pagado_hasta = timezone.localdate() + datetime.timedelta(days=10)
+        self.condominio.save(update_fields=["pagado_hasta"])
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("pagar-suscripcion"))
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Pago.objects.filter(condominio=self.condominio, tipo="suscripcion").exists())
+
+    @patch("pagos.views.crear_preferencia_pago", return_value="https://fake-mp.test/pagar/1")
+    def test_si_la_suscripcion_vencida_si_deja_pagar_de_nuevo(self, mock_pref):
+        self.condominio.pagado_hasta = timezone.localdate() - datetime.timedelta(days=1)
+        self.condominio.save(update_fields=["pagado_hasta"])
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("pagar-suscripcion"))
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(Pago.objects.filter(condominio=self.condominio, tipo="suscripcion").exists())
 
 
 class WebhookMercadoPagoTests(TestCase):

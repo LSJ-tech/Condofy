@@ -49,6 +49,44 @@ class DonarView(LoginRequiredMixin, View):
         return redirect(url_pago)
 
 
+class SuscripcionPagarView(LoginRequiredMixin, View):
+    """Solo directiva o administración pueden pagar la suscripción mensual
+    del condominio -- monto fijo, no lo elige quien paga (a diferencia de
+    una donación). Bloqueado si el mes actual ya está pagado (pagado_hasta
+    en el futuro), para no duplicar el cobro -- la aprobación del pago
+    extiende pagado_hasta 30 días, ver WebhookMercadoPagoView."""
+
+    MONTO_SUSCRIPCION = Decimal("19990")
+
+    def post(self, request, *args, **kwargs):
+        membresia = getattr(request.user, "membresia", None)
+        if membresia is None:
+            messages.error(request, "Tu cuenta no está vinculada a ningún condominio.")
+            return redirect("login")
+        if membresia.rol not in ("administracion", "directiva"):
+            messages.error(request, "Pagar la suscripción es exclusivo de directiva/administración.")
+            return redirect("inicio")
+
+        if not settings.MERCADOPAGO_ACCESS_TOKEN:
+            messages.error(request, "El pago en línea todavía no está disponible. Escríbenos para coordinar el pago.")
+            return redirect("inicio")
+
+        condominio = membresia.condominio
+        if condominio.pagado_hasta and condominio.pagado_hasta >= timezone.localdate():
+            messages.error(request, f"La suscripción de este mes ya está pagada (vigente hasta el {condominio.pagado_hasta}).")
+            return redirect("inicio")
+
+        pago = Pago.objects.create(
+            condominio=condominio, membresia=membresia, tipo="suscripcion",
+            plan="premium", monto=self.MONTO_SUSCRIPCION,
+        )
+        url_pago = crear_preferencia_pago(pago, request)
+        if not url_pago:
+            messages.error(request, "No pudimos iniciar el pago. Intenta de nuevo en un momento.")
+            return redirect("inicio")
+        return redirect(url_pago)
+
+
 class PagoResultadoView(LoginRequiredMixin, TemplateView):
     """A donde vuelve el navegador tras pagar (o cancelar). Solo informativa
     -- la confirmación real llega por separado a WebhookMercadoPagoView."""

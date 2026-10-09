@@ -339,6 +339,7 @@ class InicioView(TemplateView):
             "total_unidades": condominio.total_unidades,
             "total_miembros": Membresia.objects.filter(condominio=condominio).count(),
             "alertas_activas_count": Alerta.objects.filter(condominio=condominio, estado="activa").count(),
+            "suscripcion_al_dia": bool(condominio.pagado_hasta and condominio.pagado_hasta >= timezone.localdate()),
         }
 
         gasto_actual = GastoComun.objects.filter(condominio=condominio).order_by("-periodo").first()

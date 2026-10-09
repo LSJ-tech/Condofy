@@ -190,10 +190,30 @@
     </ul>
 </div>
 
+{% if membresia.rol == "administracion" or membresia.rol == "directiva" %}
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h6 mb-1"><i class="bi bi-credit-card text-primary"></i> Suscripción de {{ PLATFORM_NAME }}</h2>
+        {% if suscripcion_al_dia %}
+        <p class="text-muted small mb-0"><i class="bi bi-check-circle text-success"></i> Al día -- pagada hasta el {{ condominio.pagado_hasta|date:"d-m-Y" }}.</p>
+        {% else %}
+        <p class="text-muted small mb-2">
+            $19.990 al mes, fijo, sin importar cantidad de unidades.
+            {% if condominio.pagado_hasta %}Venció el {{ condominio.pagado_hasta|date:"d-m-Y" }}.{% endif %}
+        </p>
+        <form method="post" action="{% url 'pagar-suscripcion' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Pagar suscripción con Mercado Pago</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="card mt-4">
     <div class="card-body">
         <h2 class="h6 mb-1"><i class="bi bi-heart text-danger"></i> Apoya el proyecto</h2>
-        <p class="text-muted small mb-2">¿{{ PLATFORM_NAME }} les ha sido útil? Pueden hacer una donación voluntaria para apoyar el desarrollo de la plataforma.</p>
+        <p class="text-muted small mb-2">¿{{ PLATFORM_NAME }} les ha sido útil? Además de la suscripción, pueden hacer una donación voluntaria extra para apoyar el desarrollo de la plataforma.</p>
         <form method="post" action="{% url 'donar' %}" class="d-flex gap-2">
             {% csrf_token %}
             <label for="donar-monto" class="visually-hidden">Monto a donar en CLP</label>
