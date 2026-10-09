@@ -5,7 +5,7 @@
 <form method="post" class="col-md-7">
     {% csrf_token %}
     {% for field in form %}
-    <div class="mb-3 {% if field.name == 'activo' or field.name == 'aplica_gratificacion' %}form-check{% endif %}">
+    <div class="mb-3 {% if field.name == 'activo' or field.name == 'aplica_gratificacion' %}form-check{% endif %}" {% if field.name == 'fecha_termino' %}id="bloque-fecha-termino"{% endif %}>
         {% if field.name == 'activo' or field.name == 'aplica_gratificacion' %}
         {{ field }}
         <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -20,4 +20,15 @@
     {{ form.non_field_errors }}
     <button type="submit" class="btn btn-primary">Guardar</button>
 </form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function actualizarFechaTermino() {
+    const tipo = document.getElementById("id_tipo_contrato").value;
+    document.getElementById("bloque-fecha-termino").style.display = tipo === "plazo_fijo" ? "" : "none";
+}
+document.getElementById("id_tipo_contrato").addEventListener("change", actualizarFechaTermino);
+actualizarFechaTermino();
+</script>
 {% endblock %}

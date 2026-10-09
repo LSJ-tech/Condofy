@@ -151,6 +151,69 @@ class EmpleadoPermisosTests(TestCase):
         self.assertEqual(r.status_code, 302)
 
 
+class EmpleadoTipoContratoTests(TestCase):
+    """Un contrato indefinido no tiene fecha de término; uno a plazo fijo sí
+    la necesita. Al editar un empleado de plazo fijo a indefinido (lo que
+    pasa en la práctica cuando se renueva y queda fijo), la fecha de
+    término se limpia sola."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Tipo Contrato", plan="premium")
+        cls.afp = Afp.objects.create(nombre="Test AFP", tasa_total_pct=Decimal("11.44"))
+
+    def setUp(self):
+        self.administracion = crear_membresia(self.condominio, "administracion", username="tipo_admon")
+
+    def _datos_base(self, **overrides):
+        datos = {
+            "nombre": "Pedro Soto", "rut": "22.222.222-2", "cargo": "Aseo",
+            "fecha_ingreso": "2026-01-01", "afp": self.afp.pk, "sistema_salud": "fonasa",
+            "sueldo_base": "450000", "asignacion_colacion": "0", "asignacion_movilizacion": "0",
+        }
+        datos.update(overrides)
+        return datos
+
+    def test_indefinido_no_exige_fecha_termino(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("empleado-crear"), self._datos_base(tipo_contrato="indefinido"))
+        self.assertEqual(r.status_code, 302)
+        empleado = Empleado.objects.get(rut="22.222.222-2")
+        self.assertIsNone(empleado.fecha_termino)
+
+    def test_plazo_fijo_exige_fecha_termino(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("empleado-crear"), self._datos_base(tipo_contrato="plazo_fijo"))
+        self.assertEqual(r.status_code, 200)  # vuelve a mostrar el form con el error
+        self.assertFalse(Empleado.objects.filter(rut="22.222.222-2").exists())
+
+    def test_plazo_fijo_con_fecha_termino_se_guarda(self):
+        self.client.force_login(self.administracion.user)
+        r = self.client.post(reverse("empleado-crear"), self._datos_base(tipo_contrato="plazo_fijo", fecha_termino="2027-01-01"))
+        self.assertEqual(r.status_code, 302)
+        empleado = Empleado.objects.get(rut="22.222.222-2")
+        self.assertEqual(str(empleado.fecha_termino), "2027-01-01")
+
+    def test_pasar_de_plazo_fijo_a_indefinido_limpia_la_fecha_de_termino(self):
+        empleado = Empleado.objects.create(
+            condominio=self.condominio, nombre="Pedro Soto", rut="22.222.222-2", cargo="Aseo",
+            tipo_contrato="plazo_fijo", fecha_ingreso="2026-01-01", fecha_termino="2027-01-01",
+            afp=self.afp, sistema_salud="fonasa", sueldo_base=450000,
+        )
+        self.client.force_login(self.administracion.user)
+        # el admin cambia el tipo de contrato a indefinido, pero el campo de fecha
+        # sigue mandándose en el POST (el navegador no lo vacía solo) -- el form
+        # tiene que ignorarlo y limpiarlo igual
+        r = self.client.post(
+            reverse("empleado-editar", args=[empleado.pk]),
+            self._datos_base(tipo_contrato="indefinido", fecha_termino="2027-01-01"),
+        )
+        self.assertEqual(r.status_code, 302)
+        empleado.refresh_from_db()
+        self.assertEqual(empleado.tipo_contrato, "indefinido")
+        self.assertIsNone(empleado.fecha_termino)
+
+
 class LiquidacionGenerarTests(TestCase):
     @classmethod
     def setUpTestData(cls):

@@ -41,4 +41,11 @@ class EmpleadoForm(forms.ModelForm):
         cleaned = super().clean()
         if cleaned.get("sistema_salud") == "isapre" and not cleaned.get("plan_isapre_uf"):
             self.add_error("plan_isapre_uf", "Ingresa el valor del plan Isapre en UF.")
+
+        if cleaned.get("tipo_contrato") == "indefinido":
+            # un contrato indefinido no tiene fecha de término -- si viene de
+            # editar un empleado que antes era a plazo fijo, se limpia sola
+            cleaned["fecha_termino"] = None
+        elif cleaned.get("tipo_contrato") == "plazo_fijo" and not cleaned.get("fecha_termino"):
+            self.add_error("fecha_termino", "Ingresa la fecha de término del contrato a plazo fijo.")
         return cleaned
