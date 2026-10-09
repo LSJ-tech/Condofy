@@ -6,16 +6,6 @@ def _rol(request):
     return membresia.rol if membresia else None
 
 
-class EsDirectiva(BasePermission):
-    def has_permission(self, request, view):
-        return _rol(request) == "directiva"
-
-
-class EsResidente(BasePermission):
-    def has_permission(self, request, view):
-        return _rol(request) == "residente"
-
-
 class EsDirectivaOAdministracion(BasePermission):
     def has_permission(self, request, view):
         return _rol(request) in ("directiva", "administracion")

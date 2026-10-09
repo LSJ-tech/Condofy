@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 
+import requests
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -9,7 +10,7 @@ from pywebpush import WebPushException
 from core.models import Condominio, Membresia
 
 from .models import DispositivoPush, SuscripcionWebPush
-from .services import enviar_web_push_a_condominio
+from .services import enviar_push_a_condominio, enviar_web_push_a_condominio
 
 
 def crear_membresia(condominio, rol, **user_kwargs):
@@ -126,3 +127,49 @@ class EnviarWebPushTests(TestCase):
         with patch("notificaciones.services.webpush", side_effect=error):
             enviar_web_push_a_condominio(self.condominio, "Título", "Cuerpo")
         self.assertTrue(SuscripcionWebPush.objects.filter(pk=sub.pk).exists())
+
+
+class EnviarPushExpoTests(TestCase):
+    """enviar_push_a_condominio -- el canal de Expo (app nativa futura), sin
+    tocar la red real. No lanza excepción si Expo falla: una alerta no debe
+    fallar en crearse solo porque el push no salió."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Push Expo", plan="premium")
+
+    def setUp(self):
+        self.autor = crear_membresia(self.condominio, "residente", username="expo_autor")
+        self.vecino = crear_membresia(self.condominio, "residente", username="expo_vecino")
+
+    def test_sin_dispositivos_no_hace_ningun_request(self):
+        with patch("notificaciones.services.requests.post") as mock_post:
+            enviar_push_a_condominio(self.condominio, "Título", "Cuerpo")
+        mock_post.assert_not_called()
+
+    def test_envia_a_los_dispositivos_del_condominio_excluyendo_al_autor(self):
+        DispositivoPush.objects.create(user=self.autor.user, token="ExponentPushToken[autor]")
+        DispositivoPush.objects.create(user=self.vecino.user, token="ExponentPushToken[vecino]")
+        with patch("notificaciones.services.requests.post") as mock_post:
+            mock_post.return_value.raise_for_status.return_value = None
+            enviar_push_a_condominio(self.condominio, "Título", "Cuerpo", excluir_user_id=self.autor.user_id)
+        mock_post.assert_called_once()
+        lote_enviado = mock_post.call_args.kwargs["json"]
+        self.assertEqual(len(lote_enviado), 1)
+        self.assertEqual(lote_enviado[0]["to"], "ExponentPushToken[vecino]")
+        self.assertEqual(lote_enviado[0]["title"], "Título")
+
+    def test_lotes_de_mas_de_100_dispositivos_se_dividen(self):
+        for i in range(150):
+            DispositivoPush.objects.create(user=crear_membresia(self.condominio, "residente", username=f"expo_bulk_{i}").user, token=f"ExponentPushToken[{i}]")
+        with patch("notificaciones.services.requests.post") as mock_post:
+            mock_post.return_value.raise_for_status.return_value = None
+            enviar_push_a_condominio(self.condominio, "Título", "Cuerpo")
+        self.assertEqual(mock_post.call_count, 2)
+        self.assertEqual(len(mock_post.call_args_list[0].kwargs["json"]), 100)
+        self.assertEqual(len(mock_post.call_args_list[1].kwargs["json"]), 50)
+
+    def test_fallo_de_red_no_lanza_excepcion(self):
+        DispositivoPush.objects.create(user=self.vecino.user, token="ExponentPushToken[vecino]")
+        with patch("notificaciones.services.requests.post", side_effect=requests.RequestException("timeout")):
+            enviar_push_a_condominio(self.condominio, "Título", "Cuerpo")

@@ -222,3 +222,101 @@ class MarcarCuotaPagadaEnviaBoucherTests(TestCase):
         # pero ambos correos sí aparecen como sugerencias del datalist
         self.assertIn('<option value="padre@example.com">', contenido)
         self.assertIn('<option value="hijo@example.com">', contenido)
+
+
+class GenerarCuotasModelTests(TestCase):
+    """GastoComun.generar_cuotas() en sí -- los tests de arriba crean el
+    gasto común vía la vista pero sin ninguna Unidad en el condominio, así
+    que nunca llegan al cuerpo real del prorrateo (solo al "no hay unidades,
+    no hace nada")."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Generar Cuotas", plan="premium")
+
+    def test_sin_unidades_no_crea_cuotas(self):
+        gasto = GastoComun.objects.create(condominio=self.condominio, periodo="2026-01", monto_total=100000, fecha_vencimiento=datetime.date(2026, 1, 31))
+        gasto.generar_cuotas()
+        self.assertFalse(CuotaUnidad.objects.filter(gasto_comun=gasto).exists())
+
+    def test_monto_por_unidad_da_el_mismo_valor_fijo_a_todas(self):
+        Unidad.objects.create(condominio=self.condominio, numero="1")
+        Unidad.objects.create(condominio=self.condominio, numero="2")
+        gasto = GastoComun.objects.create(
+            condominio=self.condominio, periodo="2026-02", monto_total=24000, monto_por_unidad=12000,
+            fecha_vencimiento=datetime.date(2026, 2, 28),
+        )
+        gasto.generar_cuotas()
+        cuotas = CuotaUnidad.objects.filter(gasto_comun=gasto)
+        self.assertEqual(cuotas.count(), 2)
+        self.assertTrue(all(c.monto == 12000 for c in cuotas))
+
+    def test_prorratea_por_alicuota_si_no_hay_monto_fijo(self):
+        Unidad.objects.create(condominio=self.condominio, numero="1", alicuota="0.75")
+        Unidad.objects.create(condominio=self.condominio, numero="2", alicuota="0.25")
+        gasto = GastoComun.objects.create(condominio=self.condominio, periodo="2026-03", monto_total=100000, fecha_vencimiento=datetime.date(2026, 3, 31))
+        gasto.generar_cuotas()
+        cuota_1 = CuotaUnidad.objects.get(gasto_comun=gasto, unidad__numero="1")
+        cuota_2 = CuotaUnidad.objects.get(gasto_comun=gasto, unidad__numero="2")
+        self.assertEqual(cuota_1.monto, 75000)
+        self.assertEqual(cuota_2.monto, 25000)
+
+    def test_reparte_parejo_si_ninguna_unidad_tiene_alicuota(self):
+        Unidad.objects.create(condominio=self.condominio, numero="1")
+        Unidad.objects.create(condominio=self.condominio, numero="2")
+        Unidad.objects.create(condominio=self.condominio, numero="3")
+        gasto = GastoComun.objects.create(condominio=self.condominio, periodo="2026-04", monto_total=30000, fecha_vencimiento=datetime.date(2026, 4, 30))
+        gasto.generar_cuotas()
+        cuotas = CuotaUnidad.objects.filter(gasto_comun=gasto)
+        self.assertEqual(cuotas.count(), 3)
+        self.assertTrue(all(c.monto == 10000 for c in cuotas))
+
+    def test_no_duplica_cuotas_ya_generadas(self):
+        Unidad.objects.create(condominio=self.condominio, numero="1")
+        gasto = GastoComun.objects.create(condominio=self.condominio, periodo="2026-05", monto_total=10000, fecha_vencimiento=datetime.date(2026, 5, 31))
+        gasto.generar_cuotas()
+        gasto.generar_cuotas()
+        self.assertEqual(CuotaUnidad.objects.filter(gasto_comun=gasto).count(), 1)
+
+    def test_str_de_gasto_comun_y_cuota(self):
+        unidad = Unidad.objects.create(condominio=self.condominio, numero="1")
+        gasto = GastoComun.objects.create(condominio=self.condominio, periodo="2026-06", monto_total=10000, fecha_vencimiento=datetime.date(2026, 6, 30))
+        cuota = CuotaUnidad.objects.create(gasto_comun=gasto, unidad=unidad, monto=10000)
+        self.assertIn("2026-06", str(gasto))
+        self.assertIn("Pendiente", str(cuota))
+
+
+class CuotaUnidadApiTests(TestCase):
+    """CuotaUnidadViewSet (solo lectura) -- un residente solo ve sus propias
+    cuotas, directiva/administración ven las de todo el condominio."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Cuota Api", plan="premium")
+        cls.unidad_propia = Unidad.objects.create(condominio=cls.condominio, numero="10")
+        cls.unidad_ajena = Unidad.objects.create(condominio=cls.condominio, numero="20")
+        cls.gasto = GastoComun.objects.create(condominio=cls.condominio, periodo="2026-07", monto_total=20000, fecha_vencimiento=datetime.date(2026, 7, 31))
+        cls.cuota_propia = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad_propia, monto=10000)
+        cls.cuota_ajena = CuotaUnidad.objects.create(gasto_comun=cls.gasto, unidad=cls.unidad_ajena, monto=10000)
+
+    def test_residente_solo_ve_las_cuotas_de_su_propia_unidad(self):
+        residente = crear_membresia(self.condominio, "residente", unidad=self.unidad_propia, username="cuota_api_residente")
+        self.client.force_login(residente.user)
+        r = self.client.get(reverse("cuota-unidad-list"))
+        self.assertEqual(r.status_code, 200)
+        datos = r.json()
+        resultados = datos["results"] if isinstance(datos, dict) else datos
+        self.assertEqual(len(resultados), 1)
+        self.assertEqual(resultados[0]["unidad_numero"], "10")
+
+    def test_administracion_ve_todas_las_cuotas_del_condominio(self):
+        administracion = crear_membresia(self.condominio, "administracion", username="cuota_api_admon")
+        self.client.force_login(administracion.user)
+        r = self.client.get(reverse("cuota-unidad-list"))
+        datos = r.json()
+        resultados = datos["results"] if isinstance(datos, dict) else datos
+        self.assertEqual(len(resultados), 2)
+
+    def test_sin_autenticar_no_puede_listar(self):
+        r = self.client.get(reverse("cuota-unidad-list"))
+        self.assertEqual(r.status_code, 401)

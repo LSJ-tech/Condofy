@@ -1,15 +1,17 @@
 import datetime
 import json
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from mercadopago.errors.response import MPResponse
 
 from core.models import Condominio, Membresia, Torre, Unidad
 
+from .mercadopago_client import crear_preferencia_pago, obtener_pago_mercadopago
 from .models import Pago
 
 
@@ -165,3 +167,189 @@ class WebhookMercadoPagoTests(TestCase):
         self._simular_webhook(pago, estado_mp="rejected")
         pago.refresh_from_db()
         self.assertEqual(pago.estado, "rechazado")
+
+
+@override_settings(MERCADOPAGO_ACCESS_TOKEN="TEST-fake-token")
+class MercadoPagoClientTests(TestCase):
+    """Tests directos de pagos/mercadopago_client.py -- el resto de los
+    tests de esta app mockean crear_preferencia_pago/obtener_pago_mercadopago
+    a nivel de vista a propósito (sin tocar la red real de Mercado Pago), así
+    que este módulo (el único que arma la preferencia de verdad) se quedaba
+    sin ningún test propio."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test MP Client", plan="premium")
+
+    def _request(self):
+        return RequestFactory().get("/")
+
+    def _pago(self, **kwargs):
+        kwargs.setdefault("condominio", self.condominio)
+        kwargs.setdefault("tipo", "donacion")
+        kwargs.setdefault("monto", Decimal("5000"))
+        return Pago.objects.create(**kwargs)
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_donacion_sin_unidad_usa_nombre_del_condominio_como_origen(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse(
+            {"status": 201, "response": {"id": "pref-1", "init_point": "https://fake-mp.test/pagar/1"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago()
+        url = crear_preferencia_pago(pago, self._request())
+        self.assertEqual(url, "https://fake-mp.test/pagar/1")
+        titulo = mock_sdk.preference.return_value.create.call_args[0][0]["items"][0]["title"]
+        self.assertIn(self.condominio.nombre, titulo)
+        pago.refresh_from_db()
+        self.assertEqual(pago.mercadopago_preference_id, "pref-1")
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_donacion_con_torre_arma_origen_con_torre_y_depto(self, mock_sdk_factory):
+        torre = Torre.objects.create(condominio=self.condominio, nombre="3")
+        unidad = Unidad.objects.create(condominio=self.condominio, torre=torre, numero="301")
+        membresia = crear_membresia(self.condominio, "residente", unidad=unidad, username="mp_con_torre")
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse(
+            {"status": 201, "response": {"id": "pref-2", "init_point": "https://fake-mp.test/pagar/2"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago(membresia=membresia)
+        crear_preferencia_pago(pago, self._request())
+        titulo = mock_sdk.preference.return_value.create.call_args[0][0]["items"][0]["title"]
+        self.assertIn("Torre 3", titulo)
+        self.assertIn("Depto 301", titulo)
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_donacion_sin_torre_arma_origen_solo_con_depto(self, mock_sdk_factory):
+        unidad = Unidad.objects.create(condominio=self.condominio, numero="99")
+        membresia = crear_membresia(self.condominio, "residente", unidad=unidad, username="mp_sin_torre")
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse(
+            {"status": 201, "response": {"id": "pref-3", "init_point": "https://fake-mp.test/pagar/3"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago(membresia=membresia)
+        crear_preferencia_pago(pago, self._request())
+        titulo = mock_sdk.preference.return_value.create.call_args[0][0]["items"][0]["title"]
+        self.assertIn("Depto 99", titulo)
+        self.assertNotIn("Torre", titulo)
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_suscripcion_usa_titulo_distinto_al_de_donacion(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse(
+            {"status": 201, "response": {"id": "pref-4", "init_point": "https://fake-mp.test/pagar/4"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago(tipo="suscripcion", monto=Decimal("19990"), plan="premium")
+        crear_preferencia_pago(pago, self._request())
+        titulo = mock_sdk.preference.return_value.create.call_args[0][0]["items"][0]["title"]
+        self.assertIn("Suscripción", titulo)
+        self.assertNotIn("Donación", titulo)
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_mercadopago_rechaza_la_preferencia_devuelve_none(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse(
+            {"status": 400, "response": {"message": "bad request"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago()
+        url = crear_preferencia_pago(pago, self._request())
+        self.assertIsNone(url)
+        pago.refresh_from_db()
+        self.assertEqual(pago.mercadopago_preference_id, "")
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_credencial_de_prueba_usa_sandbox_init_point(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse({
+            "status": 201,
+            "response": {
+                "id": "pref-5",
+                "init_point": "https://fake-mp.test/prod",
+                "sandbox_init_point": "https://fake-mp.test/sandbox",
+            },
+        })
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago()
+        url = crear_preferencia_pago(pago, self._request())
+        self.assertEqual(url, "https://fake-mp.test/sandbox")
+
+    @override_settings(MERCADOPAGO_ACCESS_TOKEN="APP_USR-prod-token")
+    @patch("pagos.mercadopago_client._sdk")
+    def test_credencial_de_produccion_usa_init_point_aunque_haya_sandbox(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.preference.return_value.create.return_value = MPResponse({
+            "status": 201,
+            "response": {
+                "id": "pref-6",
+                "init_point": "https://fake-mp.test/prod",
+                "sandbox_init_point": "https://fake-mp.test/sandbox",
+            },
+        })
+        mock_sdk_factory.return_value = mock_sdk
+        pago = self._pago()
+        url = crear_preferencia_pago(pago, self._request())
+        self.assertEqual(url, "https://fake-mp.test/prod")
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_obtener_pago_exitoso_devuelve_el_body(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.payment.return_value.get.return_value = MPResponse(
+            {"status": 200, "response": {"id": 999, "status": "approved"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        resultado = obtener_pago_mercadopago("999")
+        self.assertEqual(resultado["status"], "approved")
+
+    @patch("pagos.mercadopago_client._sdk")
+    def test_obtener_pago_fallido_devuelve_none(self, mock_sdk_factory):
+        mock_sdk = MagicMock()
+        mock_sdk.payment.return_value.get.return_value = MPResponse(
+            {"status": 404, "response": {"message": "not found"}}
+        )
+        mock_sdk_factory.return_value = mock_sdk
+        resultado = obtener_pago_mercadopago("999")
+        self.assertIsNone(resultado)
+
+
+class PagoAdminTests(TestCase):
+    """Columnas calculadas de PagoAdmin (pagos/admin.py) -- probadas
+    directo sobre los métodos, sin pasar por el cliente admin de Django."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Pago Admin", plan="premium")
+
+    def setUp(self):
+        from .admin import PagoAdmin
+        self.admin = PagoAdmin(Pago, None)
+
+    def test_donante_sin_membresia_muestra_guion(self):
+        pago = Pago.objects.create(condominio=self.condominio, tipo="suscripcion", monto=Decimal("19990"))
+        self.assertEqual(self.admin.donante(pago), "-")
+        self.assertEqual(self.admin.torre(pago), "-")
+        self.assertEqual(self.admin.unidad(pago), "-")
+
+    def test_donante_con_membresia_sin_unidad(self):
+        membresia = crear_membresia(self.condominio, "residente", username="admin_sin_unidad")
+        pago = Pago.objects.create(condominio=self.condominio, tipo="donacion", monto=Decimal("1000"), membresia=membresia)
+        self.assertEqual(self.admin.torre(pago), "-")
+        self.assertEqual(self.admin.unidad(pago), "-")
+
+    def test_donante_con_torre_y_unidad(self):
+        torre = Torre.objects.create(condominio=self.condominio, nombre="7")
+        unidad = Unidad.objects.create(condominio=self.condominio, torre=torre, numero="701")
+        membresia = crear_membresia(self.condominio, "residente", unidad=unidad, username="admin_con_unidad", first_name="Ana", last_name="Soto")
+        pago = Pago.objects.create(condominio=self.condominio, tipo="donacion", monto=Decimal("1000"), membresia=membresia)
+        self.assertEqual(self.admin.donante(pago), "Ana Soto")
+        self.assertEqual(self.admin.torre(pago), "7")
+        self.assertEqual(self.admin.unidad(pago), "701")
+
+    def test_donante_sin_nombre_usa_username(self):
+        membresia = crear_membresia(self.condominio, "residente", username="sin_nombre_admin")
+        pago = Pago.objects.create(condominio=self.condominio, tipo="donacion", monto=Decimal("1000"), membresia=membresia)
+        self.assertEqual(self.admin.donante(pago), "sin_nombre_admin")

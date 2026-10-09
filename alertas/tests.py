@@ -102,3 +102,31 @@ class NotificarAlertaTests(TestCase):
         self.assertEqual(mock_web.call_count, 1)
         self.assertEqual(mock_expo.call_args.kwargs["excluir_user_id"], membresia.user_id)
         self.assertEqual(mock_web.call_args.kwargs["excluir_user_id"], membresia.user_id)
+
+
+class AlertaHistorialViewTests(TestCase):
+    """Página web del historial (`alertas/views.py`) -- distinta del endpoint
+    de API que prueba FiltroEstadoAlertaTests arriba."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Historial Alertas", plan="premium")
+
+    def setUp(self):
+        self.membresia = crear_membresia(self.condominio, "residente", username="historial_residente")
+        self.client.force_login(self.membresia.user)
+        Alerta.objects.create(condominio=self.condominio, autor=self.membresia, tipo="robo", estado="activa")
+        Alerta.objects.create(condominio=self.condominio, autor=self.membresia, tipo="incendio", estado="resuelta")
+
+    def test_sin_filtro_muestra_todas(self):
+        r = self.client.get(reverse("alertas-historial"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.context["alertas"]), 2)
+        self.assertEqual(r.context["estado_seleccionado"], "")
+
+    def test_filtro_por_estado(self):
+        r = self.client.get(reverse("alertas-historial") + "?estado=resuelta")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.context["alertas"]), 1)
+        self.assertEqual(r.context["alertas"][0].tipo, "incendio")
+        self.assertEqual(r.context["estado_seleccionado"], "resuelta")

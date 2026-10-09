@@ -343,3 +343,78 @@ class DonacionVisibilidadTests(TestCase):
         r = self.client.get(reverse("inicio"))
         self.assertEqual(r.status_code, 200)
         self.assertNotIn(b"Apoya el proyecto", r.content)
+
+
+class ApiAuthTests(TestCase):
+    """Login/logout/me de la API JWT (core/api_views.py) -- usado por la
+    futura app Expo, nunca ejercitado por los tests de la web (que se
+    autentican con force_login, sin pasar por este flujo)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.condominio = Condominio.objects.create(nombre="Test Api Auth", plan="premium")
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="api_auth_user", password="clave-segura-123")
+        self.membresia = Membresia.objects.create(
+            user=self.user, condominio=self.condominio, rol="residente", terminos_aceptados_en=timezone.now(),
+        )
+
+    def test_login_devuelve_tokens_y_la_membresia(self):
+        r = self.client.post(reverse("api-login"), {"username": "api_auth_user", "password": "clave-segura-123"})
+        self.assertEqual(r.status_code, 200)
+        datos = r.json()
+        self.assertIn("access", datos)
+        self.assertIn("refresh", datos)
+        self.assertEqual(datos["membresia"]["rol"], "residente")
+        self.assertEqual(datos["membresia"]["condominio"]["nombre"], self.condominio.nombre)
+
+    def test_login_sin_membresia_devuelve_membresia_none(self):
+        User.objects.create_user(username="sin_membresia_api", password="clave-segura-123")
+        r = self.client.post(reverse("api-login"), {"username": "sin_membresia_api", "password": "clave-segura-123"})
+        self.assertEqual(r.status_code, 200)
+        self.assertIsNone(r.json()["membresia"])
+
+    def test_login_con_clave_incorrecta_falla(self):
+        r = self.client.post(reverse("api-login"), {"username": "api_auth_user", "password": "clave-mala"})
+        self.assertEqual(r.status_code, 401)
+
+    def test_me_requiere_autenticacion(self):
+        r = self.client.get(reverse("api-me"))
+        self.assertEqual(r.status_code, 401)
+
+    def test_me_devuelve_la_membresia_del_usuario_autenticado(self):
+        login = self.client.post(reverse("api-login"), {"username": "api_auth_user", "password": "clave-segura-123"})
+        access = login.json()["access"]
+        r = self.client.get(reverse("api-me"), HTTP_AUTHORIZATION=f"Bearer {access}")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["rol"], "residente")
+
+    def test_me_sin_membresia_devuelve_409(self):
+        User.objects.create_user(username="sin_membresia_me", password="clave-segura-123")
+        login = self.client.post(reverse("api-login"), {"username": "sin_membresia_me", "password": "clave-segura-123"})
+        access = login.json()["access"]
+        r = self.client.get(reverse("api-me"), HTTP_AUTHORIZATION=f"Bearer {access}")
+        self.assertEqual(r.status_code, 409)
+
+    def test_logout_invalida_el_refresh_token(self):
+        login = self.client.post(reverse("api-login"), {"username": "api_auth_user", "password": "clave-segura-123"})
+        access, refresh = login.json()["access"], login.json()["refresh"]
+        r = self.client.post(
+            reverse("api-logout"), {"refresh": refresh},
+            content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {access}",
+        )
+        self.assertEqual(r.status_code, 205)
+
+    def test_logout_sin_refresh_token_devuelve_400(self):
+        login = self.client.post(reverse("api-login"), {"username": "api_auth_user", "password": "clave-segura-123"})
+        access = login.json()["access"]
+        r = self.client.post(
+            reverse("api-logout"), {},
+            content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {access}",
+        )
+        self.assertEqual(r.status_code, 400)
+
+    def test_logout_requiere_autenticacion(self):
+        r = self.client.post(reverse("api-logout"), {}, content_type="application/json")
+        self.assertEqual(r.status_code, 401)
