@@ -82,7 +82,7 @@ function actualizarUnidades() {
         return;
     }
     var unidades = unidadesPorTorre[torreId] || [];
-    agregarOpcion(selectorUnidad, "", "— Elige tu depto —");
+    agregarOpcion(selectorUnidad, "", "— Elige tu {{ condominio.etiqueta_unidad|lower|escapejs }} —");
     unidades.forEach(function (u) { agregarOpcion(selectorUnidad, u.id, u.numero); });
     selectorUnidad.disabled = false;
 }

@@ -38,6 +38,11 @@ ROL_CHOICES = [
     ("residente", "Residente"),
 ]
 
+GENERO_UNIDAD_CHOICES = [
+    ("f", "Femenino (la/una/nueva unidad)"),
+    ("m", "Masculino (el/un/nuevo departamento)"),
+]
+
 
 class Condominio(models.Model):
     """El tenant: una junta de vecinos o condominio cliente de la plataforma.
@@ -70,6 +75,16 @@ class Condominio(models.Model):
         help_text="Cómo le dicen en este condominio a la agrupación de unidades (Torre, Block, Edificio, "
         "Pabellón...) -- se usa tal cual en el panel, en vez de 'Torre' a secas.",
     )
+    etiqueta_unidad = models.CharField(
+        max_length=30, default="Unidad",
+        help_text="Cómo le dicen en este condominio a cada unidad (Unidad, Departamento, Casa...) -- "
+        "se usa tal cual en el panel, en vez de 'Unidad'/'Depto' a secas.",
+    )
+    genero_unidad = models.CharField(
+        max_length=1, choices=GENERO_UNIDAD_CHOICES, default="f",
+        help_text="Solo para que el texto concuerde en género con etiqueta_unidad (ej. 'nueva unidad' vs "
+        "'nuevo departamento'). No afecta nada más.",
+    )
 
     class Meta:
         ordering = ["nombre"]
@@ -90,6 +105,16 @@ class Condominio(models.Model):
     @property
     def total_unidades(self):
         return self.unidades.count()
+
+    @property
+    def etiqueta_unidad_nueva(self):
+        """'Nueva unidad' / 'Nuevo departamento' -- concuerda en género con etiqueta_unidad."""
+        return "Nuevo" if self.genero_unidad == "m" else "Nueva"
+
+    @property
+    def etiqueta_unidad_todos(self):
+        """'TODAS las unidades' / 'TODOS los departamentos' -- idem, para el plural."""
+        return "TODOS los" if self.genero_unidad == "m" else "TODAS las"
 
 
 class Torre(models.Model):

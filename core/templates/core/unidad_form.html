@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}
-{% block titulo %}Nueva unidad{% endblock %}
+{% block titulo %}{{ condominio.etiqueta_unidad_nueva }} {{ condominio.etiqueta_unidad|lower }}{% endblock %}
 {% block contenido %}
-<h1 class="h4 mb-3">Nueva unidad</h1>
+<h1 class="h4 mb-3">{{ condominio.etiqueta_unidad_nueva }} {{ condominio.etiqueta_unidad|lower }}</h1>
 <form method="post" class="col-md-5">
     {% csrf_token %}
     {% for field in form %}

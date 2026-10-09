@@ -10,9 +10,9 @@
 <div class="card mb-4">
     <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <div class="text-muted small">Mi unidad</div>
+            <div class="text-muted small">Mi {{ condominio.etiqueta_unidad|lower }}</div>
             <div class="fw-semibold">
-                {% if membresia.unidad %}{{ condominio.etiqueta_torre }} {{ membresia.unidad.torre.nombre|default:"—" }}, depto {{ membresia.unidad.numero }}{% else %}Sin unidad asignada — pídesela a tu directiva{% endif %}
+                {% if membresia.unidad %}{{ condominio.etiqueta_torre }} {{ membresia.unidad.torre.nombre|default:"—" }}, {{ condominio.etiqueta_unidad|lower }} {{ membresia.unidad.numero }}{% else %}Sin {{ condominio.etiqueta_unidad|lower }} asignad{% if condominio.genero_unidad == "m" %}o — pídeselo{% else %}a — pídesela{% endif %} a tu directiva{% endif %}
             </div>
         </div>
         {% if membresia.unidad %}
@@ -34,7 +34,7 @@
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="card h-100"><div class="card-body text-center">
-            <div class="text-muted small">Unidades</div>
+            <div class="text-muted small">{{ condominio.etiqueta_unidad }}s</div>
             <div class="fs-4 fw-bold">{{ total_unidades }}</div>
         </div></div>
     </div>
@@ -52,7 +52,7 @@
     </div>
     <div class="col-6 col-md-3">
         <div class="card h-100"><div class="card-body text-center">
-            <div class="text-muted small">Unidades morosas</div>
+            <div class="text-muted small">{{ condominio.etiqueta_unidad }}s con atraso</div>
             <div class="fs-4 fw-bold {% if morosos_count %}text-danger{% endif %}">{{ morosos_count }}</div>
         </div></div>
     </div>
@@ -64,7 +64,7 @@
     <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <div class="text-muted small">Recaudado</div>
-            <div class="fw-semibold text-success">${{ gasto_actual_recaudado }} <span class="text-muted small">({{ gasto_actual_cuotas_pagadas }}/{{ gasto_actual_cuotas_total }} unidades)</span></div>
+            <div class="fw-semibold text-success">${{ gasto_actual_recaudado }} <span class="text-muted small">({{ gasto_actual_cuotas_pagadas }}/{{ gasto_actual_cuotas_total }} {{ condominio.etiqueta_unidad|lower }}s)</span></div>
         </div>
         <div>
             <div class="text-muted small">Pendiente</div>
@@ -77,18 +77,18 @@
 
 {% if morosos %}
 <div class="card mb-4 border-warning">
-    <div class="card-header">Unidades con gastos comunes atrasados</div>
+    <div class="card-header">{{ condominio.etiqueta_unidad }}s con gastos comunes atrasados</div>
     <div class="card-body">
         <ul class="list-group list-group-flush">
             {% for m in morosos %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 px-0">
-                <span>{% if m.unidad__torre__nombre %}{{ condominio.etiqueta_torre }} {{ m.unidad__torre__nombre }} - {% endif %}Depto {{ m.unidad__numero }}</span>
+                <span>{% if m.unidad__torre__nombre %}{{ condominio.etiqueta_torre }} {{ m.unidad__torre__nombre }} - {% endif %}{{ condominio.etiqueta_unidad }} {{ m.unidad__numero }}</span>
                 <span class="text-danger fw-semibold">${{ m.total_adeudado }} <span class="text-muted small">({{ m.cuotas_atrasadas }} cuota{{ m.cuotas_atrasadas|pluralize }})</span></span>
             </li>
             {% endfor %}
         </ul>
         {% if morosos_count > 10 %}
-        <div class="small text-muted mt-2">Mostrando 10 de {{ morosos_count }} unidades morosas — ${{ morosos_total_adeudado }} adeudado en total.</div>
+        <div class="small text-muted mt-2">Mostrando 10 de {{ morosos_count }} {{ condominio.etiqueta_unidad|lower }}s con atraso — ${{ morosos_total_adeudado }} adeudado en total.</div>
         {% endif %}
     </div>
 </div>
@@ -97,7 +97,7 @@
 <div class="row row-cols-2 row-cols-md-4 g-2 mb-4">
     <div class="col"><a href="{% url 'miembros' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-people d-block fs-4 mb-1"></i> Miembros</a></div>
     <div class="col"><a href="{% url 'torres' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-buildings d-block fs-4 mb-1"></i> {{ condominio.etiqueta_torre }}s</a></div>
-    <div class="col"><a href="{% url 'unidades' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-building d-block fs-4 mb-1"></i> Unidades</a></div>
+    <div class="col"><a href="{% url 'unidades' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-building d-block fs-4 mb-1"></i> {{ condominio.etiqueta_unidad }}s</a></div>
     <div class="col"><a href="{% url 'gastos-comunes-list' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-cash-coin d-block fs-4 mb-1"></i> Gastos comunes</a></div>
     <div class="col"><a href="{% url 'registro-ingreso-list' %}" class="btn btn-outline-primary w-100 h-100"><i class="bi bi-door-open d-block fs-4 mb-1"></i> Accesos</a></div>
     {% if membresia.rol == "directiva" %}
@@ -217,13 +217,14 @@ function csrfToken() {
 // integración de por medio: solo un link wa.me con el mensaje ya armado.
 const CONDOMINIO_NOMBRE_WHATSAPP = "{{ condominio.nombre|default:PLATFORM_NAME|escapejs }}";
 const ETIQUETA_TORRE = "{{ condominio.etiqueta_torre|default:"Torre"|escapejs }}";
+const ETIQUETA_UNIDAD = "{{ condominio.etiqueta_unidad|default:"Unidad"|escapejs }}";
 
 function mensajeAlertaWhatsApp(alerta) {
     const lineas = [`🚨 *Alerta de ${alerta.tipo_display || alerta.tipo}* en ${CONDOMINIO_NOMBRE_WHATSAPP}`, ""];
     if (alerta.autor_nombre) lineas.push(`Reportado por: ${alerta.autor_nombre}`);
     if (alerta.autor_unidad) {
-        const unidad = alerta.autor_torre ? `${ETIQUETA_TORRE} ${alerta.autor_torre}, depto ${alerta.autor_unidad}` : `Depto ${alerta.autor_unidad}`;
-        lineas.push(`Unidad: ${unidad}`);
+        const unidad = alerta.autor_torre ? `${ETIQUETA_TORRE} ${alerta.autor_torre}, ${ETIQUETA_UNIDAD.toLowerCase()} ${alerta.autor_unidad}` : `${ETIQUETA_UNIDAD} ${alerta.autor_unidad}`;
+        lineas.push(`${ETIQUETA_UNIDAD}: ${unidad}`);
     }
     if (alerta.mensaje) lineas.push(`Mensaje: "${alerta.mensaje}"`);
     lineas.push("", `👉 Revisa la alerta en Condofy: ${window.location.origin}/`);
@@ -353,7 +354,7 @@ function cargarAlertas() {
             }
             cont.innerHTML = alertas.map(a => `
                 <div class="border rounded p-2 mb-2">
-                    <strong>${a.tipo_display}</strong> — ${a.autor_nombre || ""} ${a.autor_unidad ? "(Unidad " + a.autor_unidad + ")" : ""}
+                    <strong>${a.tipo_display}</strong> — ${a.autor_nombre || ""} ${a.autor_unidad ? "(" + ETIQUETA_UNIDAD + " " + a.autor_unidad + ")" : ""}
                     <div class="small text-muted">${new Date(a.fecha_creacion).toLocaleString()}</div>
                     ${a.mensaje ? `<div>${a.mensaje}</div>` : ""}
                     ${a.latitud && a.longitud ? `<div id="mapa-alerta-${a.id}" style="height: 180px;" class="rounded mt-2 mb-2"></div>` : ""}
@@ -390,7 +391,7 @@ function cargarAlertasRecientes() {
             cont.innerHTML = alertas.map(a => {
                 const quien = a.estado === "auto_cerrada"
                     ? "Se cerró sola (nadie respondió en 30 min)"
-                    : `${a.resuelta_por_nombre || "?"} ${a.resuelta_por_unidad ? "(Unidad " + a.resuelta_por_unidad + ")" : ""}`;
+                    : `${a.resuelta_por_nombre || "?"} ${a.resuelta_por_unidad ? "(" + ETIQUETA_UNIDAD + " " + a.resuelta_por_unidad + ")" : ""}`;
                 return `
                 <div class="border rounded p-2 mb-2">
                     <strong>${a.tipo_display}</strong> — <span class="badge bg-secondary">${a.estado_display}</span>

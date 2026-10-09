@@ -1,9 +1,9 @@
 {% extends "core/base.html" %}
-{% block titulo %}Unidades{% endblock %}
+{% block titulo %}{{ condominio.etiqueta_unidad }}s{% endblock %}
 {% block contenido %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Unidades</h1>
-    <a href="{% url 'crear-unidad' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nueva unidad</a>
+    <h1 class="h4 mb-0">{{ condominio.etiqueta_unidad }}s</h1>
+    <a href="{% url 'crear-unidad' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> {{ condominio.etiqueta_unidad_nueva }} {{ condominio.etiqueta_unidad|lower }}</a>
 </div>
 <div class="row g-3 mb-3">
     <div class="col-md-5">
@@ -20,7 +20,7 @@
     </div>
     <div class="col-md-7">
         <form method="post" action="{% url 'aplicar-alicuota-masiva' %}" class="d-flex gap-2 justify-content-md-end"
-              onsubmit="return confirm('Esto va a cambiar la alícuota de TODAS las unidades del condominio. ¿Continuar?');">
+              onsubmit="return confirm('Esto va a cambiar la alícuota de {{ condominio.etiqueta_unidad_todos }} {{ condominio.etiqueta_unidad|lower }}s del condominio. ¿Continuar?');">
             {% csrf_token %}
             <label class="col-form-label small text-muted" for="id_alicuota_masiva">Aplicar alícuota a todas:</label>
             <input type="text" id="id_alicuota_masiva" name="alicuota" class="form-control" style="max-width: 140px;" placeholder="Ej. 0.0031" required>
@@ -36,7 +36,7 @@
         {% for u in unidades %}
         <tr><td>{{ u.numero }}</td><td>{{ u.torre|default:"—" }}</td><td>{{ u.alicuota }}</td></tr>
         {% empty %}
-        <tr><td colspan="3" class="text-muted">Sin unidades todavía.</td></tr>
+        <tr><td colspan="3" class="text-muted">Sin {{ condominio.etiqueta_unidad|lower }}s todavía.</td></tr>
         {% endfor %}
     </tbody>
 </table>

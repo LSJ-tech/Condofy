@@ -101,6 +101,7 @@ class CrearMiembroForm(forms.Form):
         else:
             self.fields["rol"].choices = [c for c in ROL_CHOICES if c[0] in ("conserje", "residente")]
         if condominio is not None:
+            self.fields["unidad"].label = f"{condominio.etiqueta_unidad} (obligatorio para residentes)"
             self.fields["unidad"].queryset = (
                 Unidad.objects.filter(condominio=condominio)
                 .select_related("torre")
@@ -137,6 +138,7 @@ class RegistroResidenteForm(ConfirmacionContrasenaMixin):
     def __init__(self, *args, condominio=None, **kwargs):
         super().__init__(*args, **kwargs)
         if condominio is not None:
+            self.fields["unidad"].label = f"Tu {condominio.etiqueta_unidad.lower()}"
             self.fields["unidad"].queryset = (
                 Unidad.objects.filter(condominio=condominio)
                 .select_related("torre")
@@ -200,6 +202,7 @@ class UnidadForm(forms.ModelForm):
     def __init__(self, *args, condominio=None, **kwargs):
         super().__init__(*args, **kwargs)
         if condominio is not None:
+            self.fields["torre"].label = condominio.etiqueta_torre
             self.fields["torre"].queryset = Torre.objects.filter(condominio=condominio).annotate(_len=Length("nombre")).order_by("_len", "nombre")
 
 
