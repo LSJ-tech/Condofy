@@ -388,7 +388,7 @@ class ServiceWorkerView(View):
     cubra todo el dominio -- el scope por defecto de un service worker es el
     directorio desde el que se sirve."""
 
-    def get(self, request, *args, **kwargs):
+    def get(self, _request, *args, **kwargs):
         ruta = find_static("core/sw.js")
         with open(ruta, "rb") as archivo:
             contenido = archivo.read()

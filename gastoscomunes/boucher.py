@@ -50,9 +50,11 @@ def generar_boucher_pdf_bytes(cuota):
     filas = []
     if unidad.torre:
         filas.append((f"{condominio.etiqueta_torre}", unidad.torre.nombre))
-    filas.append((f"{condominio.etiqueta_unidad} N°", unidad.numero))
-    filas.append(("Periodo", cuota.gasto_comun.periodo))
-    filas.append(("Fecha de pago", str(cuota.fecha_pago) if cuota.fecha_pago else "—"))
+    filas.extend([
+        (f"{condominio.etiqueta_unidad} N°", unidad.numero),
+        ("Periodo", cuota.gasto_comun.periodo),
+        ("Fecha de pago", str(cuota.fecha_pago) if cuota.fecha_pago else "—"),
+    ])
 
     c.setFont("Helvetica", 10)
     for etiqueta, valor in filas:

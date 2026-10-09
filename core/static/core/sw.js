@@ -1,4 +1,4 @@
-const CACHE_NAME = "condofy-v1";
+const CACHE_NAME = "securapp-copropiedad-v1";
 const OFFLINE_URL = "/offline/";
 
 self.addEventListener("install", (event) => {
@@ -33,16 +33,16 @@ self.addEventListener("push", (event) => {
     try {
         datos = event.data ? event.data.json() : {};
     } catch (error) {
-        datos = { title: "Condofy", body: event.data ? event.data.text() : "" };
+        datos = { title: "SecurApp Copropiedad", body: event.data ? event.data.text() : "" };
     }
     const opciones = {
         body: datos.body || "",
         icon: "/static/core/icon-192.png",
         badge: "/static/core/icon-192.png",
         data: datos.data || {},
-        requireInteraction: (datos.data && datos.data.tipo === "alerta") || false,
+        requireInteraction: datos.data?.tipo === "alerta",
     };
-    event.waitUntil(self.registration.showNotification(datos.title || "Condofy", opciones));
+    event.waitUntil(self.registration.showNotification(datos.title || "SecurApp Copropiedad", opciones));
 });
 
 self.addEventListener("notificationclick", (event) => {

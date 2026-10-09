@@ -119,7 +119,6 @@ def generar_liquidacion_pdf_bytes(liquidacion):
     # Dos columnas: Haberes (izquierda) / Descuentos (derecha)
     col_izq_x1, col_izq_x2 = margen, margen + col_w * 1.42
     col_der_x1, col_der_x2 = margen + col_w * 1.62, ancho - margen
-    y_inicio_columnas = y
 
     c.setFillColor(NAVY)
     c.setFont("Helvetica-Bold", 10.5)

@@ -22,14 +22,7 @@
                     </div>
                     {% endif %}
                     {% endfor %}
-                    <div class="form-check mb-3">
-                        {{ form.acepto_terminos }}
-                        <label class="form-check-label" for="{{ form.acepto_terminos.id_for_label }}">
-                            Acepto los <a href="{% url 'terminos' %}" target="_blank">Términos de Uso</a> y la
-                            <a href="{% url 'privacidad' %}" target="_blank">Política de Privacidad</a>
-                        </label>
-                        {{ form.acepto_terminos.errors }}
-                    </div>
+                    {% include "core/includes/_checkbox_terminos.html" %}
                     <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
                 </form>
             </div>

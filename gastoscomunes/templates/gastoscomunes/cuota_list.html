@@ -41,7 +41,8 @@
                 {% if c.estado != "pagado" %}
                 <form method="post" action="{% url 'cuota-marcar-pagada' c.pk %}" class="d-flex gap-1">
                     {% csrf_token %}
-                    <input type="email" name="correo_destino" list="correos-{{ c.pk }}" class="form-control form-control-sm" style="min-width: 170px;"
+                    <label for="correo-destino-{{ c.pk }}" class="visually-hidden">Correo del comprobante</label>
+                    <input type="email" id="correo-destino-{{ c.pk }}" name="correo_destino" list="correos-{{ c.pk }}" class="form-control form-control-sm" style="min-width: 170px;"
                            placeholder="Correo del comprobante (opcional)"
                            {% if c.unidad.residentes_con_correo|length == 1 %}value="{{ c.unidad.residentes_con_correo.0.user.email }}"{% endif %}>
                     <datalist id="correos-{{ c.pk }}">
@@ -63,17 +64,5 @@
 </table>
 </div>
 
-{% if page_obj.has_other_pages %}
-<nav>
-    <ul class="pagination">
-        {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if torre_seleccionada %}&torre={{ torre_seleccionada }}{% endif %}">Anterior</a></li>
-        {% endif %}
-        <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
-        {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if torre_seleccionada %}&torre={{ torre_seleccionada }}{% endif %}">Siguiente</a></li>
-        {% endif %}
-    </ul>
-</nav>
-{% endif %}
+{% include "core/includes/_paginacion_torre.html" %}
 {% endblock %}

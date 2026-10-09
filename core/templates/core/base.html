@@ -58,8 +58,13 @@
             text-decoration: none; padding: 0.55rem 0.65rem; border-radius: 0.5rem; font-size: 0.925rem;
             background: none; border: none; width: 100%;
         }
-        .sidebar-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
-        .sidebar-link.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 600; }
+        /* Colores sólidos (no rgba) a propósito: el checker de contraste de
+           Sonar evalúa el color declarado tal cual, sin mezclarlo con el
+           fondo navy real -- con rgba(255,255,255,X) ve "blanco sobre casi
+           blanco" y marca falso contraste insuficiente. Estos hex son el
+           mismo resultado visual (blanco X% sobre #1A2E40), ya mezclado. */
+        .sidebar-link:hover { color: #fff; background: #2C3F4F; }
+        .sidebar-link.active { background: #3C4D5D; color: #fff; font-weight: 600; }
         .sidebar-user { border-top: 1px solid rgba(255,255,255,0.15); margin-top: 0.75rem; padding-top: 0.75rem; }
         .app-main { min-height: 100vh; display: flex; flex-direction: column; }
         .mobile-topbar { display: flex; align-items: center; gap: 0.75rem; }

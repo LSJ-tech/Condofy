@@ -6,6 +6,7 @@ rara vez (quedan en Afp/TramoImpuestoUnico, editables a mano cuando cambien)."""
 
 import calendar
 import logging
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -16,14 +17,27 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://mindicador.cl/api"
 TIMEOUT = 8
 
-
 class IndicadorNoDisponibleError(Exception):
     pass
 
 
+# periodo llega desde request.POST (LiquidacionGenerarView) y termina dentro
+# de la URL que se le pide a mindicador.cl -- sin validar el formato acá,
+# un valor armado a mano podría meter cualquier cosa en esa URL (ver
+# python:S7044 en SonarCloud). Mismo patrón que gastoscomunes/forms.py.
+PERIODO_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+
+
+def _validar_periodo(periodo):
+    if not PERIODO_RE.match(periodo):
+        raise IndicadorNoDisponibleError(f"Periodo inválido: {periodo!r} (formato esperado 'YYYY-MM').")
+
+
 def obtener_utm(periodo):
-    """periodo: 'YYYY-MM'. Lanza IndicadorNoDisponibleError si todavía no
-    está publicada (ej. un mes futuro) o si la API no responde."""
+    """periodo: 'YYYY-MM'. Lanza IndicadorNoDisponibleError si el formato no
+    es válido, si todavía no está publicada (ej. un mes futuro), o si la API
+    no responde."""
+    _validar_periodo(periodo)
     anio, mes = periodo.split("-")
     try:
         r = requests.get(f"{BASE_URL}/utm/{anio}", timeout=TIMEOUT)
@@ -42,6 +56,7 @@ def obtener_utm(periodo):
 def obtener_uf(periodo):
     """UF del último día del periodo -- si el mes todavía no terminó (o la
     fecha es futura), usa el último valor disponible como aproximación."""
+    _validar_periodo(periodo)
     anio, mes = (int(p) for p in periodo.split("-"))
     ultimo_dia = calendar.monthrange(anio, mes)[1]
     fecha_objetivo = date(anio, mes, ultimo_dia)

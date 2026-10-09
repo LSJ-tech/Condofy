@@ -18,14 +18,18 @@
     .features li { font-size: 15px; line-height: 1.6; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
     .features li:last-child { border-bottom: none; }
     .btn-wrap { text-align: center; margin: 28px 0 8px; }
-    .btn { display: inline-block; background-color: #E07A5F; color: #FFFFFF !important; text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; }
+    /* Texto navy (no blanco) a propósito: blanco sobre este terracota da
+       2.95:1 de contraste, insuficiente para WCAG AA (mínimo 4.5:1 en texto
+       normal) -- navy sobre el mismo terracota da 4.72:1, pasa, y mantiene
+       el mismo color de fondo de marca sin tocarlo. */
+    .btn { display: inline-block; background-color: #E07A5F; color: #1A2E40 !important; text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 8px; }
     .footer { padding: 20px 32px 28px; text-align: center; color: #9CA3AF; font-size: 12px; line-height: 1.6; }
     .footer a { color: #9CA3AF; }
 </style>
 </head>
 <body>
 <div class="wrapper">
-<table role="presentation" class="container" width="100%">
+<table role="presentation" class="container">
     <tr><td class="header"><span class="wordmark">{{ platform_name }}</span></td></tr>
     <tr><td class="body">
         <h1>¡Hola {{ nombre }}!</h1>
